@@ -11,6 +11,7 @@ import {
   Star,
   Plus,
 } from "lucide-react";
+import { useCart } from "./CartContext";
 
 const featured = [
   {

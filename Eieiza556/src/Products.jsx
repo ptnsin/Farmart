@@ -10,8 +10,10 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  Plus,
 } from "lucide-react";
 import { PRODUCTS, CATEGORIES, ORIGINS } from "./productsData";
+import { useCart } from "./CartContext";
 
 const PAGE_SIZE = 6;
 
@@ -34,10 +36,23 @@ function Badge({ badge }) {
 }
 
 export default function Products() {
+  const { addItem, itemCount } = useCart();
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedOrigins, setSelectedOrigins] = useState([]);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [page, setPage] = useState(1);
+
+  const handleAddToCart = (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id: product.id,
+      name: product.name,
+      subtitle: product.tag,
+      price: product.price,
+      image: product.image,
+    });
+  };
 
   const toggleCategory = (key) => {
     setSelectedCategories((prev) =>
@@ -111,9 +126,17 @@ export default function Products() {
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Heart className="w-5 h-5" />
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
+            <Link
+              to="/cart"
+              className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
               <ShoppingCart className="w-5 h-5" />
-            </button>
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-green-700 text-white text-[10px] font-bold flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
             <Link
               to="/dashboard"
               className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
@@ -210,7 +233,7 @@ export default function Products() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {pageItems.map((p) => (
                 <Link
-                  to={`/products/${p.id}`}
+                  to={`/product/${p.id}`}
                   key={p.id}
                   className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow group block"
                 >
@@ -226,6 +249,13 @@ export default function Products() {
                       className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-gray-500 hover:text-red-500 shadow-sm"
                     >
                       <Heart className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => handleAddToCart(e, p)}
+                      title="เพิ่มลงตะกร้า"
+                      className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-green-800 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-green-700"
+                    >
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="p-3.5">

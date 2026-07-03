@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { PRODUCTS, getProductById } from "./productsData";
+import { useCart } from "./CartContext";
 
 function Stars({ rating }) {
   const rounded = Math.round(rating);
@@ -34,6 +35,7 @@ function Stars({ rating }) {
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addItem, itemCount } = useCart();
   const product = getProductById(id);
 
   const [activeImage, setActiveImage] = useState(0);
@@ -70,6 +72,18 @@ export default function ProductDetail() {
   ).slice(0, 4);
 
   const handleAddToCart = () => {
+    const sizeLabel = product.sizes?.[selectedSize]?.label;
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        subtitle: sizeLabel || product.tag,
+        price: currentPrice,
+        image: product.image,
+        variant: sizeLabel,
+      },
+      quantity
+    );
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -108,9 +122,17 @@ export default function ProductDetail() {
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Heart className="w-5 h-5" />
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
+            <Link
+              to="/cart"
+              className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
               <ShoppingCart className="w-5 h-5" />
-            </button>
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-green-700 text-white text-[10px] font-bold flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
             <Link
               to="/dashboard"
               className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
