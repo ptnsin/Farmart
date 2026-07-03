@@ -5,6 +5,8 @@ import Home from "./Home";
 import Dashboard from "./Dashboard";
 import Products from "./Products";
 import Profile from "./Profile";
+import ProductDetail from "./ProductDetail";
+import Tracking from "./Tracking";
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/products" element={<Products />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/product/:id" element={<ProductDetail />} />
+      <Route path="/tracking" element={<Tracking />} />
     </Routes>
   );
 }

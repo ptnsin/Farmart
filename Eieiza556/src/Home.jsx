@@ -72,6 +72,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
             <Link to="/home" className="hover:text-green-800">หน้าแรก</Link>
             <Link to="/products" className="hover:text-green-800">สินค้า</Link>
+            <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
             <a href="#about" className="hover:text-green-800">เกี่ยวกับเรา</a>
           </nav>
 
@@ -85,6 +86,13 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-1">
+            <Link
+              to="/tracking"
+              title="ติดตามพัสดุ"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
+              <Truck className="w-5 h-5" />
+            </Link>
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Bell className="w-5 h-5" />
             </button>
@@ -295,7 +303,7 @@ export default function Home() {
             <div>
               <p className="font-semibold text-gray-900 mb-2.5">Shipping</p>
               <ul className="space-y-2 text-gray-500 text-xs">
-                <li><a href="#" className="hover:text-green-700">ติดตามพัสดุ</a></li>
+                <li><Link to="/tracking" className="hover:text-green-700">ติดตามพัสดุ</Link></li>
                 <li><a href="#" className="hover:text-green-700">นโยบายการจัดส่ง</a></li>
               </ul>
             </div>
