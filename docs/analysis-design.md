@@ -17,14 +17,13 @@
 
 ## 1. Use Case Diagram
 
-แสดงความสัมพันธ์ระหว่างผู้ใช้งาน (Actors) ทั้ง 4 กลุ่ม กับฟังก์ชันของระบบ ได้แก่ **ผู้ใช้งานทั่วไป, ลูกค้า, พนักงาน, ผู้จัดการ**
+แสดงความสัมพันธ์ระหว่างผู้ใช้งาน (Actors) ทั้ง 3 กลุ่ม กับฟังก์ชันของระบบ ได้แก่ **ผู้ใช้งานทั่วไป, ลูกค้า, พนักงาน**
 
 ```mermaid
 graph LR
     GuestActor((ผู้ใช้งานทั่วไป))
     CustomerActor((ลูกค้า))
-    StaffActor((พนักงาน))
-    ManagerActor((ผู้จัดการ))
+    EmployeeActor((พนักงาน))
 
     %% ผู้ใช้งานทั่วไป
     GuestActor --> UC_Home[เรียกดูหน้าแรก]
@@ -54,14 +53,14 @@ graph LR
     CustomerActor --> UC_Contact[ติดต่อสอบถาม]
 
     %% พนักงาน
-    StaffActor --> UC_ManageProduct[จัดการสินค้า]
+    EmployeeActor --> UC_ManageProduct[จัดการสินค้า]
     UC_ManageProduct -.include.-> UC_ProductOps["เพิ่ม/ลบ/แก้ไขสินค้า"]
-    StaffActor --> UC_Category[จัดหมวดหมู่สินค้า]
-    StaffActor --> UC_Content[จัดการเนื้อหาสินค้าในเว็บไซต์]
-    StaffActor --> UC_ManageOrder[จัดการคำสั่งซื้อ]
+    EmployeeActor --> UC_Category[จัดหมวดหมู่สินค้า]
+    EmployeeActor --> UC_Content[จัดการเนื้อหาสินค้าในเว็บไซต์]
+    EmployeeActor --> UC_ManageOrder[จัดการคำสั่งซื้อ]
     UC_ManageOrder -.include.-> UC_OrderOps["ตรวจสอบ/ยืนยัน, อัปเดตสถานะ, ยกเลิกคำสั่งซื้อ"]
-    StaffActor --> UC_ManagePay[จัดการการชำระเงิน]
-    StaffActor --> UC_ManageShip[จัดการการจัดส่ง]
+    EmployeeActor --> UC_ManagePay[จัดการการชำระเงิน]
+    EmployeeActor --> UC_ManageShip[จัดการการจัดส่ง]
     UC_ManageOrder -.extend.-> UC_ManageRefund[จัดการคืนเงินเมื่อยกเลิกคำสั่งซื้อ]
 
     %% ผู้จัดการ
@@ -310,7 +309,7 @@ classDiagram
 | **หน้าชำระเงิน (Checkout)** | ที่อยู่จัดส่ง, ช่องทางชำระเงิน, สรุปยอดรวม |
 | **หน้าประวัติคำสั่งซื้อ (Order History)** | รายการคำสั่งซื้อพร้อมสถานะ |
 
-### 5.2 ฝั่งหลังบ้าน (Admin / Staff Dashboard)
+### 5.2 ฝั่งหลังบ้าน (Admin / Employee Dashboard)
 
 | หน้าจอ | องค์ประกอบหลัก |
 |---|---|
