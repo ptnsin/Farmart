@@ -11,121 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-
-const CATEGORIES = [
-  { key: "seeds", label: "เมล็ดพันธุ์ (Seeds)" },
-  { key: "organic", label: "ปุ๋ยอินทรีย์ (Organic)" },
-  { key: "tools", label: "เครื่องมือเกษตร (Tools)" },
-];
-
-const ORIGINS = ["เชียงใหม่", "ภาคเหนือ", "น่าน"];
-
-const PRODUCTS = [
-  {
-    id: 1,
-    name: "เมล็ดพันธุ์ผักสลัดออร์แกนิก",
-    category: "seeds",
-    tag: "PREMIUM SEEDS",
-    badge: { label: "ขายดีที่สุด", tone: "green" },
-    price: 250,
-    oldPrice: 350,
-    origin: "เชียงใหม่",
-    rating: "4.9 (210)",
-    image:
-      "https://images.unsplash.com/photo-1508747703725-719777637510?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    name: "ปุ๋ยน้ำหมักจุลินทรีย์เข้มข้น",
-    category: "organic",
-    tag: "FERTILIZERS",
-    badge: { label: "Organic Certified", tone: "outline" },
-    price: 490,
-    origin: "ภาคเหนือ",
-    rating: "4.8 (96)",
-    image:
-      "https://images.unsplash.com/photo-1620200423727-8127f75d7f53?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    name: "ชุดเสียมสแตนเลสด้ามไม้โอ๊ค",
-    category: "tools",
-    tag: "PREMIUM TOOLS",
-    badge: { label: "Best Seller", tone: "orange" },
-    price: 1290,
-    origin: "น่าน",
-    rating: "4.9 (58)",
-    image:
-      "https://images.unsplash.com/photo-1617576683096-00fc8eecb3af?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 4,
-    name: "ดินผสมอินทรียวัตถุ (50L)",
-    category: "organic",
-    tag: "SOIL & SUBSTRATES",
-    price: 180,
-    origin: "เชียงใหม่",
-    rating: "4.7 (140)",
-    image:
-      "https://images.unsplash.com/photo-1585123334904-845d60e97b29?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 5,
-    name: "เครื่องตั้งเวลาหยดน้ำพลังงานแสงอาทิตย์",
-    category: "tools",
-    tag: "IRRIGATION",
-    badge: { label: "Smart Farming", tone: "green" },
-    price: 2450,
-    origin: "ภาคเหนือ",
-    rating: "4.8 (44)",
-    image:
-      "https://images.unsplash.com/photo-1625246335525-79f3f77bad0f?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 6,
-    name: "เมล็ดพันธุ์ไมโครกรีนรวม",
-    category: "seeds",
-    tag: "ORGANIC SEEDS",
-    price: 120,
-    origin: "น่าน",
-    rating: "4.9 (302)",
-    image:
-      "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 7,
-    name: "เมล็ดพันธุ์แตงกวาญี่ปุ่น",
-    category: "seeds",
-    tag: "SEEDS",
-    price: 95,
-    origin: "เชียงใหม่",
-    rating: "4.6 (77)",
-    image:
-      "https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 8,
-    name: "ปุ๋ยหมักมูลไส้เดือน (10 กก.)",
-    category: "organic",
-    tag: "FERTILIZERS",
-    price: 320,
-    origin: "ภาคเหนือ",
-    rating: "4.8 (63)",
-    image:
-      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    id: 9,
-    name: "กรรไกรตัดกิ่งอเนกประสงค์",
-    category: "tools",
-    tag: "TOOLS",
-    price: 450,
-    origin: "น่าน",
-    rating: "4.7 (91)",
-    image:
-      "https://images.unsplash.com/photo-1617396900799-f4ec2b43c7ae?q=80&w=600&auto=format&fit=crop",
-  },
-];
+import { PRODUCTS, CATEGORIES, ORIGINS } from "./productsData";
 
 const PAGE_SIZE = 6;
 
@@ -323,9 +209,10 @@ export default function Products() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {pageItems.map((p) => (
-                <div
+                <Link
+                  to={`/products/${p.id}`}
                   key={p.id}
-                  className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
+                  className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow group block"
                 >
                   <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
                     <img
@@ -334,7 +221,10 @@ export default function Products() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <Badge badge={p.badge} />
-                    <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-gray-500 hover:text-red-500 shadow-sm">
+                    <button
+                      onClick={(e) => e.preventDefault()}
+                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-gray-500 hover:text-red-500 shadow-sm"
+                    >
                       <Heart className="w-4 h-4" />
                     </button>
                   </div>
@@ -357,10 +247,10 @@ export default function Products() {
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      {p.rating}
+                      {p.rating} ({p.ratingCount})
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
