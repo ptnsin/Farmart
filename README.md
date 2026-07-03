@@ -1,4 +1,4 @@
-# 🌾 Farmart - Online Agricultural Equipment Store System
+#  Farmart - Online Agricultural Equipment Store System
 
 ระบบจัดการร้านค้าจำหน่ายอุปกรณ์การเกษตร (Online Agricultural Equipment Store System)
 
