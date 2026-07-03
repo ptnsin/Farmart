@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   LayoutDashboard,
   Search,
@@ -11,6 +12,8 @@ import {
   ArrowDownRight,
   MoreVertical,
   ExternalLink,
+  LogOut,
+  Store,
 } from "lucide-react";
 
 const stats = [
@@ -83,21 +86,45 @@ const products = [
 ];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [range, setRange] = useState("รายวัน");
+  const [user, setUser] = useState(null);
   const maxValue = Math.max(...chartData.map((d) => d.value));
+
+  useEffect(() => {
+    const isAuthed = localStorage.getItem("agriharvest_auth");
+    if (!isAuthed) {
+      navigate("/");
+      return;
+    }
+    const saved = localStorage.getItem("agriharvest_user");
+    if (saved) {
+      try {
+        setUser(JSON.parse(saved));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("agriharvest_auth");
+    localStorage.removeItem("agriharvest_user");
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen w-full flex bg-gray-50 text-gray-900">
       {/* Sidebar */}
       <aside className="hidden md:flex w-56 shrink-0 flex-col border-r border-gray-200 bg-white">
-        <div className="px-6 py-6 flex items-center gap-2">
+        <Link to="/home" className="px-6 py-6 flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center text-white text-sm font-bold">
             A
           </div>
           <span className="font-bold text-gray-900">employee</span>
-        </div>
+        </Link>
 
-        <nav className="flex-1 px-3">
+        <nav className="flex-1 px-3 space-y-1">
           <a
             href="#"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-green-50 text-green-800 font-semibold text-sm"
@@ -105,6 +132,13 @@ export default function Dashboard() {
             <LayoutDashboard className="w-4 h-4" />
             Dashboard
           </a>
+          <Link
+            to="/home"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-500 hover:bg-gray-50 text-sm"
+          >
+            <Store className="w-4 h-4" />
+            หน้าร้านค้า
+          </Link>
         </nav>
 
         <div className="px-3 pb-6 space-y-1 border-t border-gray-100 pt-4">
@@ -119,11 +153,20 @@ export default function Dashboard() {
             <div className="w-8 h-8 rounded-full bg-green-800 flex items-center justify-center text-white text-xs font-bold">
               ST
             </div>
-            <div className="leading-tight">
-              <p className="text-sm font-semibold text-gray-800">Staff Member</p>
+            <div className="leading-tight min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {user?.email || "Staff Member"}
+              </p>
               <p className="text-[11px] text-gray-400">ENTERPRISE HUB</p>
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-500 hover:bg-gray-50 text-sm w-full"
+          >
+            <LogOut className="w-4 h-4" />
+            ออกจากระบบ
+          </button>
         </div>
       </aside>
 
