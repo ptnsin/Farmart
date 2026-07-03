@@ -92,7 +92,7 @@ export default function Home() {
               <ShoppingCart className="w-5 h-5" />
             </button>
             <Link
-              to="/dashboard"
+              to="/profile"
               className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
             >
               <UserCircle2 className="w-6 h-6" />
