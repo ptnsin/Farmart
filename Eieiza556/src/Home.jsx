@@ -9,32 +9,45 @@ import {
   ShieldCheck,
   BadgeCheck,
   Star,
+  Plus,
 } from "lucide-react";
 
 const featured = [
   {
+    id: "mixed-seeds",
     name: "เมล็ดพันธุ์ผสม",
-    price: "฿85.00",
+    price: 85,
+    priceLabel: "฿85.00",
     rating: "4.8 (120)",
     emoji: "🌾",
+    subtitle: "แหล่งที่มา: เชียงใหม่, ประเทศไทย",
   },
   {
+    id: "seedling-kit",
     name: "ชุดปลูกกล้าไม้ระดับมืออาชีพ",
-    price: "฿150.00",
+    price: 150,
+    priceLabel: "฿150.00",
     rating: "4.9 (80)",
     emoji: "🌱",
+    subtitle: "แหล่งที่มา: เชียงราย, ประเทศไทย",
   },
   {
+    id: "organic-fertilizer",
     name: "ปุ๋ยอินทรีย์ (5 กก.)",
-    price: "฿1,250.00",
+    price: 1250,
+    priceLabel: "฿1,250.00",
     rating: "4.7 (65)",
     emoji: "🧴",
+    subtitle: "แหล่งที่มา: สุพรรณบุรี, ประเทศไทย",
   },
   {
+    id: "fresh-veg-set-2",
     name: "ผักสดจากไร่ ชุดที่ 2",
-    price: "฿65.00",
+    price: 65,
+    priceLabel: "฿65.00",
     rating: "4.9 (210)",
     emoji: "🫑",
+    subtitle: "แหล่งที่มา: นครปฐม, ประเทศไทย",
   },
 ];
 
@@ -57,6 +70,18 @@ const perks = [
 ];
 
 export default function Home() {
+  const { addItem, itemCount } = useCart();
+
+  function handleAddToCart(product) {
+    addItem({
+      id: product.id,
+      name: product.name,
+      subtitle: product.subtitle,
+      price: product.price,
+      emoji: product.emoji,
+    });
+  }
+
   return (
     <div className="min-h-screen w-full bg-white text-gray-900">
       {/* Top nav */}
@@ -96,9 +121,18 @@ export default function Home() {
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Bell className="w-5 h-5" />
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
+            <Link
+              to="/cart"
+              title="รถเข็นของคุณ"
+              className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
               <ShoppingCart className="w-5 h-5" />
-            </button>
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-green-700 text-white text-[10px] font-bold flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
             <Link
               to="/profile"
               className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
@@ -187,16 +221,23 @@ export default function Home() {
           {featured.map((p) => (
             <div
               key={p.name}
-              className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+              className="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
             >
-              <div className="aspect-square bg-gray-50 flex items-center justify-center text-5xl">
+              <div className="relative aspect-square bg-gray-50 flex items-center justify-center text-5xl">
                 {p.emoji}
+                <button
+                  onClick={() => handleAddToCart(p)}
+                  title="เพิ่มลงตะกร้า"
+                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-green-800 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-green-700"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
               </div>
               <div className="p-3">
                 <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2 mb-1">
                   {p.name}
                 </p>
-                <p className="text-sm font-bold text-gray-900">{p.price}</p>
+                <p className="text-sm font-bold text-gray-900">{p.priceLabel}</p>
                 <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   {p.rating}
