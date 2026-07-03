@@ -70,8 +70,8 @@ export default function Home() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
-            <a href="#" className="hover:text-green-800">หน้าแรก</a>
-            <a href="#products" className="text-green-800 font-semibold">สินค้า</a>
+            <Link to="/home" className="hover:text-green-800">หน้าแรก</Link>
+            <Link to="/products" className="hover:text-green-800">สินค้า</Link>
             <a href="#about" className="hover:text-green-800">เกี่ยวกับเรา</a>
           </nav>
 
@@ -121,12 +121,12 @@ export default function Home() {
             อุปกรณ์ และผลผลิตคุณภาพสูงได้ในที่เดียว
           </p>
           <div className="flex items-center gap-3">
-            <a
-              href="#products"
+            <Link
+              to="/products"
               className="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
             >
               เลือกซื้อสินค้า
-            </a>
+            </Link>
             <button className="bg-white/10 hover:bg-white/20 text-white text-sm font-semibold px-5 py-2.5 rounded-lg border border-white/30 transition-colors">
               เรียนรู้เพิ่มเติม
             </button>
@@ -170,9 +170,9 @@ export default function Home() {
             <h2 className="text-lg font-bold text-gray-900">สินค้าขายดี</h2>
             <p className="text-sm text-gray-500 mt-1">สินค้าที่ลูกค้าเลือกซื้อมากที่สุดในเดือนนี้</p>
           </div>
-          <a href="#" className="text-sm font-semibold text-green-700 hover:underline">
+          <Link to="/products" className="text-sm font-semibold text-green-700 hover:underline">
             ดูทั้งหมด
-          </a>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
