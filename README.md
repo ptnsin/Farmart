@@ -167,14 +167,14 @@ graph TD
    ```bash
    cd frontend
    npm install
-   npm start
+   npm run dev
    ```
 
 3. ติดตั้ง Dependencies ฝั่ง Backend
    ```bash
    cd backend
    npm install
-   npm run dev
+   npm run start
    ```
 
 4. เปิดเบราว์เซอร์ไปที่ `http://localhost:3000`
