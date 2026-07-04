@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import AgriHarvestLogin from "./AgriHarvestLogin";
+// Customer
 import Register from "./Register";
 import Home from "./Home";
 import Dashboard from "./Dashboard";
@@ -9,10 +10,17 @@ import ProductDetail from "./ProductDetail";
 import Tracking from "./Tracking";
 import Cart from "./Cart";
 
+// Admin
+import AdminUsers from "./AdminUsers";
+import AdminOrders from "./AdminOrders";
+import AdminInventory from "./AdminInventory";
+import AdminProductNew from "./AdminProductNew";
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<AgriHarvestLogin />} />
+      {/* Customer Routes */}
       <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
@@ -21,6 +29,11 @@ function App() {
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/tracking" element={<Tracking />} />
       <Route path="/cart" element={<Cart />} />
+      {/* Admin Routes */}
+      <Route path="/admin/users" element={<AdminUsers />} />
+      <Route path="/admin/orders" element={<AdminOrders />} />
+      <Route path="/admin/inventory" element={<AdminInventory />} />
+      <Route path="/admin/inventory/new" element={<AdminProductNew />} />
     </Routes>
   );
 }
