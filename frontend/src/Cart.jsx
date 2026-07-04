@@ -208,7 +208,7 @@ export default function Cart() {
 
               <button
                 disabled={items.length === 0}
-                onClick={() => navigate("/tracking")}
+                onClick={() => navigate("/checkout")}
                 className="w-full flex items-center justify-center gap-2 bg-green-800 hover:bg-green-900 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold py-3 rounded-lg transition-colors"
               >
                 ดำเนินการชำระเงิน
