@@ -103,6 +103,7 @@ export default function ProductDetail() {
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
             <Link to="/home" className="hover:text-green-800">แนะนำ</Link>
             <Link to="/products" className="text-green-800 font-semibold">ผลิตภัณฑ์</Link>
+            <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
             <a href="#" className="hover:text-green-800">อุปกรณ์ครบชุด</a>
           </nav>
 
@@ -134,7 +135,7 @@ export default function ProductDetail() {
               )}
             </Link>
             <Link
-              to="/dashboard"
+              to="/profile"
               className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
             >
               <UserCircle2 className="w-6 h-6" />

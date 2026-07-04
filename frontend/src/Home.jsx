@@ -99,6 +99,7 @@ export default function Home() {
             <Link to="/home" className="hover:text-green-800">หน้าแรก</Link>
             <Link to="/products" className="hover:text-green-800">สินค้า</Link>
             <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
+            <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
             <a href="#about" className="hover:text-green-800">เกี่ยวกับเรา</a>
           </nav>
 

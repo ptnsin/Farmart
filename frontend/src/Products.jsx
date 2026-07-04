@@ -105,6 +105,9 @@ export default function Products() {
             <Link to="/products" className="text-green-800 font-semibold">
               ผลิตภัณฑ์
             </Link>
+            <Link to="/orders" className="hover:text-green-800">
+              คำสั่งซื้อ
+            </Link>
             <a href="#" className="hover:text-green-800">
               อุปกรณ์ครบชุด
             </a>

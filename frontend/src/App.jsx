@@ -9,6 +9,7 @@ import Profile from "./Profile";
 import ProductDetail from "./ProductDetail";
 import Tracking from "./Tracking";
 import Cart from "./Cart";
+import Order from "./Order";
 
 // Admin
 import AdminUsers from "./admin/AdminUsers";
@@ -30,6 +31,7 @@ function App() {
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/tracking" element={<Tracking />} />
       <Route path="/cart" element={<Cart />} />
+      <Route path="/orders" element={<Order />} />
       {/* Admin Routes */}
       <Route path="/admin/users" element={<AdminUsers />} />
       <Route path="/admin/orders" element={<AdminOrders />} />
