@@ -11,10 +11,11 @@ import Tracking from "./Tracking";
 import Cart from "./Cart";
 
 // Admin
-import AdminUsers from "./AdminUsers";
-import AdminOrders from "./AdminOrders";
-import AdminInventory from "./AdminInventory";
-import AdminProductNew from "./AdminProductNew";
+import AdminUsers from "./admin/AdminUsers";
+import AdminOrders from "./admin/AdminOrders";
+import AdminInventory from "./admin/AdminInventory";
+import AdminProductNew from "./admin/AdminProductNew";
+import AdminShipping from "./admin/AdminShipping";
 
 function App() {
   return (
@@ -34,6 +35,8 @@ function App() {
       <Route path="/admin/orders" element={<AdminOrders />} />
       <Route path="/admin/inventory" element={<AdminInventory />} />
       <Route path="/admin/inventory/new" element={<AdminProductNew />} />
+      <Route path="/admin/shipping" element={<AdminShipping />} />
+
     </Routes>
   );
 }
