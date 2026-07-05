@@ -1,319 +1,362 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Search,
-  HelpCircle,
-  Plus,
-  TrendingUp,
-  AlertTriangle,
-  DollarSign,
   RefreshCw,
+  AlertTriangle,
+  Camera,
+  RotateCw,
+  Plus,
+  Filter,
   ChevronLeft,
   ChevronRight,
-  MoreHorizontal,
+  ChevronDown,
+  Eye,
+  Pencil,
+  MoreVertical,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
 
-// Swap this for real data from productsData.js / an API call.
 const PRODUCTS = [
   {
-    id: "HTS-2024-01",
+    id: 1,
     name: "เมล็ดมะเขือเทศ Heirloom",
-    category: "เมล็ดพันธุ์",
-    price: "$12.50",
-    stock: 450,
-    stockPct: 75,
-    tone: "good",
-    supplier: "เกษตรอโยธยา, สุพรรณบุรี",
-    emoji: "🍅",
+    category: "ผักอินทรีย์",
+    sku: "HTS-2024-01",
+    price: 12.5,
+    stockUnits: 450,
+    stockPercent: 75,
+    stockLevel: "healthy",
+    farmer: "แสงฟาร์มอินทรีย์, สวยรัตน์ฟาร์ม",
+    image: "https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=64&h=64&fit=crop",
   },
   {
-    id: "PHT-009",
-    name: "ขวดพรวนดินอเนกประสงค์",
-    category: "อุปกรณ์",
-    price: "$34.99",
-    stock: 12,
-    stockPct: 8,
-    tone: "low",
-    supplier: "เอฟเฟิร์ต, เชียงใหม่",
-    emoji: "🪴",
+    id: 2,
+    name: "ข้าวหอมมะลิ ปทุมทาน",
+    category: "ข้าว",
+    sku: "PHT-009",
+    price: 34.99,
+    stockUnits: 12,
+    stockPercent: 8,
+    stockLevel: "low",
+    farmer: "เพชรบัตร, สวนอาม่าตร",
+    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=64&h=64&fit=crop",
   },
   {
-    id: "LSF-221",
-    name: "สารอาหารพืชจากสาหร่ายทะเล",
-    category: "สารอาหาร",
-    price: "$18.25",
-    stock: 2100,
-    stockPct: 92,
-    tone: "good",
-    supplier: "บลูปอนด์ (ภาคใต้)",
-    emoji: "🧪",
+    id: 3,
+    name: "สาระอาหารเกียจากสมาร์ทฟาร์ม",
+    category: "สมุนไพร",
+    sku: "LSF-221",
+    price: 18.25,
+    stockUnits: 2100,
+    stockPercent: 92,
+    stockLevel: "healthy",
+    farmer: "แสงรวี (ภาคเหนือ)",
+    image: "https://images.unsplash.com/photo-1515586838455-8f8f940d6853?w=64&h=64&fit=crop",
   },
 ];
 
 const STATS = [
   {
-    icon: TrendingUp,
-    tone: "emerald",
-    label: "สินค้าที่เพิ่ม",
+    key: "total",
+    label: "สินค้าทั้งหมด",
     value: "1,248",
-    delta: "+4.5%",
+    note: "+4.5%",
+    icon: RefreshCw,
+    iconBg: "bg-emerald-50",
+    iconColor: "text-emerald-600",
+    noteColor: "text-emerald-600",
   },
   {
-    icon: AlertTriangle,
-    tone: "amber",
+    key: "low",
     label: "สินค้าใกล้หมด",
     value: "42",
-    delta: "12 รายการวิกฤต",
+    note: "12 รายการวิกฤต",
+    icon: AlertTriangle,
+    iconBg: "bg-amber-50",
+    iconColor: "text-amber-600",
+    noteColor: "text-rose-500",
   },
   {
-    icon: DollarSign,
-    tone: "indigo",
-    label: "มูลค่าสินค้ารวม",
+    key: "value",
+    label: "มูลค่าสินค้าคงคลัง",
     value: "$248.5k",
-    delta: null,
+    note: "",
+    icon: Camera,
+    iconBg: "bg-slate-100",
+    iconColor: "text-slate-500",
+    noteColor: "text-slate-400",
   },
   {
-    icon: RefreshCw,
-    tone: "slate",
-    label: "สถานะการซิงค์",
-    value: "ทุกโหมดปกติ",
-    delta: null,
+    key: "status",
+    label: "สถานะการสั่งซื้อ",
+    value: "ทุกอย่างปกติ",
+    note: "",
+    icon: RotateCw,
+    iconBg: "bg-slate-100",
+    iconColor: "text-slate-500",
+    noteColor: "text-slate-400",
   },
 ];
 
-const TONE_CLASSES = {
-  emerald: "bg-emerald-50 text-emerald-700",
-  amber: "bg-amber-50 text-amber-700",
-  indigo: "bg-indigo-50 text-indigo-700",
-  slate: "bg-slate-100 text-slate-600",
-};
+const TOTAL_PAGES = 125;
+const TOTAL_RECORDS = 1248;
 
-const DELTA_CLASSES = {
-  emerald: "text-emerald-600",
-  amber: "text-red-500",
-  indigo: "text-slate-500",
-  slate: "text-slate-500",
-};
-
-function StatCard({ icon: Icon, tone, label, value, delta }) {
+function StatCard({ label, value, note, noteColor, icon: Icon, iconBg, iconColor }) {
   return (
-    <div className="relative flex items-start gap-3 rounded-lg border border-slate-100 bg-white p-4 shadow-sm">
-      <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${TONE_CLASSES[tone]}`}>
-        <Icon size={16} />
+    <div className="flex items-center gap-4 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+      <div className={`flex h-11 w-11 items-center justify-center rounded-full ${iconBg} ${iconColor}`}>
+        <Icon size={20} />
       </div>
       <div>
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-lg font-bold text-slate-800">{value}</p>
+        <p className="text-xs font-medium tracking-wide text-slate-400">{label}</p>
+        <p className={`font-semibold text-slate-800 ${value === "ทุกอย่างปกติ" ? "text-base" : "text-2xl"}`}>
+          {value}
+        </p>
+        {note && <p className={`text-xs ${noteColor}`}>{note}</p>}
       </div>
-      {delta && (
-        <span className={`absolute right-4 top-4 text-xs font-semibold ${DELTA_CLASSES[tone]}`}>
-          {delta}
-        </span>
-      )}
     </div>
   );
 }
 
 export default function AdminInventory() {
-  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState([]);
+  const [page, setPage] = useState(1);
 
-  const filteredProducts = useMemo(() => {
-    if (!query.trim()) return PRODUCTS;
-    const q = query.trim().toLowerCase();
-    return PRODUCTS.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)
-    );
-  }, [query]);
+  const allSelected = selected.length === PRODUCTS.length;
+
+  const toggleAll = () => {
+    setSelected(allSelected ? [] : PRODUCTS.map((p) => p.id));
+  };
+
+  const toggleOne = (id) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       <AdminSidebar />
 
-      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-8">
-      {/* Top bar */}
-      <div className="mb-8 flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search
-            size={18}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            type="text"
-            placeholder="ค้นหาเลขสินค้า..."
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-          />
-        </div>
-        <button
-          type="button"
-          aria-label="ช่วยเหลือ"
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
-        >
-          <HelpCircle size={18} />
-        </button>
-        <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
-          <img
-            src="https://i.pravatar.cc/64?img=12"
-            alt=""
-            className="h-8 w-8 rounded-full object-cover"
-          />
-          <div className="leading-tight">
-            <p className="text-sm font-medium text-slate-800">Admin</p>
-            <p className="text-xs text-slate-400">Logistics Manager</p>
+      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
+        {/* Top bar */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div className="relative w-80 max-w-full">
+            <input
+              type="text"
+              placeholder="ค้นหาสินค้า..."
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-4 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+            />
+          </div>
+          <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
+            <img
+              src="https://i.pravatar.cc/64?img=12"
+              alt=""
+              className="h-8 w-8 rounded-full object-cover"
+            />
+            <div className="leading-tight">
+              <p className="text-sm font-medium text-slate-800">Admin</p>
+              <p className="text-xs text-slate-400">Logistics Manager</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <p className="mb-2 text-xs text-slate-500">แดชบอร์ด / คลังสินค้า</p>
+        {/* Breadcrumb */}
+        <p className="text-xs text-slate-400">แดชบอร์ด &gt; คลังสินค้า</p>
 
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800">รายการสินค้าทั้งหมด</h1>
-          <p className="mt-1 max-w-xl text-sm text-slate-500">
-            ดูภาพรวมสต็อกสินค้าเกษตร ตรวจสอบคุณภาพ เครื่องมือ และปุ๋ย อัปเดตตารางราคา
-            ติดตามระดับสต็อก และจัดระเบียบหมวดหมู่สินค้า
-          </p>
-        </div>
-        <Link
-          to="/admin/inventory/new"
-          className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-        >
-          <Plus size={16} />
-          เพิ่มสินค้าใหม่
-        </Link>
-      </div>
-
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {STATS.map((s) => (
-          <StatCard key={s.label} {...s} />
-        ))}
-      </div>
-
-      <div className="overflow-hidden rounded-lg border border-slate-100 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-          <button className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
-            จัดการพร้อมกัน
-          </button>
-          <p className="text-xs text-slate-500">
-            แสดง <span className="font-semibold text-slate-700">1-{filteredProducts.length}</span> จาก 1,248 รายการ
-          </p>
+        {/* Heading */}
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-800">รายการสินค้าทั้งหมด</h1>
+            <p className="mt-1 max-w-2xl text-sm text-slate-400">
+              จัดการเกษตรกิจติดตามสินค้าคงคลัง เครื่องมือ และปุ๋ย ปรับปรุงราคา ติดตามระดับการเก็บ
+              และจัดระเบียบหมวดหมู่ของคุณ
+            </p>
+          </div>
+          <Link
+            to="/admin/inventory/new"
+            className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
+          >
+            <Plus size={16} />
+            เพิ่มสินค้าใหม่
+          </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        {/* Stats */}
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
+          {STATS.map((stat) => (
+            <StatCard key={stat.key} {...stat} />
+          ))}
+        </div>
+
+        {/* Toolbar */}
+        <div className="mt-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              จัดการพร้อมกัน
+            </button>
+            <button
+              type="button"
+              aria-label="กรอง"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+            >
+              <Filter size={14} />
+            </button>
+          </div>
+          <p className="text-sm text-slate-400">
+            แสดง 1 - {PRODUCTS.length} จาก {TOTAL_RECORDS.toLocaleString()} รายการ
+          </p>
+        </div>
+
+        {/* Table */}
+        <div className="mt-4 overflow-hidden rounded-xl border border-slate-100 bg-white">
+          <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
-                <th className="w-9 px-5 py-3">
-                  <input type="checkbox" className="rounded border-slate-300" />
+              <tr className="border-b border-slate-100 text-xs text-slate-400">
+                <th className="w-10 px-6 py-3">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    className="h-4 w-4 rounded border-slate-300 accent-emerald-600"
+                  />
                 </th>
-                <th className="px-3 py-3">สินค้า</th>
-                <th className="px-3 py-3">หมวดหมู่</th>
-                <th className="px-3 py-3">ราคา</th>
-                <th className="px-3 py-3">ระดับสต็อก</th>
-                <th className="px-3 py-3">เเหล่งที่มา</th>
-                <th className="px-3 py-3" />
+                <th className="px-3 py-3 font-medium">สินค้า</th>
+                <th className="px-6 py-3 font-medium">หมวดหมู่</th>
+                <th className="px-6 py-3 font-medium">ราคา</th>
+                <th className="px-6 py-3 font-medium">ระดับสต็อก</th>
+                <th className="px-6 py-3 font-medium">เจ้าของฟาร์ม</th>
+                <th className="px-6 py-3 text-right font-medium">จัดการ</th>
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((p) => (
-                <tr key={p.id} className="border-b border-slate-50 last:border-0">
-                  <td className="px-5 py-3">
-                    <input type="checkbox" className="rounded border-slate-300" />
+              {PRODUCTS.map((product) => (
+                <tr key={product.id} className="border-b border-slate-50 last:border-0">
+                  <td className="px-6 py-3.5">
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(product.id)}
+                      onChange={() => toggleOne(product.id)}
+                      className="h-4 w-4 rounded border-slate-300 accent-emerald-600"
+                    />
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-lg">
-                        {p.emoji}
-                      </div>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="h-10 w-10 rounded-lg object-cover"
+                      />
                       <div>
-                        <Link
-                          to={`/admin/inventory/${p.id}`}
-                          className="font-semibold text-slate-800 hover:text-emerald-700"
-                        >
-                          {p.name}
-                        </Link>
-                        <p className="text-xs text-slate-400">SKU: {p.id}</p>
+                        <p className="font-medium text-slate-800">{product.name}</p>
+                        <p className="text-xs text-slate-400">SKU: {product.sku}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-slate-600">{p.category}</td>
-                  <td className="px-3 py-3 font-semibold text-slate-800">{p.price}</td>
-                  <td className="px-3 py-3">
-                    <div className="flex w-32 flex-col gap-1">
-                      <span className="text-xs text-slate-500">
-                        {p.stock.toLocaleString()} หน่วย
-                      </span>
-                      <div className="h-1.5 rounded-full bg-slate-100">
-                        <div
-                          className={`h-full rounded-full ${
-                            p.tone === "good" ? "bg-emerald-600" : "bg-red-500"
-                          }`}
-                          style={{ width: `${p.stockPct}%` }}
-                        />
-                      </div>
-                      <span
-                        className={`text-xs font-bold ${
-                          p.tone === "good" ? "text-emerald-600" : "text-red-500"
+                  <td className="px-6 py-3.5 text-slate-600">{product.category}</td>
+                  <td className="px-6 py-3.5 font-medium text-slate-800">
+                    ${product.price.toFixed(2)}
+                  </td>
+                  <td className="px-6 py-3.5">
+                    <div className="w-32">
+                      <p
+                        className={`text-xs font-medium ${
+                          product.stockLevel === "low" ? "text-rose-500" : "text-emerald-600"
                         }`}
                       >
-                        {p.stockPct}%
-                      </span>
+                        {product.stockUnits.toLocaleString()} หน่วย {product.stockPercent}%
+                      </p>
+                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className={`h-full rounded-full ${
+                            product.stockLevel === "low" ? "bg-rose-500" : "bg-emerald-500"
+                          }`}
+                          style={{ width: `${product.stockPercent}%` }}
+                        />
+                      </div>
                     </div>
                   </td>
-                  <td className="px-3 py-3">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
-                      🚚 {p.supplier}
+                  <td className="px-6 py-3.5">
+                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
+                      {product.farmer}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-right text-slate-300">
-                    <button className="hover:text-slate-500">
-                      <MoreHorizontal size={16} />
-                    </button>
+                  <td className="px-6 py-3.5">
+                    <div className="flex items-center justify-end gap-3 text-slate-400">
+                      <Link
+                        to={`/admin/inventory/${product.id}`}
+                        aria-label="ดูข้อมูล"
+                        className="hover:text-slate-600"
+                      >
+                        <Eye size={16} />
+                      </Link>
+                      <button type="button" aria-label="แก้ไข" className="hover:text-slate-600">
+                        <Pencil size={16} />
+                      </button>
+                      <button type="button" aria-label="เพิ่มเติม" className="hover:text-slate-600">
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
-              {filteredProducts.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
-                    ไม่พบสินค้าที่ตรงกับคำค้นหา
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 px-5 py-3">
-          <button className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50">
-            <ChevronLeft size={16} />
-          </button>
-          <button className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-700 text-sm font-bold text-white">
-            1
-          </button>
-          <button className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">
-            2
-          </button>
-          <button className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">
-            3
-          </button>
-          <span className="px-1 text-xs text-slate-400">...</span>
-          <button className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">
-            125
-          </button>
-          <button className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50">
-            <ChevronRight size={16} />
-          </button>
-          <div className="ml-auto flex items-center gap-2 text-xs text-slate-500">
-            ตรวจดูหน้า:
-            <input
-              defaultValue={10}
-              className="w-12 rounded-md border border-slate-200 px-2 py-1 text-center"
-            />
+          {/* Pagination */}
+          <div className="flex items-center justify-between border-t border-slate-100 px-6 py-3 text-sm">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-40"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              {[1, 2, 3].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setPage(n)}
+                  className={`h-8 w-8 rounded-lg text-sm ${
+                    page === n
+                      ? "bg-emerald-700 font-medium text-white"
+                      : "text-slate-500 hover:bg-slate-50"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+              <span className="px-1 text-slate-400">...</span>
+              <button
+                type="button"
+                onClick={() => setPage(TOTAL_PAGES)}
+                className="h-8 w-8 rounded-lg text-sm text-slate-500 hover:bg-slate-50"
+              >
+                {TOTAL_PAGES}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(TOTAL_PAGES, p + 1))}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 text-slate-500">
+              แสดงต่อหน้า:
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 font-medium text-slate-700"
+              >
+                10
+                <ChevronDown size={12} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </main>
     </div>
   );

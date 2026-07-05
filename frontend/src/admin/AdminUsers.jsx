@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Search,
   HelpCircle,
@@ -178,10 +179,21 @@ export default function AdminUsers() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-2xl font-semibold text-emerald-800">การจัดการบัญชีผู้ใช้</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            ตรวจสอบและจัดการสิทธิ์การเข้าถึงของผู้ใช้งานในระบบ AgriHarvest
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold text-emerald-800">การจัดการบัญชีผู้ใช้</h1>
+              <p className="mt-1 text-sm text-slate-400">
+                ตรวจสอบและจัดการสิทธิ์การเข้าถึงของผู้ใช้งานในระบบ AgriHarvest
+              </p>
+            </div>
+            <Link
+              to="/admin/users/new"
+              className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
+            >
+              <UserPlus size={16} />
+              เพิ่มบัญชีผู้ใช้
+            </Link>
+          </div>
 
           {/* Stats */}
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">

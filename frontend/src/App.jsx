@@ -14,10 +14,14 @@ import Checkout from "./Checkout";
 
 // Admin
 import AdminUsers from "./admin/AdminUsers";
-import AdminOrders from "./admin/AdminOrders";
+import AdminUserNew from "./admin/AdminUserNew";
+import AdminProductApprovals from "./admin/AdminProductApprovals";
 import AdminInventory from "./admin/AdminInventory";
-import AdminProductNew from "./admin/AdminProductNew";
-import AdminShipping from "./admin/AdminShipping";
+import AdminProductDetail from "./admin/AdminProductDetail";
+import AdminPromotions from "./admin/AdminPromotions";
+import AdminReports from "./admin/AdminReports";
+import AdminSettings from "./admin/AdminSettings";
+import AdminSupport from "./admin/AdminSupport";
 
 function App() {
   return (
@@ -36,11 +40,14 @@ function App() {
       <Route path="/checkout" element={<Checkout />} />
       {/* Admin Routes */}
       <Route path="/admin/users" element={<AdminUsers />} />
-      <Route path="/admin/orders" element={<AdminOrders />} />
+      <Route path="/admin/users/new" element={<AdminUserNew />} />
+      <Route path="/admin/product-approvals" element={<AdminProductApprovals />} />
       <Route path="/admin/inventory" element={<AdminInventory />} />
-      <Route path="/admin/inventory/new" element={<AdminProductNew />} />
-      <Route path="/admin/shipping" element={<AdminShipping />} />
-
+      <Route path="/admin/inventory/:id" element={<AdminProductDetail />} />
+      <Route path="/admin/promotions" element={<AdminPromotions />} />
+      <Route path="/admin/reports" element={<AdminReports />} />
+      <Route path="/admin/settings" element={<AdminSettings />} />
+      <Route path="/admin/support" element={<AdminSupport />} />
     </Routes>
   );
 }

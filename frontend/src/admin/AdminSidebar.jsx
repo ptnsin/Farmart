@@ -1,10 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   Users,
-  ShoppingCart,
+  ClipboardCheck,
   Warehouse,
-  Truck,
-  UserCog,
+  BadgePercent,
+  BarChart3,
   Settings,
   LifeBuoy,
   Leaf,
@@ -12,15 +12,20 @@ import {
 
 const NAV_ITEMS = [
   { key: "users", label: "ผู้ใช้งาน", icon: Users, href: "/admin/users" },
-  { key: "orders", label: "คำสั่งซื้อ", icon: ShoppingCart, href: "/admin/orders" },
-  { key: "inventory", label: "คลังสินค้า", icon: Warehouse, href: "/admin/inventory" },
-  { key: "shipping", label: "การขนส่ง", icon: Truck, href: "/admin/shipping" },
   {
-    key: "account-settings",
-    label: "ตั้งค่าบัญชี",
-    icon: UserCog,
-    href: "/admin/settings-account",
+    key: "product-approvals",
+    label: "อนุมัติสินค้า",
+    icon: ClipboardCheck,
+    href: "/admin/product-approvals",
   },
+  { key: "inventory", label: "คลังสินค้า", icon: Warehouse, href: "/admin/inventory" },
+  {
+    key: "promotions",
+    label: "โปรโมชั่น/ส่วนลด",
+    icon: BadgePercent,
+    href: "/admin/promotions",
+  },
+  { key: "reports", label: "รายงาน/สถิติ", icon: BarChart3, href: "/admin/reports" },
 ];
 
 // Active item is detected automatically from the current URL (via useLocation),
