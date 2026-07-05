@@ -1,7 +1,6 @@
-// EmployeeSupport.jsx — หน้า support
 import { useState } from "react";
-import { IconSupport, IconChevronLeft } from "./EmployeeIcons";
-import "./employee.css";
+import { Search, HelpCircle, LifeBuoy, ChevronDown } from "lucide-react";
+import EmployeeSidebar from "./EmployeeSidebar";
 
 const FAQS = [
   {
@@ -38,76 +37,118 @@ export default function EmployeeSupport() {
   };
 
   return (
-    <>
-      <div className="emp-page-header">
+    <div className="flex h-screen overflow-hidden bg-slate-50">
+      <EmployeeSidebar />
+
+      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
+        {/* Top bar */}
+        <div className="mb-8 flex items-center gap-4">
+          <div className="relative flex-1">
+            <Search
+              size={18}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="text"
+              placeholder="ค้นหาคำถามที่พบบ่อย..."
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+            />
+          </div>
+          <button
+            type="button"
+            aria-label="ช่วยเหลือ"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
+          >
+            <HelpCircle size={18} />
+          </button>
+          <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
+            <img src="https://i.pravatar.cc/64?img=5" alt="" className="h-8 w-8 rounded-full object-cover" />
+            <div className="leading-tight">
+              <p className="text-sm font-medium text-slate-800">พนักงาน</p>
+              <p className="text-xs text-slate-400">Warehouse Staff</p>
+            </div>
+          </div>
+        </div>
+
         <div>
-          <h1 className="emp-page-title">Support</h1>
-          <p className="emp-page-sub">คำถามที่พบบ่อย และช่องทางติดต่อทีมงาน</p>
+          <h1 className="text-2xl font-semibold text-emerald-800">Support</h1>
+          <p className="mt-1 text-sm text-slate-400">คำถามที่พบบ่อย และช่องทางติดต่อทีมงาน</p>
         </div>
-      </div>
 
-      <div className="emp-two-col">
-        <div className="emp-panel">
-          <div className="emp-panel-head">
-            <h2 className="emp-panel-title">คำถามที่พบบ่อย</h2>
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
+            <div className="border-b border-slate-100 px-6 py-4">
+              <h2 className="text-base font-semibold text-slate-800">คำถามที่พบบ่อย</h2>
+            </div>
+            {FAQS.map((item, idx) => (
+              <div key={item.q} className="border-b border-slate-50 last:border-0">
+                <button
+                  type="button"
+                  onClick={() => setOpenIdx(openIdx === idx ? -1 : idx)}
+                  className="flex w-full items-center justify-between px-6 py-4 text-left text-sm font-medium text-slate-800"
+                >
+                  {item.q}
+                  <ChevronDown
+                    size={16}
+                    className={`text-slate-400 transition-transform ${openIdx === idx ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {openIdx === idx && (
+                  <p className="px-6 pb-4 text-sm leading-relaxed text-slate-500">{item.a}</p>
+                )}
+              </div>
+            ))}
           </div>
-          {FAQS.map((item, idx) => (
-            <div className="emp-faq-item" key={item.q}>
-              <button
-                className="emp-faq-q"
-                onClick={() => setOpenIdx(openIdx === idx ? -1 : idx)}
-              >
-                {item.q}
-                <IconChevronLeft
-                  width={14}
-                  height={14}
-                  style={{ transform: openIdx === idx ? "rotate(90deg)" : "rotate(-90deg)", transition: "transform .15s" }}
+
+          <form
+            onSubmit={handleSubmit}
+            className="rounded-xl border border-slate-100 bg-white p-6"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                <LifeBuoy size={20} />
+              </div>
+              <h2 className="text-base font-semibold text-slate-800">ติดต่อทีมงาน</h2>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-600">หัวข้อ</label>
+                <input
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="เช่น ไม่สามารถอนุมัติคำสั่งซื้อได้"
+                  value={form.subject}
+                  onChange={update("subject")}
+                  required
                 />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-600">รายละเอียด</label>
+                <textarea
+                  rows={5}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  placeholder="อธิบายปัญหาที่พบโดยละเอียด"
+                  value={form.message}
+                  onChange={update("message")}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
+              <span className="text-sm text-emerald-600">
+                {sent ? "ส่งคำร้องเรียบร้อยแล้ว ทีมงานจะติดต่อกลับเร็ว ๆ นี้" : ""}
+              </span>
+              <button
+                type="submit"
+                className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
+              >
+                ส่งคำร้อง
               </button>
-              {openIdx === idx && <div className="emp-faq-a">{item.a}</div>}
             </div>
-          ))}
+          </form>
         </div>
-
-        <form className="emp-panel" style={{ padding: 24 }} onSubmit={handleSubmit}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-            <div className="emp-stat-icon" style={{ background: "var(--emp-green-50)", color: "var(--emp-green-700)" }}>
-              <IconSupport width={18} height={18} />
-            </div>
-            <h2 className="emp-panel-title">ติดต่อทีมงาน</h2>
-          </div>
-
-          <div className="emp-form-grid">
-            <div className="emp-field full">
-              <label className="emp-label">หัวข้อ</label>
-              <input
-                className="emp-input"
-                placeholder="เช่น ไม่สามารถอนุมัติคำสั่งซื้อได้"
-                value={form.subject}
-                onChange={update("subject")}
-                required
-              />
-            </div>
-            <div className="emp-field full">
-              <label className="emp-label">รายละเอียด</label>
-              <textarea
-                className="emp-textarea"
-                placeholder="อธิบายปัญหาที่พบโดยละเอียด"
-                value={form.message}
-                onChange={update("message")}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="emp-form-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "var(--emp-green-700)" }}>
-              {sent ? "ส่งคำร้องเรียบร้อยแล้ว ทีมงานจะติดต่อกลับเร็ว ๆ นี้" : ""}
-            </span>
-            <button type="submit" className="emp-btn emp-btn-primary">ส่งคำร้อง</button>
-          </div>
-        </form>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }

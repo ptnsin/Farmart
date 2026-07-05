@@ -1,6 +1,6 @@
-// EmployeeSettings.jsx — หน้าตั้งค่า
 import { useState } from "react";
-import "./employee.css";
+import { Search, HelpCircle } from "lucide-react";
+import EmployeeSidebar from "./EmployeeSidebar";
 
 export default function EmployeeSettings() {
   const [profile, setProfile] = useState({
@@ -26,66 +26,128 @@ export default function EmployeeSettings() {
   };
 
   return (
-    <>
-      <div className="emp-page-header">
+    <div className="flex h-screen overflow-hidden bg-slate-50">
+      <EmployeeSidebar />
+
+      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
+        {/* Top bar */}
+        <div className="mb-8 flex items-center gap-4">
+          <div className="relative flex-1">
+            <Search
+              size={18}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="text"
+              placeholder="ค้นหา..."
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+            />
+          </div>
+          <button
+            type="button"
+            aria-label="ช่วยเหลือ"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
+          >
+            <HelpCircle size={18} />
+          </button>
+          <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
+            <img src="https://i.pravatar.cc/64?img=5" alt="" className="h-8 w-8 rounded-full object-cover" />
+            <div className="leading-tight">
+              <p className="text-sm font-medium text-slate-800">พนักงาน</p>
+              <p className="text-xs text-slate-400">Warehouse Staff</p>
+            </div>
+          </div>
+        </div>
+
         <div>
-          <h1 className="emp-page-title">ตั้งค่า</h1>
-          <p className="emp-page-sub">จัดการข้อมูลบัญชีและการแจ้งเตือนของคุณ</p>
+          <h1 className="text-2xl font-semibold text-emerald-800">ตั้งค่า</h1>
+          <p className="mt-1 text-sm text-slate-400">จัดการข้อมูลบัญชีและการแจ้งเตือนของคุณ</p>
         </div>
-      </div>
 
-      <div className="emp-two-col">
-        <form className="emp-panel" style={{ padding: 24 }} onSubmit={handleSave}>
-          <h2 className="emp-panel-title" style={{ marginBottom: 18 }}>ข้อมูลส่วนตัว</h2>
-          <div className="emp-form-grid">
-            <div className="emp-field full">
-              <label className="emp-label">ชื่อ-นามสกุล</label>
-              <input className="emp-input" value={profile.name} onChange={updateProfile("name")} />
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <form
+            onSubmit={handleSave}
+            className="rounded-xl border border-slate-100 bg-white p-6 lg:col-span-2"
+          >
+            <h2 className="mb-4 text-base font-semibold text-slate-800">ข้อมูลส่วนตัว</h2>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-slate-600">ชื่อ-นามสกุล</label>
+                <input
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  value={profile.name}
+                  onChange={updateProfile("name")}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-600">อีเมล</label>
+                <input
+                  type="email"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  value={profile.email}
+                  onChange={updateProfile("email")}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-600">เบอร์โทรศัพท์</label>
+                <input
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  value={profile.phone}
+                  onChange={updateProfile("phone")}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-600">รหัสผ่านใหม่</label>
+                <input
+                  type="password"
+                  placeholder="เว้นว่างไว้หากไม่ต้องการเปลี่ยน"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-600">ยืนยันรหัสผ่านใหม่</label>
+                <input
+                  type="password"
+                  placeholder="กรอกรหัสผ่านอีกครั้ง"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
             </div>
-            <div className="emp-field">
-              <label className="emp-label">อีเมล</label>
-              <input className="emp-input" type="email" value={profile.email} onChange={updateProfile("email")} />
+
+            <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
+              <span className="text-sm text-emerald-600">{savedMsg}</span>
+              <button
+                type="submit"
+                className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
+              >
+                บันทึกการเปลี่ยนแปลง
+              </button>
             </div>
-            <div className="emp-field">
-              <label className="emp-label">เบอร์โทรศัพท์</label>
-              <input className="emp-input" value={profile.phone} onChange={updateProfile("phone")} />
-            </div>
-            <div className="emp-field">
-              <label className="emp-label">รหัสผ่านใหม่</label>
-              <input className="emp-input" type="password" placeholder="เว้นว่างไว้หากไม่ต้องการเปลี่ยน" />
-            </div>
-            <div className="emp-field">
-              <label className="emp-label">ยืนยันรหัสผ่านใหม่</label>
-              <input className="emp-input" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" />
-            </div>
+          </form>
+
+          <div className="rounded-xl border border-slate-100 bg-white p-6">
+            <h2 className="mb-4 text-base font-semibold text-slate-800">การแจ้งเตือน</h2>
+            {[
+              { key: "newOrder", label: "แจ้งเตือนเมื่อมีคำสั่งซื้อใหม่" },
+              { key: "lowStock", label: "แจ้งเตือนเมื่อสินค้าใกล้หมด" },
+              { key: "shippingUpdate", label: "แจ้งเตือนเมื่อสถานะพัสดุเปลี่ยน" },
+            ].map(({ key, label }) => (
+              <label
+                key={key}
+                className="flex cursor-pointer items-center justify-between border-b border-slate-50 py-3 text-sm text-slate-600 last:border-0"
+              >
+                {label}
+                <input
+                  type="checkbox"
+                  checked={notify[key]}
+                  onChange={() => toggleNotify(key)}
+                  className="h-4 w-4 accent-emerald-600"
+                />
+              </label>
+            ))}
           </div>
-
-          <div className="emp-form-actions" style={{ justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "var(--emp-green-700)" }}>{savedMsg}</span>
-            <button type="submit" className="emp-btn emp-btn-primary">บันทึกการเปลี่ยนแปลง</button>
-          </div>
-        </form>
-
-        <div className="emp-panel" style={{ padding: 24 }}>
-          <h2 className="emp-panel-title" style={{ marginBottom: 18 }}>การแจ้งเตือน</h2>
-          {[
-            { key: "newOrder", label: "แจ้งเตือนเมื่อมีคำสั่งซื้อใหม่" },
-            { key: "lowStock", label: "แจ้งเตือนเมื่อสินค้าใกล้หมด" },
-            { key: "shippingUpdate", label: "แจ้งเตือนเมื่อสถานะพัสดุเปลี่ยน" },
-          ].map(({ key, label }) => (
-            <label
-              key={key}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "12px 0", borderBottom: "1px solid var(--emp-gray-100)", fontSize: 13.5, cursor: "pointer",
-              }}
-            >
-              {label}
-              <input type="checkbox" checked={notify[key]} onChange={() => toggleNotify(key)} />
-            </label>
-          ))}
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
