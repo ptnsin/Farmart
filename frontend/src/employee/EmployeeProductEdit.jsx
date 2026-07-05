@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Search, HelpCircle, ArrowLeft, UploadCloud, Trash2 } from "lucide-react";
+import { Search, Bell, ArrowLeft, UploadCloud, Trash2 } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
 import { INITIAL_PRODUCTS } from "./EmployeeWarehouse";
 
@@ -57,10 +57,10 @@ export default function EmployeeProductEdit() {
           </div>
           <button
             type="button"
-            aria-label="ช่วยเหลือ"
+            aria-label="แจ้งเตือน"
             className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
           >
-            <HelpCircle size={18} />
+            <Bell size={18} />
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img src="https://i.pravatar.cc/64?img=5" alt="" className="h-8 w-8 rounded-full object-cover" />
