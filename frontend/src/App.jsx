@@ -49,13 +49,13 @@ function App() {
       <Route path="/checkout" element={<Checkout />} />
 
       {/* Employee Routes */}
-<Route path="/employee/orders" element={<EmployeeOrders />} />
-<Route path="/employee/warehouse" element={<EmployeeWarehouse />} />
-<Route path="/employee/warehouse/add" element={<EmployeeProductAdd />} />
-<Route path="/employee/warehouse/edit/:id" element={<EmployeeProductEdit />} />
-<Route path="/employee/shipping" element={<EmployeeShipping />} />
-<Route path="/employee/settings" element={<EmployeeSettings />} />
-<Route path="/employee/support" element={<EmployeeSupport />} />
+      <Route path="/employee/orders" element={<EmployeeOrders />} />
+      <Route path="/employee/warehouse" element={<EmployeeWarehouse />} />
+      <Route path="/employee/warehouse/add" element={<EmployeeProductAdd />} />
+      <Route path="/employee/warehouse/edit/:id" element={<EmployeeProductEdit />} />
+      <Route path="/employee/shipping" element={<EmployeeShipping />} />
+      <Route path="/employee/settings" element={<EmployeeSettings />} />
+      <Route path="/employee/support" element={<EmployeeSupport />} />
 
       {/* Admin Routes */}
       <Route path="/admin/users" element={<AdminUsers />} />
