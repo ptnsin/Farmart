@@ -22,14 +22,14 @@ const CONTACT_CHANNELS = [
   {
     key: "email",
     label: "อีเมล",
-    value: "support@agriharvest.co.th",
+    value: "support@Farmart.co.th",
     hint: "ตอบกลับภายใน 24 ชั่วโมง",
     icon: Mail,
   },
   {
     key: "line",
     label: "LINE Official",
-    value: "@agriharvest",
+    value: "@Farmart",
     hint: "แชทได้ทุกวัน 09:00–21:00 น.",
     icon: MessageCircle,
   },

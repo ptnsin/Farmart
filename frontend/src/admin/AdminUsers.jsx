@@ -183,7 +183,7 @@ export default function AdminUsers() {
             <div>
               <h1 className="text-2xl font-semibold text-emerald-800">การจัดการบัญชีผู้ใช้</h1>
               <p className="mt-1 text-sm text-slate-400">
-                ตรวจสอบและจัดการสิทธิ์การเข้าถึงของผู้ใช้งานในระบบ AgriHarvest
+                ตรวจสอบและจัดการสิทธิ์การเข้าถึงของผู้ใช้งานในระบบ Farmart
               </p>
             </div>
             <Link

@@ -40,7 +40,7 @@ export default function AdminSidebar() {
           <Leaf size={18} />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-800">AgriHarvest</p>
+          <p className="text-sm font-semibold text-slate-800">Farmart</p>
           <p className="text-xs text-slate-400">Admin Console</p>
         </div>
       </div>

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  Search,
+  HelpCircle,
   RefreshCw,
   AlertTriangle,
   Camera,
@@ -138,14 +140,25 @@ export default function AdminInventory() {
 
       <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
         {/* Top bar */}
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div className="relative w-80 max-w-full">
+        <div className="mb-6 flex items-center gap-4">
+          <div className="relative flex-1">
+            <Search
+              size={18}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
             <input
               type="text"
               placeholder="ค้นหาสินค้า..."
-              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-4 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
+          <button
+            type="button"
+            aria-label="ช่วยเหลือ"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
+          >
+            <HelpCircle size={18} />
+          </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
               src="https://i.pravatar.cc/64?img=12"

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Sprout, User, Lock, Tractor, ArrowRight } from "lucide-react";
 
-export default function AgriHarvestLogin() {
+export default function FarmartLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,8 +24,8 @@ export default function AgriHarvestLogin() {
       keepSignedIn,
       loggedInAt: new Date().toISOString(),
     };
-    localStorage.setItem("agriharvest_user", JSON.stringify(session));
-    localStorage.setItem("agriharvest_auth", "true");
+    localStorage.setItem("Farmart_user", JSON.stringify(session));
+    localStorage.setItem("Farmart_auth", "true");
 
     // Redirect to dashboard
     navigate("/dashboard");
@@ -81,7 +81,7 @@ export default function AgriHarvestLogin() {
             <div className="w-8 h-8 rounded-lg bg-green-800 flex items-center justify-center">
               <Sprout className="w-5 h-5 text-white" strokeWidth={2} />
             </div>
-            <span className="text-lg font-bold text-gray-900">AgriHarvest</span>
+            <span className="text-lg font-bold text-gray-900">Farmart</span>
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>
@@ -181,7 +181,7 @@ export default function AgriHarvestLogin() {
           </div>
 
           <p className="text-sm text-gray-600 text-center mt-6">
-            New to AgriHarvest?{" "}
+            New to Farmart?{" "}
             <Link to="/register" className="text-green-700 font-semibold hover:underline">
               Create an account
             </Link>

@@ -33,7 +33,7 @@ export default function AdminUserNew() {
           <div>
             <h1 className="text-2xl font-semibold text-slate-800">เพิ่มบัญชีผู้ใช้</h1>
             <p className="mt-1 text-sm text-slate-400">
-              กรอกข้อมูลเพื่อสร้างบัญชีผู้ใช้งานใหม่ในระบบ AgriHarvest
+              กรอกข้อมูลเพื่อสร้างบัญชีผู้ใช้งานใหม่ในระบบ Farmart
             </p>
           </div>
           <div className="flex items-center gap-3">

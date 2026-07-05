@@ -144,7 +144,7 @@ export default function AdminProductDetail() {
                     {review.reply && (
                       <div className="mt-3 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                         <p className="mb-0.5 text-xs font-medium text-emerald-600">
-                          คำตอบจากทีมงาน AgriHarvest
+                          คำตอบจากทีมงาน Farmart
                         </p>
                         {review.reply}
                       </div>

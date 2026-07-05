@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import AgriHarvestLogin from "./AgriHarvestLogin";
+import FarmartLogin from "./FarmartLogin";
 // Customer
 import Register from "./Register";
 import Home from "./Home";
@@ -26,7 +26,7 @@ import AdminSupport from "./admin/AdminSupport";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<AgriHarvestLogin />} />
+      <Route path="/" element={<FarmartLogin />} />
       {/* Customer Routes */}
       <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
