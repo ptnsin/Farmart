@@ -12,6 +12,16 @@ import Cart from "./Cart";
 import Order from "./Order";
 import Checkout from "./Checkout";
 
+// Employee
+import EmployeeLayout from "./employee/EmployeeLayout";
+import EmployeeOrders from "./employee/EmployeeOrders";
+import EmployeeWarehouse from "./employee/EmployeeWarehouse";
+import EmployeeProductAdd from "./employee/EmployeeProductAdd";
+import EmployeeProductEdit from "./employee/EmployeeProductEdit";
+import EmployeeShipping from "./employee/EmployeeShipping";
+import EmployeeSettings from "./employee/EmployeeSettings";
+import EmployeeSupport from "./employee/EmployeeSupport";
+
 // Admin
 import AdminUsers from "./admin/AdminUsers";
 import AdminUserNew from "./admin/AdminUserNew";
@@ -38,6 +48,18 @@ function App() {
       <Route path="/cart" element={<Cart />} />
       <Route path="/orders" element={<Order />} />
       <Route path="/checkout" element={<Checkout />} />
+
+      {/* Employee Routes */}
+      <Route path="/employee" element={<EmployeeLayout />}>
+        <Route path="orders" element={<EmployeeOrders />} />
+        <Route path="warehouse" element={<EmployeeWarehouse />} />
+        <Route path="warehouse/add" element={<EmployeeProductAdd />} />
+        <Route path="warehouse/edit/:id" element={<EmployeeProductEdit />} />
+        <Route path="shipping" element={<EmployeeShipping />} />
+        <Route path="settings" element={<EmployeeSettings />} />
+        <Route path="support" element={<EmployeeSupport />} />
+      </Route>
+
       {/* Admin Routes */}
       <Route path="/admin/users" element={<AdminUsers />} />
       <Route path="/admin/users/new" element={<AdminUserNew />} />
