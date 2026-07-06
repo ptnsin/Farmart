@@ -11,6 +11,7 @@ import Tracking from "./Tracking";
 import Cart from "./Cart";
 import Order from "./Order";
 import Checkout from "./Checkout";
+import HelpCenter from "./HelpCenter";
 
 // Employee
 import EmployeeOrders from "./employee/EmployeeOrders";
@@ -47,6 +48,7 @@ function App() {
       <Route path="/cart" element={<Cart />} />
       <Route path="/orders" element={<Order />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/help-center" element={<HelpCenter />} />
 
       {/* Employee Routes */}
       <Route path="/employee/orders" element={<EmployeeOrders />} />

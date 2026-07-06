@@ -104,7 +104,7 @@ export default function Home() {
             <Link to="/products" className="hover:text-green-800">สินค้า</Link>
             <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
             <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
-            <a href="#about" className="hover:text-green-800">เกี่ยวกับเรา</a>
+            <Link to="/help-center" className="hover:text-green-800">ศูนย์ช่วยเหลือ</Link>
           </nav>
 
           <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
@@ -369,7 +369,7 @@ export default function Home() {
             <div>
               <p className="font-semibold text-gray-900 mb-2.5">Help</p>
               <ul className="space-y-2 text-gray-500 text-xs">
-                <li><a href="#" className="hover:text-green-700">ศูนย์ช่วยเหลือ</a></li>
+                <li><Link to="/help-center" className="hover:text-green-700">ศูนย์ช่วยเหลือ</Link></li>
                 <li><a href="#" className="hover:text-green-700">ติดต่อเรา</a></li>
               </ul>
             </div>
