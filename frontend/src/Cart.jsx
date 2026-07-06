@@ -26,7 +26,7 @@ export default function Cart() {
   const total = subtotal + shipping + tax;
 
   return (
-    <div className="min-h-screen w-full bg-white text-gray-900">
+    <div className="min-h-screen w-full bg-white text-gray-900 flex flex-col">
       {/* Top nav */}
       <header className="sticky top-0 z-20 bg-white border-b border-gray-100">
         <div className="max-w-6xl mx-auto flex items-center gap-6 px-6 py-3.5">
@@ -81,7 +81,7 @@ export default function Cart() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
         <h1 className="text-xl font-bold text-gray-900 mb-6">รถเข็นของคุณ</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -225,34 +225,29 @@ export default function Cart() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 mt-16 bg-green-950">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between gap-8">
-          <div className="max-w-xs">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-md bg-green-700 flex items-center justify-center">
-                <Sprout className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="font-bold text-white text-sm">AgriHarvest</span>
+      <footer className="bg-green-950 text-white mt-auto">
+        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-green-700 flex items-center justify-center">
+              <Sprout className="w-4 h-4 text-white" />
             </div>
-            <p className="text-xs text-white/60 leading-relaxed">
-              เกษตรกรรมยั่งยืนที่ส่งตรงถึงมือคุณ
-            </p>
+            <div>
+              <p className="font-bold text-sm">AgriHarvest</p>
+              <p className="text-xs text-white/50">
+                © 2024 AgriHarvest. Cultivating trust through transparency.
+              </p>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-8 text-sm">
-            <div>
-              <p className="font-semibold text-white/80 mb-2.5 text-xs">Sustainability</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white/80 mb-2.5 text-xs">Wholesale</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white/80 mb-2.5 text-xs">Privacy Policy</p>
-            </div>
+
+          <div className="flex items-center gap-6 text-xs text-white/70 font-medium flex-wrap justify-center">
+            <a href="#" className="hover:text-white">Sustainability</a>
+            <a href="#" className="hover:text-white">Wholesale</a>
+            <a href="#" className="hover:text-white">Privacy Policy</a>
+            <a href="#" className="hover:text-white">Terms of Service</a>
+            <a href="#" className="hover:text-white">Shipping Info</a>
+            <a href="#" className="hover:text-white">Contact Us</a>
           </div>
         </div>
-        <p className="text-center text-xs text-white/40 pb-6">
-          © 2024 AgriHarvest. Cultivated trust through transparency.
-        </p>
       </footer>
     </div>
   );

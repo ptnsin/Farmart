@@ -1,5 +1,5 @@
 import { Fragment, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Sprout,
   Search,
@@ -108,7 +108,12 @@ function Toast({ message }) {
 
 export default function Profile() {
   const fileInputRef = useRef(null);
-  const [activeTab, setActiveTab] = useState("info");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const validTabs = ["info", "orders", "address", "settings"];
+  const [activeTab, setActiveTab] = useState(
+    validTabs.includes(tabParam) ? tabParam : "info"
+  );
   const [toast, setToast] = useState("");
 
   // ----- Profile info -----
