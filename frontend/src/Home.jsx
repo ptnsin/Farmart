@@ -20,7 +20,8 @@ const featured = [
     price: 85,
     priceLabel: "฿85.00",
     rating: "4.8 (120)",
-    emoji: "🌾",
+    image:
+      "https://images.unsplash.com/photo-1635372638513-8a960010a0ff?q=80&w=600&auto=format&fit=crop",
     subtitle: "แหล่งที่มา: เชียงใหม่, ประเทศไทย",
   },
   {
@@ -29,7 +30,8 @@ const featured = [
     price: 150,
     priceLabel: "฿150.00",
     rating: "4.9 (80)",
-    emoji: "🌱",
+    image:
+      "https://images.unsplash.com/photo-1741027911956-db63415dcedf?q=80&w=600&auto=format&fit=crop",
     subtitle: "แหล่งที่มา: เชียงราย, ประเทศไทย",
   },
   {
@@ -38,7 +40,8 @@ const featured = [
     price: 1250,
     priceLabel: "฿1,250.00",
     rating: "4.7 (65)",
-    emoji: "🧴",
+    image:
+      "https://images.unsplash.com/photo-1457530378978-8bac673b8062?q=80&w=600&auto=format&fit=crop",
     subtitle: "แหล่งที่มา: สุพรรณบุรี, ประเทศไทย",
   },
   {
@@ -47,7 +50,8 @@ const featured = [
     price: 65,
     priceLabel: "฿65.00",
     rating: "4.9 (210)",
-    emoji: "🫑",
+    image:
+      "https://images.unsplash.com/photo-1567547981970-2a44cc30cf66?q=80&w=600&auto=format&fit=crop",
     subtitle: "แหล่งที่มา: นครปฐม, ประเทศไทย",
   },
 ];
@@ -79,7 +83,7 @@ export default function Home() {
       name: product.name,
       subtitle: product.subtitle,
       price: product.price,
-      emoji: product.emoji,
+      image: product.image,
     });
   }
 
@@ -182,14 +186,22 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 -mt-10 relative z-10 pb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl shadow-md border border-gray-100 p-4 flex items-center gap-4">
-            <span className="text-3xl">🌾</span>
+            <img
+              src="https://images.unsplash.com/photo-1635372638513-8a960010a0ff?q=80&w=200&auto=format&fit=crop"
+              alt="เมล็ดพันธุ์คุณภาพ"
+              className="w-12 h-12 rounded-lg object-cover shrink-0"
+            />
             <div>
               <p className="text-sm font-semibold text-gray-900">เมล็ดพันธุ์คุณภาพ</p>
               <p className="text-xs text-gray-500 mt-0.5">คัดสรรจากแหล่งปลูกโดยตรง</p>
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-md border border-gray-100 p-4 flex items-center gap-4">
-            <span className="text-3xl">🚜</span>
+            <img
+              src="https://images.unsplash.com/photo-1635168708643-aa398019ca5b?q=80&w=200&auto=format&fit=crop"
+              alt="อุปกรณ์การเกษตร"
+              className="w-12 h-12 rounded-lg object-cover shrink-0"
+            />
             <div>
               <p className="text-sm font-semibold text-gray-900">อุปกรณ์การเกษตร</p>
               <p className="text-xs text-gray-500 mt-0.5">เครื่องมือทันสมัยสำหรับทุกไร่</p>
@@ -225,8 +237,12 @@ export default function Home() {
               key={p.name}
               className="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
             >
-              <div className="relative aspect-square bg-gray-50 flex items-center justify-center text-5xl">
-                {p.emoji}
+              <div className="relative aspect-square bg-gray-50">
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="w-full h-full object-cover"
+                />
                 <button
                   onClick={() => handleAddToCart(p)}
                   title="เพิ่มลงตะกร้า"
