@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Save, X, User, Mail, Phone, Shield } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
+import { addUser } from "./userStore";
 
-const ROLES = ["FARMER", "CUSTOMER", "ADMIN"];
+const ROLES = ["EMPLOYEE", "CUSTOMER", "ADMIN"];
 
 export default function AdminUserNew() {
   const navigate = useNavigate();
@@ -11,16 +12,31 @@ export default function AdminUserNew() {
     name: "",
     email: "",
     phone: "",
-    role: "FARMER",
+    role: "EMPLOYEE",
     status: "active",
   });
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: wire up to your API / backend call to persist the new user
-    navigate("/admin/users");
+    setError("");
+
+    if (!form.name.trim() || !form.email.trim()) {
+      setError("กรุณากรอกชื่อ-นามสกุลและอีเมลให้ครบถ้วน");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      addUser(form);
+      navigate("/admin/users");
+    } catch {
+      setError("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      setSaving(false);
+    }
   };
 
   return (
@@ -48,13 +64,20 @@ export default function AdminUserNew() {
             <button
               type="submit"
               form="user-form"
-              className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+              disabled={saving}
+              className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
             >
               <Save size={16} />
-              บันทึกผู้ใช้
+              {saving ? "กำลังบันทึก..." : "บันทึกผู้ใช้"}
             </button>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-4 max-w-2xl rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            {error}
+          </div>
+        )}
 
         <form id="user-form" onSubmit={handleSubmit} className="max-w-2xl">
           <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
