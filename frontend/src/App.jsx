@@ -1,17 +1,18 @@
 import { Routes, Route } from "react-router-dom";
-import FarmartLogin from "./FarmartLogin";
+
 // Customer
-import Register from "./Register";
-import Home from "./Home";
-import Dashboard from "./Dashboard";
-import Products from "./Products";
-import Profile from "./Profile";
-import ProductDetail from "./ProductDetail";
-import Tracking from "./Tracking";
-import Cart from "./Cart";
-import Order from "./Order";
-import Checkout from "./Checkout";
-import HelpCenter from "./HelpCenter";
+import FarmartLogin from "./FarmartLogin";  //หน้า Login
+import Register from "./Register";  //หน้าสมัครสมาชิก
+import Home from "./Home";  //หน้า Home
+import Dashboard from "./Dashboard";  //หน้าเหี้ยไร
+import Products from "./Products";   //หน้าสินค้า
+import Profile from "./Profile";   //หน้าโปรไฟล์
+import ProductDetail from "./ProductDetail";   //หน้าดูรายละเอียดสินค้า
+import Tracking from "./Tracking";   //หน้าติดตามพัสดุ
+import Cart from "./Cart";   //หน้าตะกร้า
+import Order from "./Order";   //หน้าสั่งซื้อ
+import Checkout from "./Checkout";   //หน้าชำระเงิน
+import HelpCenter from "./HelpCenter";   //หน้าศูนย์ช่วยเหลือ
 
 // Employee
 import EmployeeOrders from "./employee/EmployeeOrders";
@@ -36,8 +37,8 @@ import AdminSupport from "./admin/AdminSupport";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<FarmartLogin />} />
       {/* Customer Routes */}
+      <Route path="/" element={<FarmartLogin />} />
       <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
