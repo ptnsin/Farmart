@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Sprout,
   Search,
@@ -76,6 +77,8 @@ const perks = [
 
 export default function Home() {
   const { addItem, itemCount } = useCart();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
 
   function handleAddToCart(product) {
     addItem({
@@ -86,6 +89,17 @@ export default function Home() {
       image: product.image,
     });
   }
+
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    navigate(query ? `/products?search=${encodeURIComponent(query)}` : "/products");
+  }
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredFeatured = normalizedQuery
+    ? featured.filter((p) => p.name.toLowerCase().includes(normalizedQuery))
+    : featured;
 
   return (
     <div className="min-h-screen w-full bg-white text-gray-900">
@@ -107,14 +121,19 @@ export default function Home() {
             <Link to="/help-center" className="hover:text-green-800">ศูนย์ช่วยเหลือ</Link>
           </nav>
 
-          <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex-1 max-w-xs ml-auto relative hidden sm:block"
+          >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาสินค้า..."
               className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
             />
-          </div>
+          </form>
 
           <div className="flex items-center gap-1">
             <Link
@@ -223,16 +242,27 @@ export default function Home() {
       <section id="products" className="max-w-6xl mx-auto px-6 py-14">
         <div className="flex items-end justify-between mb-6">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">สินค้าขายดี</h2>
-            <p className="text-sm text-gray-500 mt-1">สินค้าที่ลูกค้าเลือกซื้อมากที่สุดในเดือนนี้</p>
+            <h2 className="text-lg font-bold text-gray-900">
+              {normalizedQuery ? `ผลการค้นหา "${searchQuery.trim()}"` : "สินค้าขายดี"}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {normalizedQuery
+                ? `พบ ${filteredFeatured.length} รายการที่ตรงกับคำค้นหา`
+                : "สินค้าที่ลูกค้าเลือกซื้อมากที่สุดในเดือนนี้"}
+            </p>
           </div>
           <Link to="/products" className="text-sm font-semibold text-green-700 hover:underline">
             ดูทั้งหมด
           </Link>
         </div>
 
+        {filteredFeatured.length === 0 ? (
+          <div className="text-center py-12 text-sm text-gray-500">
+            ไม่พบสินค้าที่ตรงกับ "{searchQuery.trim()}"
+          </div>
+        ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {featured.map((p) => (
+          {filteredFeatured.map((p) => (
             <div
               key={p.name}
               className="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
@@ -264,6 +294,7 @@ export default function Home() {
             </div>
           ))}
         </div>
+        )}
       </section>
 
       {/* Why AgriHarvest */}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Sprout,
@@ -12,22 +12,107 @@ import {
   Plus,
   Truck,
   ChevronRight,
+  MessageSquare,
+  ThumbsUp,
+  BadgeCheck,
 } from "lucide-react";
 import { PRODUCTS, getProductById } from "./productsData";
 import { useCart } from "./CartContext";
 
-function Stars({ rating }) {
+function Stars({ rating, size = "w-3.5 h-3.5" }) {
   const rounded = Math.round(rating);
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
-          className={`w-3.5 h-3.5 ${
+          className={`${size} ${
             i < rounded ? "fill-amber-400 text-amber-400" : "text-gray-200"
           }`}
         />
       ))}
+    </div>
+  );
+}
+
+// Builds a plausible rating distribution when the product has no explicit breakdown
+function getRatingDistribution(rating) {
+  if (rating >= 4.7) return [75, 18, 4, 2, 1];
+  if (rating >= 4.3) return [60, 25, 9, 4, 2];
+  if (rating >= 4.0) return [45, 30, 15, 7, 3];
+  if (rating >= 3.5) return [32, 30, 20, 12, 6];
+  return [20, 25, 25, 18, 12];
+}
+
+// Falls back to a few representative mock reviews if the product has none yet
+function getReviews(product) {
+  if (product.reviews?.length) return product.reviews;
+  return [
+    {
+      name: "สมชาย ใจดี",
+      rating: 5,
+      date: "2 สัปดาห์ที่แล้ว",
+      comment: `สินค้าคุณภาพดีมาก บรรจุภัณฑ์แน่นหนา ส่งไวกว่าที่คิด ใช้ ${product.name} แล้วรู้สึกคุ้มค่ากับราคา จะกลับมาซื้อซ้ำแน่นอน`,
+      helpful: 12,
+      verified: true,
+    },
+    {
+      name: "วิภาวรรณ ส.",
+      rating: 4,
+      date: "1 เดือนที่แล้ว",
+      comment: `โดยรวมพอใจกับ ${product.name} ค่ะ คุณภาพตรงตามที่บรรยายไว้ มีจุดเดียวคือระยะเวลาจัดส่งช้าไปนิดหน่อย แต่สินค้าสดใหม่ดี`,
+      helpful: 5,
+      verified: true,
+    },
+    {
+      name: "ธนกฤต พ.",
+      rating: 5,
+      date: "1 เดือนที่แล้ว",
+      comment: "แพ็คสินค้าดีมาก ไม่ช้ำเสียหาย ผู้ขายตอบแชทเร็ว แนะนำร้านนี้เลยครับ",
+      helpful: 8,
+      verified: false,
+    },
+    {
+      name: "อารยา เกษตรกุล",
+      rating: 4,
+      date: "2 เดือนที่แล้ว",
+      comment: `เป็นลูกค้าประจำของร้านนี้ ${product.name} คุณภาพสม่ำเสมอทุกครั้งที่สั่ง ราคาก็ยุติธรรมดี`,
+      helpful: 3,
+      verified: true,
+    },
+  ];
+}
+
+function ReviewCard({ review }) {
+  return (
+    <div className="border-b border-gray-100 pb-5">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 shrink-0 rounded-full bg-green-100 text-green-800 font-bold flex items-center justify-center text-sm">
+          {review.name.trim().charAt(0)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-gray-800">{review.name}</p>
+            {review.verified && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-green-700 font-medium">
+                <BadgeCheck className="w-3.5 h-3.5" />
+                ซื้อสินค้าแล้ว
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Stars rating={review.rating} />
+            <span className="text-xs text-gray-400">{review.date}</span>
+          </div>
+          <p className="text-sm text-gray-600 leading-relaxed mt-2">
+            {review.comment}
+          </p>
+          <button className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-green-700 mt-3">
+            <ThumbsUp className="w-3.5 h-3.5" />
+            มีประโยชน์ ({review.helpful})
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -42,6 +127,11 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
+
+  const detailsRef = useRef(null);
+  const reviewsRef = useRef(null);
+  const relatedRef = useRef(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -49,7 +139,13 @@ export default function ProductDetail() {
     setSelectedSize(0);
     setQuantity(1);
     setAdded(false);
+    setActiveTab("details");
   }, [id]);
+
+  const scrollToSection = (key, ref) => {
+    setActiveTab(key);
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   if (!product) {
     return (
@@ -70,6 +166,12 @@ export default function ProductDetail() {
   const related = PRODUCTS.filter(
     (p) => p.category === product.category && p.id !== product.id
   ).slice(0, 4);
+
+  const reviews = useMemo(() => getReviews(product), [product]);
+  const ratingDistribution = useMemo(
+    () => getRatingDistribution(product.rating),
+    [product.rating]
+  );
 
   const handleAddToCart = () => {
     const sizeLabel = product.sizes?.[selectedSize]?.label;
@@ -286,8 +388,47 @@ export default function ProductDetail() {
           </div>
         </div>
 
+        {/* Section tabs */}
+        <div className="sticky top-[57px] z-10 bg-white border-b border-gray-100 mt-14">
+          <div className="flex items-center gap-8">
+            <button
+              onClick={() => scrollToSection("details", detailsRef)}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === "details"
+                  ? "text-green-800 border-green-700"
+                  : "text-gray-500 border-transparent hover:text-gray-800"
+              }`}
+            >
+              รายละเอียดสินค้า
+            </button>
+            <button
+              onClick={() => scrollToSection("reviews", reviewsRef)}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === "reviews"
+                  ? "text-green-800 border-green-700"
+                  : "text-gray-500 border-transparent hover:text-gray-800"
+              }`}
+            >
+              รีวิว ({product.ratingCount})
+            </button>
+            <button
+              onClick={() => scrollToSection("related", relatedRef)}
+              className={`py-3.5 text-sm font-semibold border-b-2 transition-colors ${
+                activeTab === "related"
+                  ? "text-green-800 border-green-700"
+                  : "text-gray-500 border-transparent hover:text-gray-800"
+              }`}
+            >
+              สินค้าที่เกี่ยวข้อง
+            </button>
+          </div>
+        </div>
+
         {/* Description + Specs */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-14">
+        <div
+          ref={detailsRef}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-10 scroll-mt-28"
+        >
           <div className="lg:col-span-2">
             <h2 className="font-bold text-gray-900 mb-3">รายละเอียดสินค้า</h2>
             <p className="text-sm text-gray-600 leading-relaxed mb-8">
@@ -340,9 +481,67 @@ export default function ProductDetail() {
           )}
         </div>
 
+        {/* Reviews */}
+        <div ref={reviewsRef} className="mt-16 scroll-mt-28">
+          <h2 className="text-lg font-bold text-gray-900 mb-5">
+            รีวิวจากลูกค้า
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Rating summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-gray-50 rounded-xl p-6 text-center">
+                <p className="text-4xl font-bold text-gray-900">
+                  {product.rating}
+                </p>
+                <div className="flex justify-center my-2">
+                  <Stars rating={product.rating} size="w-4 h-4" />
+                </div>
+                <p className="text-sm text-gray-500">
+                  จาก {product.ratingCount} รีวิว
+                </p>
+              </div>
+              <div className="mt-4 space-y-2">
+                {ratingDistribution.map((pct, i) => {
+                  const starLabel = 5 - i;
+                  return (
+                    <div key={starLabel} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 w-8 shrink-0">
+                        {starLabel} ดาว
+                      </span>
+                      <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className="h-full bg-amber-400 rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400 w-8 text-right shrink-0">
+                        {pct}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <button className="w-full mt-5 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-semibold text-sm py-2.5 rounded-lg hover:border-green-300 hover:text-green-700 transition-colors">
+                <MessageSquare className="w-4 h-4" />
+                เขียนรีวิว
+              </button>
+            </div>
+
+            {/* Review list */}
+            <div className="lg:col-span-2 space-y-5">
+              {reviews.map((r, i) => (
+                <ReviewCard key={`${r.name}-${i}`} review={r} />
+              ))}
+              <button className="text-sm font-semibold text-green-700 hover:underline">
+                ดูรีวิวทั้งหมด
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Related products */}
         {related.length > 0 && (
-          <div className="mt-16">
+          <div ref={relatedRef} className="mt-16 scroll-mt-28">
             <div className="flex items-end justify-between mb-5">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">สินค้าที่เกี่ยวข้อง</h2>
