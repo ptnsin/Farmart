@@ -107,7 +107,7 @@ export default function AdminInventory() {
 
     return [
       {
-        key: "total",
+        id: "total",
         label: "สินค้าทั้งหมด",
         value: total.toLocaleString(),
         note: "รายการในระบบ",
@@ -117,7 +117,7 @@ export default function AdminInventory() {
         noteColor: "text-emerald-600",
       },
       {
-        key: "low",
+        id: "low",
         label: "สินค้าใกล้หมด",
         value: lowCount.toLocaleString(),
         note: `${criticalCount} รายการวิกฤต`,
@@ -127,7 +127,7 @@ export default function AdminInventory() {
         noteColor: "text-rose-500",
       },
       {
-        key: "value",
+        id: "value",
         label: "มูลค่าสินค้าคงคลัง",
         value: `฿${inventoryValue.toLocaleString()}`,
         note: "",
@@ -137,7 +137,7 @@ export default function AdminInventory() {
         noteColor: "text-slate-400",
       },
       {
-        key: "status",
+        id: "status",
         label: "สถานะการสั่งซื้อ",
         value: lowCount > 0 ? "มีสินค้าใกล้หมด" : "ทุกอย่างปกติ",
         note: "",
@@ -216,7 +216,7 @@ export default function AdminInventory() {
         {/* Stats */}
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
           {stats.map((stat) => (
-            <StatCard key={stat.key} {...stat} />
+            <StatCard key={stat.id} {...stat} />
           ))}
         </div>
 

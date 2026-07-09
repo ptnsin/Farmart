@@ -100,7 +100,7 @@ export default function AdminUsers() {
 
     return [
       {
-        key: "total",
+        id: "total",
         label: "TOTAL USERS",
         value: total.toLocaleString(),
         note: "ผู้ใช้งานทั้งหมดในระบบ",
@@ -109,7 +109,7 @@ export default function AdminUsers() {
         iconColor: "text-slate-500",
       },
       {
-        key: "active",
+        id: "active",
         label: "ACTIVE USERS",
         value: activeCount.toLocaleString(),
         note: `${activePct}% ของผู้ใช้ทั้งหมด`,
@@ -118,7 +118,7 @@ export default function AdminUsers() {
         iconColor: "text-emerald-600",
       },
       {
-        key: "new",
+        id: "new",
         label: "NEW REGISTRATIONS",
         value: newCount.toLocaleString(),
         note: "24 ชั่วโมงที่ผ่านมา",
@@ -210,7 +210,7 @@ export default function AdminUsers() {
         {/* Stats */}
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((stat) => (
-            <StatCard key={stat.key} {...stat} />
+            <StatCard key={stat.id} {...stat} />
           ))}
         </div>
 

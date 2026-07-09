@@ -147,7 +147,7 @@ export default function AdminProductApprovals() {
 
   const STATS = [
     {
-      key: "pending",
+      id: "pending",
       label: "รอตรวจสอบ",
       value: batches.length,
       icon: Clock,
@@ -155,7 +155,7 @@ export default function AdminProductApprovals() {
       iconColor: "text-amber-600",
     },
     {
-      key: "approved",
+      id: "approved",
       label: "อนุมัติวันนี้",
       value: approvedCount,
       icon: CheckCircle2,
@@ -163,7 +163,7 @@ export default function AdminProductApprovals() {
       iconColor: "text-emerald-600",
     },
     {
-      key: "rejected",
+      id: "rejected",
       label: "ปฏิเสธวันนี้",
       value: rejectedCount,
       icon: XCircle,
@@ -222,7 +222,7 @@ export default function AdminProductApprovals() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {STATS.map((s) => (
-            <StatCard key={s.key} {...s} />
+            <StatCard key={s.id} {...s} />
           ))}
         </div>
 
