@@ -177,7 +177,7 @@ graph TD
    npm run start
    ```
 
-4. เปิดเบราว์เซอร์ไปที่ `http://localhost:3000`
+4. เปิดเบราว์เซอร์ไปที่ `http://localhost:5173`
 
 ---
 
