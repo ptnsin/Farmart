@@ -15,7 +15,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { getUsers, updateUserStatus, deleteUser, resetUsers } from "./userStore";
+import { getUsers, updateUserStatus, deleteUser } from "./userStore";
 
 const ROLE_STYLES = {
   EMPLOYEE: "text-slate-600",
@@ -145,13 +145,6 @@ export default function AdminUsers() {
     setOpenMenuId(null);
   };
 
-  const handleReset = () => {
-    if (window.confirm("ต้องการรีเซ็ตข้อมูลผู้ใช้ทั้งหมดกลับเป็นค่าเริ่มต้นหรือไม่?")) {
-      setUsers(resetUsers());
-      setPage(1);
-    }
-  };
-
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       <AdminSidebar />
@@ -204,13 +197,6 @@ export default function AdminUsers() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="whitespace-nowrap rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50"
-            >
-              รีเซ็ตข้อมูลเริ่มต้น
-            </button>
             <Link
               to="/admin/users/new"
               className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"

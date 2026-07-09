@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Bell,
@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   Camera,
   RotateCw,
-  Plus,
   Filter,
   ChevronLeft,
   ChevronRight,
@@ -17,91 +16,9 @@ import {
   MoreVertical,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
+import { getProducts } from "./productStore";
 
-const PRODUCTS = [
-  {
-    id: 1,
-    name: "เมล็ดมะเขือเทศ Heirloom",
-    category: "ผักอินทรีย์",
-    sku: "HTS-2024-01",
-    price: 12.5,
-    stockUnits: 450,
-    stockPercent: 75,
-    stockLevel: "healthy",
-    farmer: "แสงฟาร์มอินทรีย์, สวยรัตน์ฟาร์ม",
-    image: "https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=64&h=64&fit=crop",
-  },
-  {
-    id: 2,
-    name: "ข้าวหอมมะลิ ปทุมทาน",
-    category: "ข้าว",
-    sku: "PHT-009",
-    price: 34.99,
-    stockUnits: 12,
-    stockPercent: 8,
-    stockLevel: "low",
-    farmer: "เพชรบัตร, สวนอาม่าตร",
-    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=64&h=64&fit=crop",
-  },
-  {
-    id: 3,
-    name: "สาระอาหารเกียจากสมาร์ทฟาร์ม",
-    category: "สมุนไพร",
-    sku: "LSF-221",
-    price: 18.25,
-    stockUnits: 2100,
-    stockPercent: 92,
-    stockLevel: "healthy",
-    farmer: "แสงรวี (ภาคเหนือ)",
-    image: "https://images.unsplash.com/photo-1515586838455-8f8f940d6853?w=64&h=64&fit=crop",
-  },
-];
-
-const STATS = [
-  {
-    key: "total",
-    label: "สินค้าทั้งหมด",
-    value: "1,248",
-    note: "+4.5%",
-    icon: RefreshCw,
-    iconBg: "bg-emerald-50",
-    iconColor: "text-emerald-600",
-    noteColor: "text-emerald-600",
-  },
-  {
-    key: "low",
-    label: "สินค้าใกล้หมด",
-    value: "42",
-    note: "12 รายการวิกฤต",
-    icon: AlertTriangle,
-    iconBg: "bg-amber-50",
-    iconColor: "text-amber-600",
-    noteColor: "text-rose-500",
-  },
-  {
-    key: "value",
-    label: "มูลค่าสินค้าคงคลัง",
-    value: "$248.5k",
-    note: "",
-    icon: Camera,
-    iconBg: "bg-slate-100",
-    iconColor: "text-slate-500",
-    noteColor: "text-slate-400",
-  },
-  {
-    key: "status",
-    label: "สถานะการสั่งซื้อ",
-    value: "ทุกอย่างปกติ",
-    note: "",
-    icon: RotateCw,
-    iconBg: "bg-slate-100",
-    iconColor: "text-slate-500",
-    noteColor: "text-slate-400",
-  },
-];
-
-const TOTAL_PAGES = 125;
-const TOTAL_RECORDS = 1248;
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 function StatCard({ label, value, note, noteColor, icon: Icon, iconBg, iconColor }) {
   return (
@@ -120,18 +37,123 @@ function StatCard({ label, value, note, noteColor, icon: Icon, iconBg, iconColor
   );
 }
 
-export default function AdminInventory() {
-  const [selected, setSelected] = useState([]);
-  const [page, setPage] = useState(1);
+/** สร้างรายการเลขหน้าแบบมี ... คั่นเมื่อจำนวนหน้าเยอะ */
+function getPageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  return Array.from(pages)
+    .filter((p) => p >= 1 && p <= total)
+    .sort((a, b) => a - b);
+}
 
-  const allSelected = selected.length === PRODUCTS.length;
+export default function AdminInventory() {
+  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [pageSizeMenuOpen, setPageSizeMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setProducts(getProducts());
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (!e.target.closest("[data-page-size-menu]")) setPageSizeMenuOpen(false);
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    if (!query.trim()) return products;
+    const q = query.trim().toLowerCase();
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.farmer.toLowerCase().includes(q)
+    );
+  }, [products, query]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
+
+  const allSelected =
+    paginatedProducts.length > 0 && paginatedProducts.every((p) => selected.includes(p.id));
 
   const toggleAll = () => {
-    setSelected(allSelected ? [] : PRODUCTS.map((p) => p.id));
+    if (allSelected) {
+      setSelected((prev) => prev.filter((id) => !paginatedProducts.some((p) => p.id === id)));
+    } else {
+      setSelected((prev) => [...new Set([...prev, ...paginatedProducts.map((p) => p.id)])]);
+    }
   };
 
   const toggleOne = (id) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const stats = useMemo(() => {
+    const total = products.length;
+    const lowCount = products.filter((p) => p.stockLevel === "low").length;
+    const criticalCount = products.filter((p) => p.stockLevel === "low" && p.stockPercent <= 8).length;
+    const inventoryValue = products.reduce((sum, p) => sum + p.price * p.stockUnits, 0);
+
+    return [
+      {
+        key: "total",
+        label: "สินค้าทั้งหมด",
+        value: total.toLocaleString(),
+        note: "รายการในระบบ",
+        icon: RefreshCw,
+        iconBg: "bg-emerald-50",
+        iconColor: "text-emerald-600",
+        noteColor: "text-emerald-600",
+      },
+      {
+        key: "low",
+        label: "สินค้าใกล้หมด",
+        value: lowCount.toLocaleString(),
+        note: `${criticalCount} รายการวิกฤต`,
+        icon: AlertTriangle,
+        iconBg: "bg-amber-50",
+        iconColor: "text-amber-600",
+        noteColor: "text-rose-500",
+      },
+      {
+        key: "value",
+        label: "มูลค่าสินค้าคงคลัง",
+        value: `฿${inventoryValue.toLocaleString()}`,
+        note: "",
+        icon: Camera,
+        iconBg: "bg-slate-100",
+        iconColor: "text-slate-500",
+        noteColor: "text-slate-400",
+      },
+      {
+        key: "status",
+        label: "สถานะการสั่งซื้อ",
+        value: lowCount > 0 ? "มีสินค้าใกล้หมด" : "ทุกอย่างปกติ",
+        note: "",
+        icon: RotateCw,
+        iconBg: "bg-slate-100",
+        iconColor: "text-slate-500",
+        noteColor: "text-slate-400",
+      },
+    ];
+  }, [products]);
+
+  const goToProduct = (id) => navigate(`/admin/inventory/${id}`);
+
+  const handleRowClick = (e, id) => {
+    if (e.target.closest("input, button, a")) return;
+    goToProduct(id);
   };
 
   return (
@@ -147,8 +169,13 @@ export default function AdminInventory() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
+              value={query}
+              onChange={(e) => {
+                setPage(1);
+                setQuery(e.target.value);
+              }}
               type="text"
-              placeholder="ค้นหาสินค้า..."
+              placeholder="ค้นหาสินค้าด้วยชื่อ, SKU, หมวดหมู่ หรือผู้จำหน่าย..."
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
@@ -184,18 +211,11 @@ export default function AdminInventory() {
               และจัดระเบียบหมวดหมู่ของคุณ
             </p>
           </div>
-          <Link
-            to="/admin/inventory/new"
-            className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
-          >
-            <Plus size={16} />
-            เพิ่มสินค้าใหม่
-          </Link>
         </div>
 
         {/* Stats */}
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
-          {STATS.map((stat) => (
+          {stats.map((stat) => (
             <StatCard key={stat.key} {...stat} />
           ))}
         </div>
@@ -207,7 +227,7 @@ export default function AdminInventory() {
               type="button"
               className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
-              จัดการพร้อมกัน
+              จัดการพร้อมกัน{selected.length > 0 ? ` (${selected.length})` : ""}
             </button>
             <button
               type="button"
@@ -218,7 +238,12 @@ export default function AdminInventory() {
             </button>
           </div>
           <p className="text-sm text-slate-400">
-            แสดง 1 - {PRODUCTS.length} จาก {TOTAL_RECORDS.toLocaleString()} รายการ
+            {filteredProducts.length === 0
+              ? "ไม่พบรายการ"
+              : `แสดง ${startIndex + 1} - ${Math.min(
+                  startIndex + pageSize,
+                  filteredProducts.length
+                )} จาก ${filteredProducts.length.toLocaleString()} รายการ`}
           </p>
         </div>
 
@@ -239,13 +264,17 @@ export default function AdminInventory() {
                 <th className="px-6 py-3 font-medium">หมวดหมู่</th>
                 <th className="px-6 py-3 font-medium">ราคา</th>
                 <th className="px-6 py-3 font-medium">ระดับสต็อก</th>
-                <th className="px-6 py-3 font-medium">เจ้าของฟาร์ม</th>
+                <th className="px-6 py-3 font-medium">ผู้จำหน่าย</th>
                 <th className="px-6 py-3 text-right font-medium">จัดการ</th>
               </tr>
             </thead>
             <tbody>
-              {PRODUCTS.map((product) => (
-                <tr key={product.id} className="border-b border-slate-50 last:border-0">
+              {paginatedProducts.map((product) => (
+                <tr
+                  key={product.id}
+                  onClick={(e) => handleRowClick(e, product.id)}
+                  className="cursor-pointer border-b border-slate-50 last:border-0 hover:bg-slate-50/70"
+                >
                   <td className="px-6 py-3.5">
                     <input
                       type="checkbox"
@@ -269,7 +298,7 @@ export default function AdminInventory() {
                   </td>
                   <td className="px-6 py-3.5 text-slate-600">{product.category}</td>
                   <td className="px-6 py-3.5 font-medium text-slate-800">
-                    ${product.price.toFixed(2)}
+                    ฿{product.price.toLocaleString()}
                   </td>
                   <td className="px-6 py-3.5">
                     <div className="w-32">
@@ -297,13 +326,14 @@ export default function AdminInventory() {
                   </td>
                   <td className="px-6 py-3.5">
                     <div className="flex items-center justify-end gap-3 text-slate-400">
-                      <Link
-                        to={`/admin/inventory/${product.id}`}
+                      <button
+                        type="button"
+                        onClick={() => goToProduct(product.id)}
                         aria-label="ดูข้อมูล"
                         className="hover:text-slate-600"
                       >
                         <Eye size={16} />
-                      </Link>
+                      </button>
                       <button type="button" aria-label="แก้ไข" className="hover:text-slate-600">
                         <Pencil size={16} />
                       </button>
@@ -314,59 +344,84 @@ export default function AdminInventory() {
                   </td>
                 </tr>
               ))}
+              {paginatedProducts.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
+                    ไม่พบสินค้าที่ตรงกับคำค้นหา
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between border-t border-slate-100 px-6 py-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-6 py-3 text-sm">
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
+                disabled={safePage === 1}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-40"
               >
                 <ChevronLeft size={16} />
               </button>
-              {[1, 2, 3].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setPage(n)}
-                  className={`h-8 w-8 rounded-lg text-sm ${
-                    page === n
-                      ? "bg-emerald-700 font-medium text-white"
-                      : "text-slate-500 hover:bg-slate-50"
-                  }`}
-                >
-                  {n}
-                </button>
+              {getPageNumbers(safePage, totalPages).map((n, idx, arr) => (
+                <span key={n} className="flex items-center gap-1">
+                  {idx > 0 && n - arr[idx - 1] > 1 && (
+                    <span className="px-1 text-slate-400">...</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setPage(n)}
+                    className={`h-8 w-8 rounded-lg text-sm ${
+                      safePage === n
+                        ? "bg-emerald-700 font-medium text-white"
+                        : "text-slate-500 hover:bg-slate-50"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                </span>
               ))}
-              <span className="px-1 text-slate-400">...</span>
               <button
                 type="button"
-                onClick={() => setPage(TOTAL_PAGES)}
-                className="h-8 w-8 rounded-lg text-sm text-slate-500 hover:bg-slate-50"
-              >
-                {TOTAL_PAGES}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(TOTAL_PAGES, p + 1))}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-40"
               >
                 <ChevronRight size={16} />
               </button>
             </div>
-            <div className="flex items-center gap-2 text-slate-500">
+            <div className="relative flex items-center gap-2 text-slate-500" data-page-size-menu>
               แสดงต่อหน้า:
               <button
                 type="button"
+                onClick={() => setPageSizeMenuOpen((v) => !v)}
                 className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 font-medium text-slate-700"
               >
-                10
+                {pageSize}
                 <ChevronDown size={12} />
               </button>
+              {pageSizeMenuOpen && (
+                <div className="absolute right-0 top-full z-10 mt-1 w-20 overflow-hidden rounded-lg border border-slate-100 bg-white shadow-lg">
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => {
+                        setPageSize(size);
+                        setPage(1);
+                        setPageSizeMenuOpen(false);
+                      }}
+                      className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-slate-50 ${
+                        size === pageSize ? "font-medium text-emerald-700" : "text-slate-600"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

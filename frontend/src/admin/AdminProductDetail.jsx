@@ -1,43 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Send, MapPin, Package } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-
-// In a real app this would come from your API, keyed by :id from the route.
-const PRODUCT = {
-  name: "เมล็ดมะเขือเทศ Heirloom",
-  category: "ผักอินทรีย์",
-  sku: "HTS-2024-01",
-  price: 12.5,
-  stockUnits: 450,
-  farmer: "แสงฟาร์มอินทรีย์, สวยรัตน์ฟาร์ม",
-  location: "จ.เชียงราย",
-  description:
-    "เมล็ดมะเขือเทศพันธุ์ Heirloom ปลูกแบบออร์แกนิก ไม่ใช้สารเคมี เหมาะสำหรับปลูกในสวนครัวหรือทำสวนผักอินทรีย์ที่บ้าน",
-  images: [
-    "https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=200&h=200&fit=crop",
-    "https://images.unsplash.com/photo-1546470427-e26264be0b0d?w=200&h=200&fit=crop",
-  ],
-};
-
-const REVIEWS = [
-  {
-    id: 1,
-    customer: "นภัสสร ใจดี",
-    rating: 5,
-    date: "28 มิ.ย. 2026",
-    comment: "เมล็ดงอกดีมาก ปลูกง่าย ได้ผลผลิตเยอะกว่าที่คิด แนะนำเลยค่ะ",
-    reply: "",
-  },
-  {
-    id: 2,
-    customer: "ธีรพงษ์ วงศ์สกุล",
-    rating: 3,
-    date: "20 มิ.ย. 2026",
-    comment: "บรรจุภัณฑ์มาช้ำเล็กน้อย แต่เมล็ดยังงอกได้ปกติ",
-    reply: "ขอบคุณสำหรับความเห็นครับ ทางร้านจะปรับปรุงบรรจุภัณฑ์ให้แข็งแรงขึ้นในล็อตถัดไป",
-  },
-];
+import { getProductById, replyToReview } from "./productStore";
 
 function Stars({ value }) {
   return (
@@ -56,8 +21,13 @@ function Stars({ value }) {
 export default function AdminProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [reviews, setReviews] = useState(REVIEWS);
+  const [product, setProduct] = useState(undefined); // undefined = ยังโหลดไม่เสร็จ, null = ไม่พบสินค้า
   const [drafts, setDrafts] = useState({});
+
+  useEffect(() => {
+    setProduct(getProductById(id));
+    setDrafts({});
+  }, [id]);
 
   const updateDraft = (reviewId, value) =>
     setDrafts((prev) => ({ ...prev, [reviewId]: value }));
@@ -65,11 +35,42 @@ export default function AdminProductDetail() {
   const submitReply = (reviewId) => {
     const text = (drafts[reviewId] || "").trim();
     if (!text) return;
-    setReviews((prev) =>
-      prev.map((r) => (r.id === reviewId ? { ...r, reply: text } : r))
-    );
+    const updated = replyToReview(product.id, reviewId, text);
+    setProduct(updated);
     setDrafts((prev) => ({ ...prev, [reviewId]: "" }));
   };
+
+  if (product === undefined) {
+    return (
+      <div className="flex h-screen overflow-hidden bg-slate-50">
+        <AdminSidebar />
+        <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
+          <p className="text-sm text-slate-400">กำลังโหลดข้อมูลสินค้า...</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (product === null) {
+    return (
+      <div className="flex h-screen overflow-hidden bg-slate-50">
+        <AdminSidebar />
+        <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
+          <button
+            type="button"
+            onClick={() => navigate("/admin/inventory")}
+            className="mb-4 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+          >
+            <ArrowLeft size={16} />
+            กลับไปคลังสินค้า
+          </button>
+          <div className="rounded-xl border border-slate-100 bg-white p-10 text-center text-sm text-slate-400 shadow-sm">
+            ไม่พบสินค้าที่ต้องการ (รหัสอ้างอิง #{id})
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -91,34 +92,33 @@ export default function AdminProductDetail() {
             <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs text-slate-400">SKU: {PRODUCT.sku} · รหัสอ้างอิง #{id}</p>
-                  <h1 className="mt-1 text-2xl font-semibold text-slate-800">{PRODUCT.name}</h1>
-                  <p className="mt-1 text-sm text-slate-500">{PRODUCT.category}</p>
+                  <p className="text-xs text-slate-400">
+                    SKU: {product.sku} · รหัสอ้างอิง #{product.id}
+                  </p>
+                  <h1 className="mt-1 text-2xl font-semibold text-slate-800">{product.name}</h1>
+                  <p className="mt-1 text-sm text-slate-500">{product.category}</p>
                 </div>
-                <p className="text-2xl font-semibold text-emerald-700">${PRODUCT.price.toFixed(2)}</p>
+                <p className="text-2xl font-semibold text-emerald-700">
+                  ฿{product.price.toLocaleString()}
+                </p>
               </div>
 
               <div className="mt-4 flex gap-3">
-                {PRODUCT.images.map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt=""
-                    className="h-24 w-24 rounded-lg object-cover"
-                  />
+                {(product.images?.length ? product.images : [product.image]).map((src, i) => (
+                  <img key={i} src={src} alt="" className="h-24 w-24 rounded-lg object-cover" />
                 ))}
               </div>
 
-              <p className="mt-4 text-sm leading-relaxed text-slate-600">{PRODUCT.description}</p>
+              <p className="mt-4 text-sm leading-relaxed text-slate-600">{product.description}</p>
 
               <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-500">
                 <span className="flex items-center gap-1.5">
                   <Package size={14} className="text-slate-400" />
-                  คงเหลือ {PRODUCT.stockUnits.toLocaleString()} หน่วย
+                  คงเหลือ {product.stockUnits.toLocaleString()} {product.unit || "หน่วย"}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <MapPin size={14} className="text-slate-400" />
-                  {PRODUCT.farmer} · {PRODUCT.location}
+                  {product.farmer} · {product.location}
                 </span>
               </div>
             </div>
@@ -126,11 +126,15 @@ export default function AdminProductDetail() {
             {/* Reviews */}
             <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
               <h2 className="text-base font-semibold text-slate-800">
-                รีวิวจากลูกค้า ({reviews.length})
+                รีวิวจากลูกค้า ({product.reviews.length})
               </h2>
 
+              {product.reviews.length === 0 && (
+                <p className="mt-3 text-sm text-slate-400">ยังไม่มีรีวิวสำหรับสินค้านี้</p>
+              )}
+
               <div className="mt-4 space-y-5">
-                {reviews.map((review) => (
+                {product.reviews.map((review) => (
                   <div key={review.id} className="border-b border-slate-50 pb-5 last:border-0 last:pb-0">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-slate-800">{review.customer}</p>
@@ -178,11 +182,11 @@ export default function AdminProductDetail() {
           {/* Right: farm / meta info */}
           <div className="space-y-6">
             <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-              <h2 className="text-base font-semibold text-slate-800">ข้อมูลเจ้าของฟาร์ม</h2>
-              <p className="mt-3 text-sm text-slate-600">{PRODUCT.farmer}</p>
+              <h2 className="text-base font-semibold text-slate-800">ข้อมูลผู้จำหน่าย</h2>
+              <p className="mt-3 text-sm text-slate-600">{product.farmer}</p>
               <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
                 <MapPin size={12} />
-                {PRODUCT.location}
+                {product.location}
               </p>
             </div>
           </div>

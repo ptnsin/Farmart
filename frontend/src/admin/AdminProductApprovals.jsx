@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Search,
   Bell,
@@ -10,6 +10,9 @@ import {
   Pencil,
   Trash2,
   ChevronDown,
+  Package,
+  Check,
+  X,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
 
@@ -19,37 +22,63 @@ const CHANGE_TYPE = {
   remove: { label: "ลบสินค้า", icon: Trash2, color: "text-rose-600 bg-rose-50" },
 };
 
-const REQUESTS = [
+// 1 "รายการที่รออนุมัติ" (batch) = พนักงาน 1 คน จัดสินค้ามาส่งครั้งเดียว
+// อาจมีสินค้าหลายชิ้นอยู่ในรายการเดียวกันได้
+const BATCHES = [
   {
     id: 1,
-    type: "add",
-    product: "น้ำผึ้งดอกลำไย ตรากิ่งแก้ว",
-    farmer: "สวนกิ่งแก้ว, เชียงราย",
-    submittedAt: "05 ก.ค. 2026",
-    detail: "เพิ่มสินค้าใหม่ หมวดหมู่ผลิตภัณฑ์แปรรูป ราคาตั้งขาย 245 บาท สต็อกเริ่มต้น 80 หน่วย",
+    employeeId: "EMP-0231",
+    employeeName: "สมชาย ใจดี",
+    submittedAt: "05 ก.ค. 2026 · 14:20",
+    items: [
+      {
+        id: 101,
+        type: "add",
+        product: "น้ำผึ้งดอกลำไย ตรากิ่งแก้ว",
+        detail: "เพิ่มสินค้าใหม่ หมวดหมู่ผลิตภัณฑ์แปรรูป ราคาตั้งขาย 245 บาท สต็อกเริ่มต้น 80 หน่วย",
+      },
+      {
+        id: 102,
+        type: "add",
+        product: "น้ำผึ้งดอกทานตะวัน ตรากิ่งแก้ว",
+        detail: "เพิ่มสินค้าใหม่ หมวดหมู่ผลิตภัณฑ์แปรรูป ราคาตั้งขาย 260 บาท สต็อกเริ่มต้น 60 หน่วย",
+      },
+    ],
   },
   {
     id: 2,
-    type: "edit",
-    product: "ข้าวหอมมะลิ ปทุมทาน",
-    farmer: "เพชรบัตร, สวนอาม่าตร",
-    submittedAt: "05 ก.ค. 2026",
-    detail: "แก้ไขราคาขายจาก 32.99 บาท เป็น 34.99 บาท และปรับคำอธิบายสินค้าใหม่",
+    employeeId: "EMP-0114",
+    employeeName: "พิมพ์ชนก แสงทอง",
+    submittedAt: "05 ก.ค. 2026 · 10:05",
+    items: [
+      {
+        id: 201,
+        type: "edit",
+        product: "ข้าวหอมมะลิ ปทุมทาน",
+        detail: "แก้ไขราคาขายจาก 32.99 บาท เป็น 34.99 บาท และปรับคำอธิบายสินค้าใหม่",
+      },
+    ],
   },
   {
     id: 3,
-    type: "remove",
-    product: "ผักกาดขาวออร์แกนิก (ล็อตเก่า)",
-    farmer: "แสงฟาร์มอินทรีย์",
-    submittedAt: "04 ก.ค. 2026",
-    detail: "ขอลบสินค้าเนื่องจากหมดฤดูเก็บเกี่ยวและไม่มีสต็อกคงเหลือ",
+    employeeId: "EMP-0075",
+    employeeName: "อรุณ ศรีสุข",
+    submittedAt: "04 ก.ค. 2026 · 16:40",
+    items: [
+      {
+        id: 301,
+        type: "remove",
+        product: "ผักกาดขาวออร์แกนิก (ล็อตเก่า)",
+        detail: "ขอลบสินค้าเนื่องจากหมดฤดูเก็บเกี่ยวและไม่มีสต็อกคงเหลือ",
+      },
+      {
+        id: 302,
+        type: "remove",
+        product: "คะน้าใบเขียว (ล็อตเก่า)",
+        detail: "ขอลบสินค้าเนื่องจากสภาพไม่ได้มาตรฐานคุณภาพ",
+      },
+    ],
   },
-];
-
-const STATS = [
-  { key: "pending", label: "รอตรวจสอบ", value: REQUESTS.length, icon: Clock, iconBg: "bg-amber-50", iconColor: "text-amber-600" },
-  { key: "approved", label: "อนุมัติวันนี้", value: 9, icon: CheckCircle2, iconBg: "bg-emerald-50", iconColor: "text-emerald-600" },
-  { key: "rejected", label: "ปฏิเสธวันนี้", value: 2, icon: XCircle, iconBg: "bg-rose-50", iconColor: "text-rose-600" },
 ];
 
 function StatCard({ label, value, icon: Icon, iconBg, iconColor }) {
@@ -68,9 +97,80 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor }) {
 
 export default function AdminProductApprovals() {
   const [expanded, setExpanded] = useState(null);
-  const [requests, setRequests] = useState(REQUESTS);
+  const [batches, setBatches] = useState(BATCHES);
+  const [query, setQuery] = useState("");
+  const [approvedCount, setApprovedCount] = useState(9);
+  const [rejectedCount, setRejectedCount] = useState(2);
 
-  const resolve = (id) => setRequests((prev) => prev.filter((r) => r.id !== id));
+  const filteredBatches = useMemo(() => {
+    if (!query.trim()) return batches;
+    const q = query.trim().toLowerCase();
+    return batches.filter(
+      (b) =>
+        b.employeeName.toLowerCase().includes(q) ||
+        b.employeeId.toLowerCase().includes(q) ||
+        b.items.some((it) => it.product.toLowerCase().includes(q))
+    );
+  }, [batches, query]);
+
+  const removeItem = (batchId, itemId) => {
+    setBatches((prev) =>
+      prev
+        .map((b) =>
+          b.id === batchId ? { ...b, items: b.items.filter((it) => it.id !== itemId) } : b
+        )
+        .filter((b) => b.items.length > 0)
+    );
+  };
+
+  const approveItem = (batchId, itemId) => {
+    removeItem(batchId, itemId);
+    setApprovedCount((c) => c + 1);
+  };
+
+  const rejectItem = (batchId, itemId) => {
+    removeItem(batchId, itemId);
+    setRejectedCount((c) => c + 1);
+  };
+
+  const approveBatch = (batch) => {
+    setApprovedCount((c) => c + batch.items.length);
+    setBatches((prev) => prev.filter((b) => b.id !== batch.id));
+    setExpanded(null);
+  };
+
+  const rejectBatch = (batch) => {
+    setRejectedCount((c) => c + batch.items.length);
+    setBatches((prev) => prev.filter((b) => b.id !== batch.id));
+    setExpanded(null);
+  };
+
+  const STATS = [
+    {
+      key: "pending",
+      label: "รอตรวจสอบ",
+      value: batches.length,
+      icon: Clock,
+      iconBg: "bg-amber-50",
+      iconColor: "text-amber-600",
+    },
+    {
+      key: "approved",
+      label: "อนุมัติวันนี้",
+      value: approvedCount,
+      icon: CheckCircle2,
+      iconBg: "bg-emerald-50",
+      iconColor: "text-emerald-600",
+    },
+    {
+      key: "rejected",
+      label: "ปฏิเสธวันนี้",
+      value: rejectedCount,
+      icon: XCircle,
+      iconBg: "bg-rose-50",
+      iconColor: "text-rose-600",
+    },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -85,8 +185,10 @@ export default function AdminProductApprovals() {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               type="text"
-              placeholder="ค้นหาคำขอด้วยชื่อสินค้าหรือเกษตรกร..."
+              placeholder="ค้นหาด้วยชื่อพนักงาน, ไอดีพนักงาน หรือชื่อสินค้า..."
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
@@ -115,7 +217,7 @@ export default function AdminProductApprovals() {
           <h1 className="text-2xl font-semibold text-slate-800">อนุมัติการจัดการสินค้า</h1>
         </div>
         <p className="-mt-6 mb-6 text-sm text-slate-400">
-          ตรวจสอบคำขอเพิ่ม แก้ไข และลบสินค้าที่เกษตรกรส่งเข้ามา ก่อนเผยแพร่ในหน้าร้าน
+          ตรวจสอบรายการที่พนักงานจัดสินค้าเข้ามา (เพิ่ม/แก้ไข/ลบ) ก่อนเผยแพร่ในหน้าร้าน
         </p>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -125,25 +227,28 @@ export default function AdminProductApprovals() {
         </div>
 
         <div className="mt-6 space-y-3">
-          {requests.map((req) => {
-            const meta = CHANGE_TYPE[req.type];
-            const Icon = meta.icon;
-            const isOpen = expanded === req.id;
+          {filteredBatches.map((batch) => {
+            const isOpen = expanded === batch.id;
             return (
-              <div key={req.id} className="rounded-xl border border-slate-100 bg-white shadow-sm">
+              <div key={batch.id} className="rounded-xl border border-slate-100 bg-white shadow-sm">
                 <button
                   type="button"
-                  onClick={() => setExpanded(isOpen ? null : req.id)}
+                  onClick={() => setExpanded(isOpen ? null : batch.id)}
                   className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
                 >
                   <div className="flex items-center gap-4">
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-full ${meta.color}`}>
-                      <Icon size={16} />
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                      <Package size={16} />
                     </span>
                     <div>
-                      <p className="font-medium text-slate-800">{req.product}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium text-slate-800">{batch.employeeName}</p>
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                          {batch.employeeId}
+                        </span>
+                      </div>
                       <p className="text-xs text-slate-400">
-                        {meta.label} · {req.farmer} · {req.submittedAt}
+                        จัดเมื่อ {batch.submittedAt} · {batch.items.length} รายการ
                       </p>
                     </div>
                   </div>
@@ -155,22 +260,70 @@ export default function AdminProductApprovals() {
 
                 {isOpen && (
                   <div className="border-t border-slate-100 px-5 py-4">
-                    <p className="text-sm text-slate-600">{req.detail}</p>
-                    <div className="mt-4 flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => resolve(req.id)}
-                        className="rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-rose-500 hover:bg-rose-50"
-                      >
-                        ปฏิเสธ
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => resolve(req.id)}
-                        className="rounded-full bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
-                      >
-                        อนุมัติ
-                      </button>
+                    <div className="space-y-3">
+                      {batch.items.map((item) => {
+                        const meta = CHANGE_TYPE[item.type];
+                        const Icon = meta.icon;
+                        return (
+                          <div
+                            key={item.id}
+                            className="flex items-start justify-between gap-4 rounded-lg border border-slate-100 bg-slate-50/70 px-4 py-3"
+                          >
+                            <div className="flex items-start gap-3">
+                              <span
+                                className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${meta.color}`}
+                              >
+                                <Icon size={14} />
+                              </span>
+                              <div>
+                                <p className="text-sm font-medium text-slate-800">{item.product}</p>
+                                <p className="text-xs text-slate-400">{meta.label}</p>
+                                <p className="mt-1 text-sm text-slate-600">{item.detail}</p>
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => rejectItem(batch.id, item.id)}
+                                aria-label="ปฏิเสธรายการนี้"
+                                className="flex h-7 w-7 items-center justify-center rounded-full border border-rose-200 text-rose-500 hover:bg-rose-50"
+                              >
+                                <X size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => approveItem(batch.id, item.id)}
+                                aria-label="อนุมัติรายการนี้"
+                                className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+                              >
+                                <Check size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                      <p className="text-xs text-slate-400">
+                        พนักงานผู้จัด: {batch.employeeName} ({batch.employeeId})
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => rejectBatch(batch)}
+                          className="rounded-full border border-rose-200 px-4 py-1.5 text-sm font-medium text-rose-500 hover:bg-rose-50"
+                        >
+                          ปฏิเสธทั้งหมด
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => approveBatch(batch)}
+                          className="rounded-full bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+                        >
+                          อนุมัติทั้งหมด
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -178,9 +331,11 @@ export default function AdminProductApprovals() {
             );
           })}
 
-          {requests.length === 0 && (
+          {filteredBatches.length === 0 && (
             <div className="rounded-xl border border-slate-100 bg-white p-10 text-center text-sm text-slate-400 shadow-sm">
-              ไม่มีคำขอที่รอตรวจสอบในขณะนี้
+              {batches.length === 0
+                ? "ไม่มีรายการที่รอตรวจสอบในขณะนี้"
+                : "ไม่พบรายการที่ตรงกับคำค้นหา"}
             </div>
           )}
         </div>
