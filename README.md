@@ -140,11 +140,11 @@ graph TD
 
 | ลำดับ | รหัสนักศึกษา | ชื่อ-สกุล | หน้าที่รับผิดชอบ |
 |:---:|:---:|---|---|
-| 1 | 67114610 | กองทัพ โคกอาศัย | UX/UI, Tester |
+| 1 | 67114610 | กองทัพ โคกอาศัย | UX/UI, Backend Dev |
 | 2 | 67118401 | ปฏิภาณ ฉิมจีน | Frontend Dev |
 | 3 | 67122203 | ศิวงศ์ เตยโพธิ์ | Database, Backend Dev |
 | 4 | 67162470 | พงศกร ศรีนวลนุ่ม | Frontend Dev |
-| 5 | 67178847 | ภัทรนันท์ สิงห์เชิดชู | PM, Full-stack |
+| 5 | 67178847 | ภัทรนันท์ สิงห์เชิดชู | PM, Full-stack, Tester |
 
 ---
 
@@ -174,7 +174,7 @@ graph TD
    ```bash
    cd backend
    npm install
-   npm run start
+   npm run dev
    ```
 
 4. เปิดเบราว์เซอร์ไปที่ `http://localhost:5173`
