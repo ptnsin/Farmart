@@ -11,7 +11,7 @@
 
 import DEFAULT_PRODUCTS from "./productsData";
 
-const STORAGE_KEY = "farmart_admin_products";
+const STORAGE_KEY = "farmart_products";
 
 function readRaw() {
   try {

@@ -49,7 +49,7 @@ export default function AgriHarvestRegister() {
         password: form.password,
       });
       saveSession(user, false);
-      navigate("/dashboard");
+      navigate("/home"); // ผู้สมัครใหม่ทุกคนเป็น role CUSTOMER
     } catch (err) {
       setError(err.message);
     }

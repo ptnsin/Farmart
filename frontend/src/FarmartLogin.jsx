@@ -26,7 +26,13 @@ export default function FarmartLogin() {
         return;
       }
       saveSession(user, keepSignedIn);
-      navigate("/dashboard");
+
+      const roleRoutes = {
+        CUSTOMER: "/home",
+        EMPLOYEE: "/employee/orders",
+        ADMIN: "/admin/users",
+      };
+      navigate(roleRoutes[user.role] || "/home");
     } catch (err) {
       setError(err.message);
     }
