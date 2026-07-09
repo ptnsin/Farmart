@@ -9,11 +9,13 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const productRoutes = require("./routes/products");
+const categoryRoutes = require("./routes/categories");
 const orderRoutes = require("./routes/orders");
 const shipmentRoutes = require("./routes/shipments");
 const promotionRoutes = require("./routes/promotions");
 const supportRoutes = require("./routes/support");
 const reportRoutes = require("./routes/reports");
+const dashboardRoutes = require("./routes/dashboard");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -34,11 +36,13 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/shipments", shipmentRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // 404
 app.use((req, res) => {

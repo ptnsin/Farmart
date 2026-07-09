@@ -1,41 +1,25 @@
+// routes/support.js
 const express = require("express");
 const router = express.Router();
-const supportModel = require("../models/supportModel");
+const supportController = require("../controllers/supportController");
 const { requireAuth, requireRole } = require("../middleware/auth");
 
-// GET /api/support  (admin only) - ตั๋วช่วยเหลือทั้งหมด (จาก employee/admin)
-router.get("/", requireRole("ADMIN"), (req, res) => {
-  res.json({ tickets: supportModel.getTickets() });
-});
+// GET /api/support (admin only) - ตั๋วช่วยเหลือทั้งหมด
+router.get("/", requireRole("ADMIN"), supportController.getTickets);
 
-// GET /api/support/mine  (ผู้ใช้ที่ login) - ตั๋วของตัวเอง
-router.get("/mine", requireAuth, (req, res) => {
-  const tickets = supportModel.getTickets().filter((t) => t.userId === req.user.id);
-  res.json({ tickets });
-});
+// GET /api/support/mine (ผู้ใช้ที่ login) - ตั๋วของตัวเอง
+router.get("/mine", requireAuth, supportController.getMyTickets);
 
-// POST /api/support  (employee/admin ส่งคำถามถึงทีมกลาง)
-router.post("/", requireAuth, (req, res) => {
-  const { subject, message } = req.body || {};
-  if (!subject) return res.status(400).json({ error: "กรุณากรอกหัวข้อ" });
-  const ticket = supportModel.createTicket({
-    userId: req.user.id,
-    role: req.user.role,
-    subject,
-    message,
-  });
-  res.status(201).json({ ticket });
-});
+// GET /api/support/:id
+router.get("/:id", requireAuth, supportController.getTicketById);
 
-// PATCH /api/support/:id/status  (admin only) - open / resolved
-router.patch("/:id/status", requireRole("ADMIN"), (req, res) => {
-  const { status } = req.body || {};
-  if (!["open", "resolved"].includes(status)) {
-    return res.status(400).json({ error: "status ต้องเป็น open หรือ resolved" });
-  }
-  const ticket = supportModel.updateTicketStatus(req.params.id, status);
-  if (!ticket) return res.status(404).json({ error: "ไม่พบตั๋วนี้" });
-  res.json({ ticket });
-});
+// POST /api/support (ผู้ใช้ที่ login แล้ว) - ส่งคำถามถึงทีมกลาง
+router.post("/", requireAuth, supportController.createTicket);
+
+// PUT /api/support/:id (admin only) - แก้ไขตั๋ว
+router.put("/:id", requireRole("ADMIN"), supportController.updateTicket);
+
+// DELETE /api/support/:id (admin only)
+router.delete("/:id", requireRole("ADMIN"), supportController.deleteTicket);
 
 module.exports = router;

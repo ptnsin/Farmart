@@ -1,0 +1,20 @@
+[
+  {
+    "id": "SP-1042",
+    "userId": 1,
+    "role": "EMPLOYEE",
+    "subject": "ไม่สามารถอัปโหลดรูปสินค้าได้",
+    "message": "",
+    "status": "open",
+    "date": "2026-07-04"
+  },
+  {
+    "id": "SP-1039",
+    "userId": 3,
+    "role": "ADMIN",
+    "subject": "สอบถามขั้นตอนอนุมัติสินค้า",
+    "message": "",
+    "status": "resolved",
+    "date": "2026-07-02"
+  }
+]

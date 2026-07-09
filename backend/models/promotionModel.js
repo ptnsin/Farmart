@@ -10,6 +10,10 @@ function savePromotions(promos) {
   return db.write("promotions", promos);
 }
 
+function getPromotionById(id) {
+  return getPromotions().find((p) => p.id === Number(id)) || null;
+}
+
 function addPromotion(data) {
   const promos = getPromotions();
   const id = db.nextId(promos);
@@ -57,6 +61,7 @@ function findByCode(code) {
 module.exports = {
   getPromotions,
   savePromotions,
+  getPromotionById,
   addPromotion,
   updatePromotion,
   togglePromotionStatus,

@@ -61,6 +61,23 @@ function updateOrderStatus(id, status) {
   return orders.find((o) => o.id === id) || null;
 }
 
+/** แก้ไขคำสั่งซื้อแบบทั่วไป (ใช้กับ PUT /api/orders/:id) */
+function updateOrder(id, patch) {
+  const safePatch = { ...patch };
+  delete safePatch.id;
+  delete safePatch.userId;
+  const orders = getOrders().map((o) => (o.id === id ? { ...o, ...safePatch, id: o.id } : o));
+  saveOrders(orders);
+  return orders.find((o) => o.id === id) || null;
+}
+
+/** ลบคำสั่งซื้อ */
+function deleteOrder(id) {
+  const orders = getOrders().filter((o) => o.id !== id);
+  saveOrders(orders);
+  return orders;
+}
+
 function advanceOrderStep(id) {
   const orders = getOrders().map((o) => {
     if (o.id !== id) return o;
@@ -78,6 +95,8 @@ module.exports = {
   getOrdersByUser,
   createOrder,
   updateOrderStatus,
+  updateOrder,
+  deleteOrder,
   advanceOrderStep,
   STEP_LABELS,
 };

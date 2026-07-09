@@ -1,9 +1,0 @@
-node_modules/
-data/users.json
-data/products.json
-data/orders.json
-data/shipments.json
-data/promotions.json
-data/support.json
-data/sessions.json
-.env

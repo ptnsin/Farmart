@@ -1,24 +1,25 @@
+// routes/shipments.js
 const express = require("express");
 const router = express.Router();
-const shipmentModel = require("../models/shipmentModel");
+const shipmentController = require("../controllers/shipmentController");
 const { requireRole } = require("../middleware/auth");
 
-// GET /api/shipments  (employee/admin)
-router.get("/", requireRole("EMPLOYEE", "ADMIN"), (req, res) => {
-  res.json({ shipments: shipmentModel.getShipments() });
-});
+// GET /api/shipments (employee/admin)
+router.get("/", requireRole("EMPLOYEE", "ADMIN"), shipmentController.getShipments);
 
-// POST /api/shipments  (employee/admin) - สร้างการจัดส่งใหม่ให้ order
-router.post("/", requireRole("EMPLOYEE", "ADMIN"), (req, res) => {
-  const shipment = shipmentModel.createShipment(req.body || {});
-  res.status(201).json({ shipment });
-});
+// GET /api/shipments/:id (employee/admin)
+router.get("/:id", requireRole("EMPLOYEE", "ADMIN"), shipmentController.getShipmentById);
 
-// PATCH /api/shipments/:id/advance  (employee/admin) - preparing -> in_transit -> delivered
-router.patch("/:id/advance", requireRole("EMPLOYEE", "ADMIN"), (req, res) => {
-  const shipment = shipmentModel.advanceShipment(req.params.id);
-  if (!shipment) return res.status(404).json({ error: "ไม่พบรายการจัดส่งนี้ หรืออยู่ในสถานะสุดท้ายแล้ว" });
-  res.json({ shipment });
-});
+// POST /api/shipments (employee/admin) - สร้างการจัดส่งใหม่ให้ order
+router.post("/", requireRole("EMPLOYEE", "ADMIN"), shipmentController.createShipment);
+
+// PUT /api/shipments/:id (employee/admin) - แก้ไขข้อมูลการจัดส่งแบบทั่วไป
+router.put("/:id", requireRole("EMPLOYEE", "ADMIN"), shipmentController.updateShipment);
+
+// DELETE /api/shipments/:id (employee/admin)
+router.delete("/:id", requireRole("EMPLOYEE", "ADMIN"), shipmentController.deleteShipment);
+
+// PATCH /api/shipments/:id/advance (employee/admin) - preparing -> in_transit -> delivered
+router.patch("/:id/advance", requireRole("EMPLOYEE", "ADMIN"), shipmentController.advance);
 
 module.exports = router;

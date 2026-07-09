@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "เมล็ดพันธุ์",
+    "slug": "seeds",
+    "description": "เมล็ดพันธุ์พืชผัก ผลไม้ และธัญพืชคุณภาพดี",
+    "icon": "🌱",
+    "status": "active"
+  },
+  {
+    "id": 2,
+    "name": "ปุ๋ย",
+    "slug": "fertilizer",
+    "description": "ปุ๋ยเคมีและปุ๋ยอินทรีย์สำหรับบำรุงพืช",
+    "icon": "🌾",
+    "status": "active"
+  },
+  {
+    "id": 3,
+    "name": "ยาฆ่าแมลง",
+    "slug": "insecticide",
+    "description": "ผลิตภัณฑ์กำจัดแมลงศัตรูพืช",
+    "icon": "🐛",
+    "status": "active"
+  },
+  {
+    "id": 4,
+    "name": "ยาฆ่าหญ้า",
+    "slug": "herbicide",
+    "description": "ผลิตภัณฑ์กำจัดวัชพืช",
+    "icon": "🌿",
+    "status": "active"
+  },
+  {
+    "id": 5,
+    "name": "ฮอร์โมน",
+    "slug": "hormone",
+    "description": "ฮอร์โมนพืชเร่งการเจริญเติบโตและออกดอกออกผล",
+    "icon": "🧪",
+    "status": "active"
+  },
+  {
+    "id": 6,
+    "name": "อุปกรณ์รดน้ำ",
+    "slug": "irrigation-tools",
+    "description": "อุปกรณ์และเครื่องมือระบบรดน้ำ",
+    "icon": "💧",
+    "status": "active"
+  },
+  {
+    "id": 7,
+    "name": "อุปกรณ์จัดการดิน",
+    "slug": "soil-tools",
+    "description": "เครื่องมือปรับปรุงและจัดการดิน",
+    "icon": "🧑‍🌾",
+    "status": "active"
+  },
+  {
+    "id": 8,
+    "name": "กระถาง",
+    "slug": "pots",
+    "description": "กระถางปลูกต้นไม้หลากหลายขนาดและวัสดุ",
+    "icon": "🪴",
+    "status": "active"
+  },
+  {
+    "id": 9,
+    "name": "ไม้ดอก",
+    "slug": "flowering-plants",
+    "description": "ต้นไม้ดอกไม้สำหรับตกแต่งและจำหน่าย",
+    "icon": "🌸",
+    "status": "active"
+  },
+  {
+    "id": 10,
+    "name": "ไม้ผล",
+    "slug": "fruit-trees",
+    "description": "ต้นไม้ผลสำหรับปลูกและเพาะพันธุ์",
+    "icon": "🌳",
+    "status": "active"
+  }
+]

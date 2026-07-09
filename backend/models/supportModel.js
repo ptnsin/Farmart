@@ -33,4 +33,32 @@ function updateTicketStatus(id, status) {
   return tickets.find((t) => t.id === id) || null;
 }
 
-module.exports = { getTickets, saveTickets, createTicket, updateTicketStatus };
+function getTicketById(id) {
+  return getTickets().find((t) => t.id === id) || null;
+}
+
+/** แก้ไขตั๋วแบบทั่วไป (ใช้กับ PUT /api/support/:id) */
+function updateTicket(id, patch) {
+  const safePatch = { ...patch };
+  delete safePatch.id;
+  const tickets = getTickets().map((t) => (t.id === id ? { ...t, ...safePatch, id: t.id } : t));
+  saveTickets(tickets);
+  return tickets.find((t) => t.id === id) || null;
+}
+
+/** ลบตั๋ว */
+function deleteTicket(id) {
+  const tickets = getTickets().filter((t) => t.id !== id);
+  saveTickets(tickets);
+  return tickets;
+}
+
+module.exports = {
+  getTickets,
+  saveTickets,
+  createTicket,
+  updateTicketStatus,
+  getTicketById,
+  updateTicket,
+  deleteTicket,
+};

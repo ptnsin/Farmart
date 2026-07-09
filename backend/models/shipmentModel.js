@@ -12,6 +12,26 @@ function saveShipments(shipments) {
   return db.write("shipments", shipments);
 }
 
+function getShipmentById(id) {
+  return getShipments().find((s) => s.id === id) || null;
+}
+
+/** แก้ไขข้อมูลการจัดส่งแบบทั่วไป (ใช้กับ PUT /api/shipments/:id) */
+function updateShipment(id, patch) {
+  const safePatch = { ...patch };
+  delete safePatch.id;
+  const shipments = getShipments().map((s) => (s.id === id ? { ...s, ...safePatch, id: s.id } : s));
+  saveShipments(shipments);
+  return shipments.find((s) => s.id === id) || null;
+}
+
+/** ลบข้อมูลการจัดส่ง */
+function deleteShipment(id) {
+  const shipments = getShipments().filter((s) => s.id !== id);
+  saveShipments(shipments);
+  return shipments;
+}
+
 function advanceShipment(id) {
   const shipments = getShipments().map((s) =>
     s.id === id && NEXT_STATUS[s.status] ? { ...s, status: NEXT_STATUS[s.status] } : s
@@ -35,4 +55,12 @@ function createShipment(data) {
   return shipment;
 }
 
-module.exports = { getShipments, saveShipments, advanceShipment, createShipment };
+module.exports = {
+  getShipments,
+  saveShipments,
+  getShipmentById,
+  updateShipment,
+  deleteShipment,
+  advanceShipment,
+  createShipment,
+};
