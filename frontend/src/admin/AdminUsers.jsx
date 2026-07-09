@@ -15,7 +15,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { getUsers, updateUserStatus, deleteUser } from "./userStore";
+import { getUsers, updateUserStatus, deleteUser } from "../data/userStore";
 
 const ROLE_STYLES = {
   EMPLOYEE: "text-slate-600",

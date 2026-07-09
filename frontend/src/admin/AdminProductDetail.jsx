@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Send, MapPin, Package } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { getProductById, replyToReview } from "./productStore";
+import { getProductById, replyToReview } from "../data/productStore";
 
 function Stars({ value }) {
   return (

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Save, X, User, Mail, Phone, Shield, Camera, Trash2, Loader2 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { addUser } from "./userStore";
+import { addUser } from "../data/userStore";
 
 const ROLES = ["EMPLOYEE", "CUSTOMER", "ADMIN"];
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB ต้องตรงกับ limit ฝั่ง backend

@@ -16,7 +16,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { getProducts } from "./productStore";
+import { getProducts } from "../data/productStore";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 

@@ -27,6 +27,7 @@ const CHANGE_TYPE = {
 const BATCHES = [
   {
     id: 1,
+    lotCode: "LOT-2026070501",
     employeeId: "EMP-0231",
     employeeName: "สมชาย ใจดี",
     submittedAt: "05 ก.ค. 2026 · 14:20",
@@ -47,6 +48,7 @@ const BATCHES = [
   },
   {
     id: 2,
+    lotCode: "LOT-2026070502",
     employeeId: "EMP-0114",
     employeeName: "พิมพ์ชนก แสงทอง",
     submittedAt: "05 ก.ค. 2026 · 10:05",
@@ -61,6 +63,7 @@ const BATCHES = [
   },
   {
     id: 3,
+    lotCode: "LOT-2026070401",
     employeeId: "EMP-0075",
     employeeName: "อรุณ ศรีสุข",
     submittedAt: "04 ก.ค. 2026 · 16:40",
@@ -109,6 +112,7 @@ export default function AdminProductApprovals() {
       (b) =>
         b.employeeName.toLowerCase().includes(q) ||
         b.employeeId.toLowerCase().includes(q) ||
+        b.lotCode.toLowerCase().includes(q) ||
         b.items.some((it) => it.product.toLowerCase().includes(q))
     );
   }, [batches, query]);
@@ -188,7 +192,7 @@ export default function AdminProductApprovals() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               type="text"
-              placeholder="ค้นหาด้วยชื่อพนักงาน, ไอดีพนักงาน หรือชื่อสินค้า..."
+              placeholder="ค้นหาด้วยชื่อพนักงาน, ไอดีพนักงาน, ไอดีรายการจัดสินค้า หรือชื่อสินค้า..."
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
@@ -244,7 +248,7 @@ export default function AdminProductApprovals() {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-medium text-slate-800">{batch.employeeName}</p>
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-                          {batch.employeeId}
+                          {batch.lotCode}
                         </span>
                       </div>
                       <p className="text-xs text-slate-400">
