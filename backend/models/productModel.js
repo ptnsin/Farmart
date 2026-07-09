@@ -1,0 +1,107 @@
+// models/productModel.js
+// พอร์ตมาจาก frontend/src/data/productStore.js ให้ทำงานฝั่ง server แทน localStorage
+
+const db = require("../utils/db");
+const SEED = require("../data/products.seed.json");
+
+function getProducts() {
+  return db.read("products", SEED);
+}
+
+function saveProducts(products) {
+  return db.write("products", products);
+}
+
+function getProductById(id) {
+  return getProducts().find((p) => String(p.id) === String(id)) || null;
+}
+
+function resetProducts() {
+  return db.write("products", SEED);
+}
+
+function addProduct(data) {
+  const products = getProducts();
+  const id = db.nextId(products);
+  const newProduct = {
+    id,
+    sku: data.sku || `SKU${String(id).padStart(4, "0")}`,
+    name: data.name?.trim() || "",
+    category: data.category || "",
+    unit: data.unit || "",
+    price: Number(data.price) || 0,
+    cost: Number(data.cost) || 0,
+    stockUnits: Number(data.stockUnits) || 0,
+    stockPercent: Number(data.stockPercent) || 0,
+    stockLevel: data.stockLevel || "healthy",
+    farmer: data.farmer || "",
+    location: data.location || "",
+    description: data.description || "",
+    image: data.image || "https://placehold.co/64x64/E2E8F0/475569?text=IMG",
+    images: data.images || [],
+    reviews: [],
+    approvalStatus: data.approvalStatus || "pending",
+  };
+  saveProducts([newProduct, ...products]);
+  return newProduct;
+}
+
+function updateProduct(id, patch) {
+  const products = getProducts().map((p) =>
+    String(p.id) === String(id) ? { ...p, ...patch, id: p.id } : p
+  );
+  saveProducts(products);
+  return products.find((p) => String(p.id) === String(id)) || null;
+}
+
+function deleteProduct(id) {
+  const products = getProducts().filter((p) => String(p.id) !== String(id));
+  saveProducts(products);
+  return products;
+}
+
+function replyToReview(productId, reviewId, replyText) {
+  const products = getProducts().map((p) => {
+    if (String(p.id) !== String(productId)) return p;
+    return {
+      ...p,
+      reviews: p.reviews.map((r) =>
+        String(r.id) === String(reviewId) ? { ...r, reply: replyText } : r
+      ),
+    };
+  });
+  saveProducts(products);
+  return products.find((p) => String(p.id) === String(productId)) || null;
+}
+
+function addReview(productId, { customer, rating, comment }) {
+  const products = getProducts();
+  const product = products.find((p) => String(p.id) === String(productId));
+  if (!product) return null;
+  const nextReviewId = (product.reviews || []).reduce((m, r) => Math.max(m, r.id || 0), 0) + 1;
+  const review = {
+    id: nextReviewId,
+    customer,
+    rating: Number(rating) || 5,
+    date: new Date().toISOString(),
+    comment: comment || "",
+    reply: "",
+  };
+  const updated = products.map((p) =>
+    String(p.id) === String(productId) ? { ...p, reviews: [...(p.reviews || []), review] } : p
+  );
+  saveProducts(updated);
+  return updated.find((p) => String(p.id) === String(productId));
+}
+
+module.exports = {
+  getProducts,
+  saveProducts,
+  getProductById,
+  resetProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  replyToReview,
+  addReview,
+};

@@ -1,0 +1,6 @@
+[
+  { "id": "SHP-5521", "order": "ORD-10229", "carrier": "Farmart Express", "status": "delivered", "eta": "2 ก.ค. 2569" },
+  { "id": "SHP-5522", "order": "ORD-10228", "carrier": "Kerry Express", "status": "in_transit", "eta": "6 ก.ค. 2569" },
+  { "id": "SHP-5523", "order": "ORD-10231", "carrier": "Farmart Express", "status": "preparing", "eta": "8 ก.ค. 2569" },
+  { "id": "SHP-5524", "order": "ORD-10230", "carrier": "Flash Express", "status": "in_transit", "eta": "7 ก.ค. 2569" }
+]
