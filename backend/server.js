@@ -5,6 +5,7 @@
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
@@ -16,12 +17,17 @@ const promotionRoutes = require("./routes/promotions");
 const supportRoutes = require("./routes/support");
 const reportRoutes = require("./routes/reports");
 const dashboardRoutes = require("./routes/dashboard");
+const uploadRoutes = require("./routes/upload");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+
+// เปิดให้เข้าถึงไฟล์ที่อัปโหลดแล้วผ่าน URL เช่น
+// http://localhost:4000/uploads/avatars/xxx.jpg
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Log แบบง่าย ๆ ไว้ดูตอน dev
 app.use((req, res, next) => {
@@ -43,6 +49,7 @@ app.use("/api/promotions", promotionRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // 404
 app.use((req, res) => {

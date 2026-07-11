@@ -1,110 +1,91 @@
 // productStore.js
-// เก็บและจัดการข้อมูลสินค้าทั้งหมดผ่าน localStorage
-// ทำหน้าที่เป็น "ฐานข้อมูลจำลอง" ฝั่ง client ให้ AdminInventory และ AdminProductDetail ใช้ร่วมกัน
+// เดิมไฟล์นี้เก็บข้อมูลสินค้าทั้งหมดใน localStorage เอง (seed มาจาก productsData.js / Excel)
+// ตอนนี้ backend ทำหน้าที่นั้นแทนแล้ว (ดู backend/data/products.seed.json)
+// ไฟล์ productsData.js เดิมไม่ได้ใช้แล้ว เพราะ backend มี seed ของตัวเองอยู่แล้ว ลบทิ้งได้
 //
-// วิธีทำงาน (แนวคิดเดียวกับ userStore.js):
-// 1. ข้อมูลสินค้าเริ่มต้น (seed) อยู่ใน productsData.js ซึ่งแปลงมาจากไฟล์ Excel
-// 2. ครั้งแรกที่เว็บถูกเปิด จะไม่มีข้อมูลใน localStorage เลย -> getProducts() จะ
-//    copy ค่าเริ่มต้นจาก productsData.js ใส่ลง localStorage ให้อัตโนมัติ (JSON.stringify)
-// 3. ครั้งถัดไปที่เปิดเว็บ จะอ่านจาก localStorage ตรง ๆ (JSON.parse) ไม่ต้อง seed ซ้ำ
-// 4. ทุกการแก้ไข (เพิ่ม/แก้/ลบสินค้า, ตอบกลับรีวิว) จะเขียนทับ localStorage ทันที
+// ทุกฟังก์ชันด้านล่างนี้เป็น async ทั้งหมด (คืนค่าเป็น Promise) ต้อง await เสมอ
+//
+// หมายเหตุ field ที่ backend คืนมา (อิงจาก controllers/productController.js จริง):
+// - GET /api/products                          -> { products: [...], total }
+// - GET /api/products/:id                      -> { product: {...} }
+// - POST /api/products                         -> { product: {...} }
+// - PUT /api/products/:id                      -> { product: {...} }
+// - DELETE /api/products/:id                   -> { products: [...], message }
+// - PATCH /api/products/:id/approval           -> { product: {...} } (body ต้องเป็น approvalStatus ไม่ใช่ status!)
+// - POST /api/products/:id/reviews             -> { product: {...} } (ไม่ต้องส่ง customer, backend ใช้ req.user.name เอง)
+// - POST /api/products/:id/reviews/:rid/reply  -> { product: {...} }
+// ฟังก์ชันด้านล่างนี้ unwrap object ห่อเหล่านี้ให้แล้ว
+//
+// สิทธิ์การเข้าถึง (ดู routes/products.js):
+// - GET ดูสินค้า: public ไม่ต้อง login
+// - POST/PUT/DELETE: ต้อง login เป็น EMPLOYEE หรือ ADMIN
+// - PATCH .../approval (อนุมัติ/ปฏิเสธ): ต้อง login เป็น ADMIN เท่านั้น
+// - POST รีวิว: ต้อง login (role อะไรก็ได้)
+// - ตอบกลับรีวิว: ต้อง login เป็น EMPLOYEE หรือ ADMIN
 
-import DEFAULT_PRODUCTS from "./productsData";
+import { api } from "./apiClient";
 
-const STORAGE_KEY = "farmart_products";
-
-function readRaw() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+/**
+ * ดึงสินค้าทั้งหมด รองรับ filter ผ่าน query string
+ * @param {{category?:string, search?:string, stockLevel?:string, approvalStatus?:string}} filters
+ */
+export async function getProducts(filters = {}) {
+  const params = new URLSearchParams(
+    Object.entries(filters).filter(([, v]) => v !== undefined && v !== "")
+  );
+  const qs = params.toString();
+  const data = await api.get(`/api/products${qs ? `?${qs}` : ""}`);
+  return data.products;
 }
 
-function writeRaw(products) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+/** ดึงสินค้าชิ้นเดียวด้วย id */
+export async function getProductById(id) {
+  const data = await api.get(`/api/products/${id}`);
+  return data.product;
 }
 
-/** ดึงสินค้าทั้งหมด ถ้ายังไม่มีข้อมูลใน localStorage จะ seed ค่าเริ่มต้นให้อัตโนมัติ */
-export function getProducts() {
-  const existing = readRaw();
-  if (existing && Array.isArray(existing)) return existing;
-  writeRaw(DEFAULT_PRODUCTS);
-  return DEFAULT_PRODUCTS;
-}
-
-/** ดึงสินค้าชิ้นเดียวด้วย id (id จาก useParams เป็น string เลยแปลงให้เทียบกันได้) */
-export function getProductById(id) {
-  return getProducts().find((p) => String(p.id) === String(id)) || null;
-}
-
-/** บันทึกสินค้าทั้งหมดทับของเดิม */
-export function saveProducts(products) {
-  writeRaw(products);
-  return products;
-}
-
-/** รีเซ็ตกลับเป็นข้อมูลเริ่มต้นจากไฟล์ Excel */
-export function resetProducts() {
-  writeRaw(DEFAULT_PRODUCTS);
-  return DEFAULT_PRODUCTS;
-}
-
-function nextId(products) {
-  return products.reduce((max, p) => Math.max(max, p.id), 0) + 1;
-}
-
-/** เพิ่มสินค้าใหม่ */
-export function addProduct(data) {
-  const products = getProducts();
-  const id = nextId(products);
-  const newProduct = {
-    id,
-    sku: data.sku || `SKU${String(id).padStart(4, "0")}`,
-    name: data.name?.trim() || "",
-    category: data.category || "",
-    unit: data.unit || "",
-    price: Number(data.price) || 0,
-    cost: Number(data.cost) || 0,
-    stockUnits: Number(data.stockUnits) || 0,
-    stockPercent: Number(data.stockPercent) || 0,
-    stockLevel: data.stockLevel || "healthy",
-    farmer: data.farmer || "",
-    location: data.location || "",
-    description: data.description || "",
-    image: data.image || "https://placehold.co/64x64/E2E8F0/475569?text=IMG",
-    images: data.images || [],
-    reviews: [],
-  };
-  const updated = [newProduct, ...products];
-  writeRaw(updated);
-  return newProduct;
+/** เพิ่มสินค้าใหม่ (employee เพิ่มแล้วจะเข้าสถานะ pending รอ admin อนุมัติ ระบบฝั่ง backend จัดการให้เอง) */
+export async function addProduct(data) {
+  const res = await api.post("/api/products", data);
+  return res.product;
 }
 
 /** แก้ไขข้อมูลสินค้า (ส่งเฉพาะ field ที่จะเปลี่ยนก็ได้) */
-export function updateProduct(id, patch) {
-  const products = getProducts().map((p) => (p.id === id ? { ...p, ...patch } : p));
-  writeRaw(products);
-  return products;
+export async function updateProduct(id, patch) {
+  const data = await api.put(`/api/products/${id}`, patch);
+  return data.product;
 }
 
-/** ลบสินค้า */
-export function deleteProduct(id) {
-  const products = getProducts().filter((p) => p.id !== id);
-  writeRaw(products);
-  return products;
+/** ลบสินค้า - คืนค่ารายการสินค้าที่เหลือทั้งหมดกลับมา */
+export async function deleteProduct(id) {
+  const data = await api.delete(`/api/products/${id}`);
+  return data.products;
 }
 
-/** ตอบกลับรีวิวของสินค้าชิ้นหนึ่ง แล้วบันทึกลง localStorage ทันที */
-export function replyToReview(productId, reviewId, replyText) {
-  const products = getProducts().map((p) => {
-    if (String(p.id) !== String(productId)) return p;
-    return {
-      ...p,
-      reviews: p.reviews.map((r) => (r.id === reviewId ? { ...r, reply: replyText } : r)),
-    };
+/**
+ * อนุมัติ/ปฏิเสธสินค้าที่พนักงานเพิ่มเข้ามา (admin เท่านั้น)
+ * @param {string|number} id
+ * @param {"approved"|"rejected"|"pending"} approvalStatus
+ */
+export async function updateApproval(id, approvalStatus) {
+  const data = await api.patch(`/api/products/${id}/approval`, { approvalStatus });
+  return data.product;
+}
+
+/**
+ * เพิ่มรีวิวสินค้า (ต้อง login) — ไม่ต้องส่งชื่อลูกค้า backend ดึงจาก user ที่ login เอง
+ * @param {string|number} productId
+ * @param {{rating:number, comment?:string}} review
+ */
+export async function addReview(productId, { rating, comment }) {
+  const data = await api.post(`/api/products/${productId}/reviews`, { rating, comment });
+  return data.product;
+}
+
+/** ตอบกลับรีวิวของสินค้า (employee/admin เท่านั้น) */
+export async function replyToReview(productId, reviewId, replyText) {
+  const data = await api.post(`/api/products/${productId}/reviews/${reviewId}/reply`, {
+    reply: replyText,
   });
-  writeRaw(products);
-  return products.find((p) => String(p.id) === String(productId));
+  return data.product;
 }

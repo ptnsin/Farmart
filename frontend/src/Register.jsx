@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Sprout, User, Mail, Phone, Lock, Tractor } from "lucide-react";
-import { registerUser, saveSession } from "./data/userStore";
+import { registerUser } from "./data/userStore";
 
 export default function AgriHarvestRegister() {
   const navigate = useNavigate();
@@ -14,11 +14,12 @@ export default function AgriHarvestRegister() {
   });
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const update = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
@@ -40,18 +41,22 @@ export default function AgriHarvestRegister() {
       return;
     }
     setError("");
+    setSubmitting(true);
 
     try {
-      const user = registerUser({
-        fullName: form.fullName,
-        email: form.email,
-        phone: form.phone,
+      // backend (authController.register) รับ field ชื่อ "name" ไม่ใช่ "fullName"
+      await registerUser({
+        name: form.fullName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
         password: form.password,
       });
-      saveSession(user, false);
+      // registerUser() เก็บ token/session ให้เรียบร้อยแล้วภายใน (ไม่ต้องเรียก saveSession ซ้ำ)
       navigate("/home"); // ผู้สมัครใหม่ทุกคนเป็น role CUSTOMER
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -211,9 +216,10 @@ export default function AgriHarvestRegister() {
 
             <button
               type="submit"
-              className="w-full bg-green-900 hover:bg-green-800 text-white font-semibold py-3 rounded-lg transition-colors"
+              disabled={submitting}
+              className="w-full bg-green-900 hover:bg-green-800 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-60"
             >
-              สร้างบัญชี
+              {submitting ? "กำลังสร้างบัญชี..." : "สร้างบัญชี"}
             </button>
           </form>
 

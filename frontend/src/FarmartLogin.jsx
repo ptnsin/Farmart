@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Sprout, User, Lock, Tractor, ArrowRight } from "lucide-react";
-import { authenticate, saveSession } from "./data/userStore";
+import { login } from "./data/authStore";
 
 export default function FarmartLogin() {
   const navigate = useNavigate();
@@ -9,8 +9,9 @@ export default function FarmartLogin() {
   const [password, setPassword] = useState("");
   const [keepSignedIn, setKeepSignedIn] = useState(false);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email.trim() || !password.trim()) {
@@ -18,15 +19,10 @@ export default function FarmartLogin() {
       return;
     }
     setError("");
+    setSubmitting(true);
 
     try {
-      const user = authenticate(email, password);
-      if (!user) {
-        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-        return;
-      }
-      saveSession(user, keepSignedIn);
-
+      const user = await login(email.trim(), password, keepSignedIn);
       const roleRoutes = {
         CUSTOMER: "/home",
         EMPLOYEE: "/employee/orders",
@@ -35,6 +31,8 @@ export default function FarmartLogin() {
       navigate(roleRoutes[user.role] || "/home");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -154,10 +152,11 @@ export default function FarmartLogin() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-green-900 hover:bg-green-800 text-white font-semibold py-3 rounded-lg transition-colors"
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-2 bg-green-900 hover:bg-green-800 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-60"
             >
-              Sign In to Dashboard
-              <ArrowRight className="w-4 h-4" />
+              {submitting ? "กำลังเข้าสู่ระบบ..." : "Sign In to Dashboard"}
+              {!submitting && <ArrowRight className="w-4 h-4" />}
             </button>
           </form>
 
