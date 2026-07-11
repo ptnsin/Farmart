@@ -54,7 +54,7 @@ const ORDERS = {
     statusStep: 2, // index into STEP_LABELS, 0-based
     statusLabel: "กำลังจัดส่ง",
     eta: "วันนี้ เวลา 14:00 - 16:00 น.",
-    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า AgriHarvest ลาดพร้าว" },
+    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" },
     courier: { lat: 13.748, lng: 100.507 },
     destination: {
       lat: 13.7563,
@@ -71,7 +71,7 @@ const ORDERS = {
     statusStep: 1,
     statusLabel: "เตรียมพัสดุ",
     eta: "พรุ่งนี้ เวลา 09:00 - 12:00 น.",
-    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า AgriHarvest ลาดพร้าว" },
+    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" },
     courier: { lat: 13.7367, lng: 100.5231 },
     destination: {
       lat: 13.7245,
@@ -88,7 +88,7 @@ const ORDERS = {
     statusStep: 4,
     statusLabel: "จัดส่งสำเร็จ",
     eta: "จัดส่งสำเร็จเมื่อ 25 มิ.ย. 2569 เวลา 11:20 น.",
-    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า AgriHarvest ลาดพร้าว" },
+    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" },
     courier: { lat: 13.7008, lng: 100.5325 },
     destination: {
       lat: 13.7008,
@@ -104,7 +104,7 @@ const ORDERS = {
     statusStep: 0,
     statusLabel: "ยืนยันคำสั่งซื้อ",
     eta: "กำลังเตรียมพัสดุ คาดว่าจะจัดส่งใน 1-2 วัน",
-    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า AgriHarvest ลาดพร้าว" },
+    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" },
     courier: { lat: 13.7367, lng: 100.5231 },
     destination: {
       lat: 13.79,
@@ -192,7 +192,7 @@ export default function Tracking() {
             <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center">
               <Sprout className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">AgriHarvest</span>
+            <span className="font-bold text-gray-900">Farmart</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">

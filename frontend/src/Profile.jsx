@@ -277,7 +277,7 @@ export default function Profile() {
             <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center">
               <Sprout className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">AgriHarvest</span>
+            <span className="font-bold text-gray-900">Farmart</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
@@ -808,9 +808,9 @@ export default function Profile() {
               <Sprout className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm">AgriHarvest</p>
+              <p className="font-bold text-sm">Farmart</p>
               <p className="text-xs text-white/50">
-                © 2024 AgriHarvest. Cultivating trust through transparency.
+                © 2024 Farmart. Cultivating trust through transparency.
               </p>
             </div>
           </div>
