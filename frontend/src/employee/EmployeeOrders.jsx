@@ -108,17 +108,17 @@ export default function EmployeeOrders() {
           >
             <Bell size={18} />
             </button>
-            <div className="ml-2 flex items-center gap-2.5">
-              <img
-                src="https://i.pravatar.cc/64?img=47"
-                alt=""
-                className="h-8 w-8 rounded-full object-cover"
-              />
-              <div className="leading-tight">
-                <p className="text-sm font-medium text-slate-800">แอดมิน ซาร่า</p>
-                <p className="text-xs text-slate-400">ผู้ดูแลระบบ</p>
-              </div>
+            <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
+            <img
+              src="https://i.pravatar.cc/64?img=5"
+              alt=""
+              className="h-8 w-8 rounded-full object-cover"
+            />
+            <div className="leading-tight">
+              <p className="text-sm font-medium text-slate-800">พนักงาน</p>
+              <p className="text-xs text-slate-400">Warehouse Staff</p>
             </div>
+          </div>
           </div>
         </div>
 
