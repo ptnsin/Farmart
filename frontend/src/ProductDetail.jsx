@@ -15,8 +15,9 @@ import {
   MessageSquare,
   ThumbsUp,
   BadgeCheck,
+  Loader2,
 } from "lucide-react";
-import { PRODUCTS, getProductById } from "./productsData";
+import { getProductById, getProducts, toDisplayProduct } from "./data/productStore";
 import { useCart } from "./CartContext";
 
 function Stars({ rating, size = "w-3.5 h-3.5" }) {
@@ -42,45 +43,6 @@ function getRatingDistribution(rating) {
   if (rating >= 4.0) return [45, 30, 15, 7, 3];
   if (rating >= 3.5) return [32, 30, 20, 12, 6];
   return [20, 25, 25, 18, 12];
-}
-
-// Falls back to a few representative mock reviews if the product has none yet
-function getReviews(product) {
-  if (product.reviews?.length) return product.reviews;
-  return [
-    {
-      name: "สมชาย ใจดี",
-      rating: 5,
-      date: "2 สัปดาห์ที่แล้ว",
-      comment: `สินค้าคุณภาพดีมาก บรรจุภัณฑ์แน่นหนา ส่งไวกว่าที่คิด ใช้ ${product.name} แล้วรู้สึกคุ้มค่ากับราคา จะกลับมาซื้อซ้ำแน่นอน`,
-      helpful: 12,
-      verified: true,
-    },
-    {
-      name: "วิภาวรรณ ส.",
-      rating: 4,
-      date: "1 เดือนที่แล้ว",
-      comment: `โดยรวมพอใจกับ ${product.name} ค่ะ คุณภาพตรงตามที่บรรยายไว้ มีจุดเดียวคือระยะเวลาจัดส่งช้าไปนิดหน่อย แต่สินค้าสดใหม่ดี`,
-      helpful: 5,
-      verified: true,
-    },
-    {
-      name: "ธนกฤต พ.",
-      rating: 5,
-      date: "1 เดือนที่แล้ว",
-      comment: "แพ็คสินค้าดีมาก ไม่ช้ำเสียหาย ผู้ขายตอบแชทเร็ว แนะนำร้านนี้เลยครับ",
-      helpful: 8,
-      verified: false,
-    },
-    {
-      name: "อารยา เกษตรกุล",
-      rating: 4,
-      date: "2 เดือนที่แล้ว",
-      comment: `เป็นลูกค้าประจำของร้านนี้ ${product.name} คุณภาพสม่ำเสมอทุกครั้งที่สั่ง ราคาก็ยุติธรรมดี`,
-      helpful: 3,
-      verified: true,
-    },
-  ];
 }
 
 function ReviewCard({ review }) {
@@ -121,7 +83,11 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem, itemCount } = useCart();
-  const product = getProductById(id);
+
+  const [product, setProduct] = useState(null);
+  const [related, setRelated] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState(0);
@@ -134,12 +100,47 @@ export default function ProductDetail() {
   const relatedRef = useRef(null);
 
   useEffect(() => {
+    let cancelled = false;
     window.scrollTo(0, 0);
     setActiveImage(0);
     setSelectedSize(0);
     setQuantity(1);
     setAdded(false);
     setActiveTab("details");
+    setLoading(true);
+    setError("");
+    setProduct(null);
+    setRelated([]);
+
+    getProductById(id)
+      .then((raw) => {
+        if (cancelled) return;
+        const display = toDisplayProduct(raw);
+        setProduct(display);
+        // โหลดสินค้าที่เกี่ยวข้อง (หมวดหมู่เดียวกัน, อนุมัติแล้ว) แยกอีก request
+        return getProducts({ category: raw.category, approvalStatus: "approved" }).then(
+          (list) => {
+            if (cancelled) return;
+            setRelated(
+              list
+                .filter((p) => String(p.id) !== String(display.id))
+                .slice(0, 4)
+                .map(toDisplayProduct)
+            );
+          }
+        );
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message || "ไม่พบสินค้านี้");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const scrollToSection = (key, ref) => {
@@ -147,10 +148,19 @@ export default function ProductDetail() {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  if (!product) {
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center gap-3 bg-white text-gray-900">
+        <Loader2 className="w-6 h-6 animate-spin text-green-700" />
+        <p className="text-sm text-gray-400">กำลังโหลดข้อมูลสินค้า...</p>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center gap-4 bg-white text-gray-900">
-        <p className="text-lg font-semibold">ไม่พบสินค้านี้</p>
+        <p className="text-lg font-semibold">{error || "ไม่พบสินค้านี้"}</p>
         <Link
           to="/products"
           className="text-sm font-semibold text-green-700 hover:underline"
@@ -163,15 +173,8 @@ export default function ProductDetail() {
 
   const gallery = product.gallery?.length ? product.gallery : [product.image];
   const currentPrice = product.sizes?.[selectedSize]?.price ?? product.price;
-  const related = PRODUCTS.filter(
-    (p) => p.category === product.category && p.id !== product.id
-  ).slice(0, 4);
-
-  const reviews = useMemo(() => getReviews(product), [product]);
-  const ratingDistribution = useMemo(
-    () => getRatingDistribution(product.rating),
-    [product.rating]
-  );
+  const reviews = product.reviews || [];
+  const ratingDistribution = getRatingDistribution(product.rating);
 
   const handleAddToCart = () => {
     const sizeLabel = product.sizes?.[selectedSize]?.label;
@@ -199,7 +202,7 @@ export default function ProductDetail() {
             <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center">
               <Sprout className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">Farmart</span>
+            <span className="font-bold text-gray-900">AgriHarvest</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
@@ -529,12 +532,20 @@ export default function ProductDetail() {
 
             {/* Review list */}
             <div className="lg:col-span-2 space-y-5">
-              {reviews.map((r, i) => (
-                <ReviewCard key={`${r.name}-${i}`} review={r} />
-              ))}
-              <button className="text-sm font-semibold text-green-700 hover:underline">
-                ดูรีวิวทั้งหมด
-              </button>
+              {reviews.length === 0 ? (
+                <p className="text-sm text-gray-400 py-6 text-center border border-dashed border-gray-200 rounded-xl">
+                  ยังไม่มีรีวิวสำหรับสินค้านี้ เป็นคนแรกที่รีวิวสิ!
+                </p>
+              ) : (
+                reviews.map((r, i) => (
+                  <ReviewCard key={r.id ?? `${r.name}-${i}`} review={r} />
+                ))
+              )}
+              {reviews.length > 0 && (
+                <button className="text-sm font-semibold text-green-700 hover:underline">
+                  ดูรีวิวทั้งหมด
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -560,7 +571,7 @@ export default function ProductDetail() {
               {related.map((p) => (
                 <Link
                   key={p.id}
-                  to={`/products/${p.id}`}
+                  to={`/product/${p.id}`}
                   className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow block"
                 >
                   <div className="aspect-square bg-gray-50 overflow-hidden">
@@ -597,7 +608,7 @@ export default function ProductDetail() {
               <div className="w-6 h-6 rounded-md bg-green-800 flex items-center justify-center">
                 <Sprout className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="font-bold text-gray-900 text-sm">Farmart</span>
+              <span className="font-bold text-gray-900 text-sm">AgriHarvest</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
               แพลตฟอร์มเชื่อมต่อเกษตรกรและผู้บริโภคเพื่อผลผลิตที่ยั่งยืน
@@ -628,7 +639,7 @@ export default function ProductDetail() {
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 pb-6">
-          © 2024 Farmart. Sustainable farming, delivered.
+          © 2024 AgriHarvest. Sustainable farming, delivered.
         </p>
       </footer>
     </div>

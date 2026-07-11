@@ -89,3 +89,59 @@ export async function replyToReview(productId, reviewId, replyText) {
   });
   return data.product;
 }
+
+/**
+ * แปลงสินค้าจาก backend (schema จริง: sku, category, unit, stockUnits, farmer, location, ...)
+ * ให้อยู่ในรูปแบบที่หน้า Products.jsx / ProductDetail.jsx (ที่แต่เดิมออกแบบมาคู่กับ productsData.js mock)
+ * ใช้งานได้เลยโดยไม่ต้องเขียน UI ใหม่ทั้งหมด — คำนวณ rating/ratingCount จาก reviews จริง
+ * และ map field ที่ชื่อไม่ตรงกัน (origin <- location, gallery <- images, specs <- sku/unit/farmer/location)
+ */
+export function toDisplayProduct(p) {
+  if (!p) return null;
+  const reviews = p.reviews || [];
+  const ratingCount = reviews.length;
+  const rating = ratingCount
+    ? Math.round((reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / ratingCount) * 10) / 10
+    : 0;
+
+  let badge = null;
+  if (p.stockLevel === "out") badge = { label: "สินค้าหมด", tone: "outline" };
+  else if (p.stockLevel === "low") badge = { label: "ใกล้หมด", tone: "orange" };
+  else if (rating >= 4.8 && ratingCount >= 3) badge = { label: "ขายดี", tone: "green" };
+
+  return {
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    tag: p.category,
+    badge,
+    price: Number(p.price) || 0,
+    origin: p.location || "",
+    rating,
+    ratingCount,
+    image: p.image,
+    gallery: p.images?.length ? p.images : [p.image].filter(Boolean),
+    description: p.description || "",
+    sku: p.sku,
+    unit: p.unit,
+    farmer: p.farmer,
+    stockUnits: p.stockUnits,
+    stockLevel: p.stockLevel,
+    specs: {
+      "รหัสสินค้า": p.sku || "-",
+      "หน่วยขาย": p.unit || "-",
+      "จำหน่ายโดย": p.farmer || "-",
+      "แหล่งผลิต": p.location || "-",
+    },
+    reviews: reviews.map((r) => ({
+      id: r.id,
+      name: r.customer,
+      rating: r.rating,
+      date: r.date,
+      comment: r.comment,
+      reply: r.reply,
+      helpful: 0,
+      verified: true,
+    })),
+  };
+}

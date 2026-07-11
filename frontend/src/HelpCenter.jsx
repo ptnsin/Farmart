@@ -130,7 +130,7 @@ export default function HelpCenter() {
             <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center">
               <Sprout className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">Farmart</span>
+            <span className="font-bold text-gray-900">AgriHarvest</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
@@ -357,7 +357,7 @@ export default function HelpCenter() {
               <div className="w-6 h-6 rounded-md bg-green-800 flex items-center justify-center">
                 <Sprout className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="font-bold text-gray-900 text-sm">Farmart</span>
+              <span className="font-bold text-gray-900 text-sm">AgriHarvest</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
               แพลตฟอร์มเชื่อมต่อเกษตรกรและผู้บริโภคเพื่อผลผลิตที่ยั่งยืน
@@ -389,7 +389,7 @@ export default function HelpCenter() {
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 pb-6">
-          © 2024 Farmart. Sustainable farming, delivered.
+          © 2024 AgriHarvest. Sustainable farming, delivered.
         </p>
       </footer>
     </div>

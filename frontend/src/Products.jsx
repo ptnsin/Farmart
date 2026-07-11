@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Sprout,
@@ -11,8 +11,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  Loader2,
 } from "lucide-react";
-import { PRODUCTS, CATEGORIES, ORIGINS } from "./productsData";
+import { getProducts, toDisplayProduct } from "./data/productStore";
 import { useCart } from "./CartContext";
 
 const PAGE_SIZE = 6;
@@ -37,10 +38,53 @@ function Badge({ badge }) {
 
 export default function Products() {
   const { addItem, itemCount } = useCart();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedOrigins, setSelectedOrigins] = useState([]);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    // เฉพาะสินค้าที่ admin อนุมัติแล้วเท่านั้นที่แสดงหน้าร้าน
+    getProducts({ approvalStatus: "approved" })
+      .then((data) => {
+        if (cancelled) return;
+        setProducts(data.map(toDisplayProduct));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message || "โหลดสินค้าไม่สำเร็จ");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // สร้างตัวเลือกหมวดหมู่ / แหล่งกำเนิด จากข้อมูลสินค้าจริงที่โหลดมา
+  const CATEGORIES = useMemo(() => {
+    const seen = new Map();
+    products.forEach((p) => {
+      if (p.category && !seen.has(p.category)) seen.set(p.category, p.category);
+    });
+    return Array.from(seen.keys()).map((c) => ({ key: c, label: c }));
+  }, [products]);
+
+  const ORIGINS = useMemo(() => {
+    const seen = new Set();
+    products.forEach((p) => {
+      if (p.origin) seen.add(p.origin);
+    });
+    return Array.from(seen);
+  }, [products]);
 
   const handleAddToCart = (e, product) => {
     e.preventDefault();
@@ -69,15 +113,17 @@ export default function Products() {
   };
 
   const filtered = useMemo(() => {
-    return PRODUCTS.filter((p) => {
+    const q = search.trim().toLowerCase();
+    return products.filter((p) => {
       const matchCategory =
         selectedCategories.length === 0 || selectedCategories.includes(p.category);
       const matchOrigin =
         selectedOrigins.length === 0 || selectedOrigins.includes(p.origin);
       const matchPrice = p.price <= maxPrice;
-      return matchCategory && matchOrigin && matchPrice;
+      const matchSearch = !q || p.name.toLowerCase().includes(q);
+      return matchCategory && matchOrigin && matchPrice && matchSearch;
     });
-  }, [selectedCategories, selectedOrigins, maxPrice]);
+  }, [products, selectedCategories, selectedOrigins, maxPrice, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -95,7 +141,7 @@ export default function Products() {
             <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center">
               <Sprout className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">Farmart</span>
+            <span className="font-bold text-gray-900">AgriHarvest</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
@@ -117,6 +163,11 @@ export default function Products() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               placeholder="ค้นหาสินค้า..."
               className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
             />
@@ -228,7 +279,18 @@ export default function Products() {
             </select>
           </div>
 
-          {pageItems.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-20 text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <p className="text-sm">กำลังโหลดสินค้า...</p>
+            </div>
+          ) : error ? (
+            <div className="border border-dashed border-red-200 bg-red-50 rounded-xl py-16 text-center text-red-500 text-sm px-6">
+              {error}
+              <br />
+              ตรวจสอบว่ารัน backend server อยู่หรือไม่
+            </div>
+          ) : pageItems.length === 0 ? (
             <div className="border border-dashed border-gray-200 rounded-xl py-20 text-center text-gray-400 text-sm">
               ไม่พบสินค้าตามเงื่อนไขที่เลือก ลองปรับตัวกรองใหม่
             </div>
@@ -331,7 +393,7 @@ export default function Products() {
               <div className="w-6 h-6 rounded-md bg-green-800 flex items-center justify-center">
                 <Sprout className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="font-bold text-gray-900 text-sm">Farmart</span>
+              <span className="font-bold text-gray-900 text-sm">AgriHarvest</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
               แพลตฟอร์มเชื่อมต่อเกษตรกรและผู้บริโภคเพื่อผลผลิตที่ยั่งยืน
@@ -362,7 +424,7 @@ export default function Products() {
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 pb-6">
-          © 2024 Farmart. Sustainable farming, delivered.
+          © 2024 AgriHarvest. Sustainable farming, delivered.
         </p>
       </footer>
     </div>

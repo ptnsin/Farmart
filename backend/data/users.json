@@ -1,5 +1,29 @@
 [
   {
+    "id": 8,
+    "name": "we",
+    "email": "we@gmail.com",
+    "phone": "0147258369",
+    "password": "111111",
+    "role": "CUSTOMER",
+    "status": "active",
+    "joined": "11 ก.ค. 2026",
+    "createdAt": "2026-07-11T07:22:29.260Z",
+    "avatar": "https://i.pravatar.cc/64?img=9"
+  },
+  {
+    "id": 7,
+    "name": "Test User",
+    "email": "testconnect_@test.com",
+    "phone": "",
+    "password": "123456",
+    "role": "CUSTOMER",
+    "status": "active",
+    "joined": "11 ก.ค. 2026",
+    "createdAt": "2026-07-11T06:55:01.468Z",
+    "avatar": "https://i.pravatar.cc/64?img=8"
+  },
+  {
     "id": 6,
     "name": "ณัฐวุฒิ แสงทอง",
     "email": "nattawut@email.com",
