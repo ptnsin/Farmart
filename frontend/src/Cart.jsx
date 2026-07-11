@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   Bell,
   UserCircle2,
-  Truck,
   Minus,
   Plus,
   Trash2,
@@ -50,7 +49,6 @@ export default function Cart() {
             <Link to="/products" className="hover:text-green-800">สินค้า</Link>
             <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
             <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
-            <Link to="/help-center" className="hover:text-green-800">ศูนย์ช่วยเหลือ</Link>
           </nav>
 
           <form
@@ -68,13 +66,6 @@ export default function Cart() {
           </form>
 
           <div className="flex items-center gap-1">
-            <Link
-              to="/tracking"
-              title="ติดตามพัสดุ"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
-            >
-              <Truck className="w-5 h-5" />
-            </Link>
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Bell className="w-5 h-5" />
             </button>

@@ -229,9 +229,12 @@ export default function Tracking() {
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Bell className="w-5 h-5" />
             </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
+            <Link
+              to="/cart"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
               <ShoppingCart className="w-5 h-5" />
-            </button>
+            </Link>
             <Link
               to="/profile"
               className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"

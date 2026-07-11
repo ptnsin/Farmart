@@ -154,7 +154,7 @@ export default function Products() {
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
             <Link to="/home" className="hover:text-green-800">หน้าแรก</Link>
-            <Link to="/products" className="hover:text-green-800">สินค้า</Link>
+            <Link to="/products" className="text-green-800 font-bold">สินค้า</Link>
             <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
             <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
           </nav>
@@ -400,26 +400,17 @@ export default function Products() {
               แพลตฟอร์มเชื่อมต่อเกษตรกรและผู้บริโภคเพื่อผลผลิตที่ยั่งยืน
             </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-sm">
+          <div className="grid grid-cols-2 gap-8 text-sm">
             <div>
               <p className="font-semibold text-gray-900 mb-2.5">Shipping</p>
               <ul className="space-y-2 text-gray-500 text-xs">
                 <li><a href="#" className="hover:text-green-700">ติดตามพัสดุ</a></li>
-                <li><a href="#" className="hover:text-green-700">นโยบายการจัดส่ง</a></li>
               </ul>
             </div>
             <div>
               <p className="font-semibold text-gray-900 mb-2.5">Help</p>
               <ul className="space-y-2 text-gray-500 text-xs">
                 <li><a href="#" className="hover:text-green-700">ศูนย์ช่วยเหลือ</a></li>
-                <li><a href="#" className="hover:text-green-700">ติดต่อเรา</a></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900 mb-2.5">Legal</p>
-              <ul className="space-y-2 text-gray-500 text-xs">
-                <li><a href="#" className="hover:text-green-700">ข้อกำหนดการใช้งาน</a></li>
-                <li><a href="#" className="hover:text-green-700">นโยบายความเป็นส่วนตัว</a></li>
               </ul>
             </div>
           </div>
