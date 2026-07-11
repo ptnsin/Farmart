@@ -307,9 +307,17 @@ export default function Profile() {
             </button>
             <Link
               to="/profile"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-green-800 bg-green-50"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-green-800 bg-green-50 overflow-hidden"
             >
-              <UserCircle2 className="w-6 h-6" />
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt="โปรไฟล์"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <UserCircle2 className="w-6 h-6" />
+              )}
             </Link>
           </div>
         </div>
