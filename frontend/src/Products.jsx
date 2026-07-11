@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Sprout,
   Search,
   Heart,
   ShoppingCart,
+  Bell,
   UserCircle2,
-  LayoutGrid,
+  Truck,
   Star,
   ChevronLeft,
   ChevronRight,
@@ -37,10 +38,18 @@ function Badge({ badge }) {
 
 export default function Products() {
   const { addItem, itemCount } = useCart();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedOrigins, setSelectedOrigins] = useState([]);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [page, setPage] = useState(1);
+
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    navigate(query ? `/products?search=${encodeURIComponent(query)}` : "/products");
+  }
 
   const handleAddToCart = (e, product) => {
     e.preventDefault();
@@ -99,38 +108,41 @@ export default function Products() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
-            <Link to="/home" className="hover:text-green-800">
-              แนะนำ
-            </Link>
-            <Link to="/products" className="text-green-800 font-semibold">
-              ผลิตภัณฑ์
-            </Link>
-            <Link to="/orders" className="hover:text-green-800">
-              คำสั่งซื้อ
-            </Link>
-            <a href="#" className="hover:text-green-800">
-              อุปกรณ์ครบชุด
-            </a>
+            <Link to="/home" className="hover:text-green-800">หน้าแรก</Link>
+            <Link to="/products" className="hover:text-green-800">สินค้า</Link>
+            <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
+            <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
+            <Link to="/help-center" className="hover:text-green-800">ศูนย์ช่วยเหลือ</Link>
           </nav>
 
-          <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex-1 max-w-xs ml-auto relative hidden sm:block"
+          >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาสินค้า..."
               className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
             />
-          </div>
+          </form>
 
           <div className="flex items-center gap-1">
+            <Link
+              to="/tracking"
+              title="ติดตามพัสดุ"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
+              <Truck className="w-5 h-5" />
+            </Link>
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <LayoutGrid className="w-5 h-5" />
-            </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <Heart className="w-5 h-5" />
+              <Bell className="w-5 h-5" />
             </button>
             <Link
               to="/cart"
+              title="รถเข็นของคุณ"
               className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
             >
               <ShoppingCart className="w-5 h-5" />
@@ -141,7 +153,7 @@ export default function Products() {
               )}
             </Link>
             <Link
-              to="/dashboard"
+              to="/profile"
               className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
             >
               <UserCircle2 className="w-6 h-6" />
