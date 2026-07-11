@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   Bell,
   UserCircle2,
-  Truck,
   Pencil,
   ClipboardList,
   MapPin,
@@ -298,13 +297,6 @@ export default function Profile() {
           </div>
 
           <div className="flex items-center gap-1">
-            <Link
-              to="/tracking"
-              title="ติดตามพัสดุ"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
-            >
-              <Truck className="w-5 h-5" />
-            </Link>
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Bell className="w-5 h-5" />
             </button>
@@ -377,7 +369,7 @@ export default function Profile() {
                       <img
                         src={avatar}
                         alt="รูปโปรไฟล์"
-                        className="w-16 h-16 rounded-full object-cover border-2 border-green-100"
+                        className="w-20 h-20 rounded-full object-cover border-4 border-green-100 shadow-sm"
                       />
                       <button
                         onClick={handleAvatarClick}
