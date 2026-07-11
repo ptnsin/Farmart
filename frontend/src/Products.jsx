@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -9,7 +8,6 @@ import {
   ShoppingCart,
   Bell,
   UserCircle2,
-  Truck,
   Star,
   ChevronLeft,
   ChevronRight,
@@ -46,7 +44,6 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedOrigins, setSelectedOrigins] = useState([]);
   const [maxPrice, setMaxPrice] = useState(10000);
@@ -94,8 +91,7 @@ export default function Products() {
 
   function handleSearchSubmit(e) {
     e.preventDefault();
-    const query = searchQuery.trim();
-    navigate(query ? `/products?search=${encodeURIComponent(query)}` : "/products");
+    navigate(search.trim() ? `/products?search=${encodeURIComponent(search.trim())}` : "/products");
   }
 
   const handleAddToCart = (e, product) => {
@@ -161,7 +157,6 @@ export default function Products() {
             <Link to="/products" className="hover:text-green-800">สินค้า</Link>
             <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
             <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
-            <Link to="/help-center" className="hover:text-green-800">ศูนย์ช่วยเหลือ</Link>
           </nav>
 
           <form
@@ -171,28 +166,17 @@ export default function Products() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาสินค้า..."
               className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
             />
           </form>
 
           <div className="flex items-center gap-1">
-            <Link
-              to="/tracking"
-              title="ติดตามพัสดุ"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
-            >
-              <Truck className="w-5 h-5" />
-            </Link>
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Bell className="w-5 h-5" />
             </button>

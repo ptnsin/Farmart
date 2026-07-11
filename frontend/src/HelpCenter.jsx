@@ -138,7 +138,6 @@ export default function HelpCenter() {
             <Link to="/products" className="hover:text-green-800">สินค้า</Link>
             <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
             <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
-            <Link to="/help-center" className="text-green-800">ศูนย์ช่วยเหลือ</Link>
           </nav>
 
           <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
@@ -151,13 +150,6 @@ export default function HelpCenter() {
           </div>
 
           <div className="flex items-center gap-1">
-            <Link
-              to="/tracking"
-              title="ติดตามพัสดุ"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
-            >
-              <Truck className="w-5 h-5" />
-            </Link>
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Bell className="w-5 h-5" />
             </button>

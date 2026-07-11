@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   Bell,
   UserCircle2,
+  Truck,
   Pencil,
   ClipboardList,
   MapPin,
@@ -19,6 +20,7 @@ import {
   EyeOff,
   X,
 } from "lucide-react";
+import { useCart } from "./CartContext";
 
 const sidebarItems = [
   { key: "info", label: "ข้อมูลส่วนตัว", icon: UserCircle2 },
@@ -107,6 +109,7 @@ function Toast({ message }) {
 }
 
 export default function Profile() {
+  const { itemCount } = useCart();
   const fileInputRef = useRef(null);
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -270,7 +273,7 @@ export default function Profile() {
     <div className="min-h-screen w-full bg-white text-gray-900 flex flex-col">
       <Toast message={toast} />
 
-      {/* Top nav */}
+      {/* Top nav — matches Home / Products / Tracking / HelpCenter */}
       <header className="sticky top-0 z-20 bg-white border-b border-gray-100">
         <div className="max-w-6xl mx-auto flex items-center gap-6 px-6 py-3.5">
           <Link to="/home" className="flex items-center gap-2 shrink-0">
@@ -281,9 +284,8 @@ export default function Profile() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
-            <Link to="/home" className="hover:text-green-800">เลือกพันธุ์</Link>
+            <Link to="/home" className="hover:text-green-800">หน้าแรก</Link>
             <Link to="/profile" className="text-green-800 font-semibold">โปรไฟล์</Link>
-            <Link to="/products" className="hover:text-green-800">อุปกรณ์เกษตร</Link>
           </nav>
 
           <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
@@ -296,17 +298,31 @@ export default function Profile() {
           </div>
 
           <div className="flex items-center gap-1">
+            <Link
+              to="/tracking"
+              title="ติดตามพัสดุ"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
+              <Truck className="w-5 h-5" />
+            </Link>
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
               <Bell className="w-5 h-5" />
             </button>
-            <button className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
+            <Link
+              to="/cart"
+              title="รถเข็นของคุณ"
+              className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
               <ShoppingCart className="w-5 h-5" />
-              <span className="absolute top-1 right-1.5 w-3.5 h-3.5 rounded-full bg-green-700 text-white text-[9px] font-bold flex items-center justify-center">
-                2
-              </span>
-            </button>
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-green-700 text-white text-[10px] font-bold flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
             <Link
               to="/profile"
+              title="โปรไฟล์"
               className="w-9 h-9 flex items-center justify-center rounded-lg text-green-800 bg-green-50 overflow-hidden"
             >
               {avatar ? (
@@ -909,14 +925,14 @@ function NotifRow({ title, desc, checked, onChange }) {
       </div>
       <button
         onClick={onChange}
-        className={`w-11 h-6 rounded-full relative transition-colors shrink-0 ${
+        className={`w-11 h-6 rounded-full relative transition-colors shrink-0 overflow-hidden ${
           checked ? "bg-green-700" : "bg-gray-200"
         }`}
         aria-pressed={checked}
       >
         <span
-          className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0.5"
+          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+            checked ? "translate-x-5" : "translate-x-0"
           }`}
         />
       </button>

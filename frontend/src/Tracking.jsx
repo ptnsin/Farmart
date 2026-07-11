@@ -15,6 +15,7 @@ import {
   MessageCircle,
   PackageSearch,
   Loader2,
+  ListOrdered,
 } from "lucide-react";
 
 // --- Leaflet default marker icons don't ship correctly with bundlers, so we
@@ -48,8 +49,10 @@ const STEP_LABELS = [
 // Swap this whole block for a real API call — see fetchOrder() below.
 // Every field the UI reads comes from here, so wiring a backend later just
 // means replacing ORDERS[key] lookups with the response from your endpoint.
+// Exported so the Orders list page (Orders.jsx) can reuse the same data
+// instead of duplicating it.
 // ---------------------------------------------------------------------------
-const ORDERS = {
+export const ORDERS = {
   "AGH-20260701": {
     statusStep: 2, // index into STEP_LABELS, 0-based
     statusLabel: "กำลังจัดส่ง",
@@ -164,6 +167,17 @@ export default function Tracking() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // If the user navigates here again with a different ?order= (e.g. from the
+  // Orders list page), re-run the lookup for the new id.
+  useEffect(() => {
+    const paramOrder = searchParams.get("order");
+    if (paramOrder && paramOrder !== order?.id) {
+      setQuery(paramOrder);
+      runSearch(paramOrder);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   function handleSubmit(e) {
     e.preventDefault();
     runSearch(query);
@@ -198,7 +212,8 @@ export default function Tracking() {
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
             <Link to="/home" className="hover:text-green-800">หน้าแรก</Link>
             <Link to="/products" className="hover:text-green-800">สินค้า</Link>
-            <Link to="/tracking" className="text-green-800">ติดตามพัสดุ</Link>
+            <Link to="/tracking" className="text-green-800 font-semibold">ติดตามพัสดุ</Link>
+            <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
           </nav>
 
           <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
@@ -256,21 +271,15 @@ export default function Tracking() {
           </button>
         </form>
 
-        {/* Demo helper — remove once wired to a real backend */}
-        <div className="max-w-lg mx-auto flex flex-wrap items-center gap-2 mb-10">
-          <span className="text-xs text-gray-400">ลองค้นหา:</span>
-          {Object.keys(ORDERS).map((id) => (
-            <button
-              key={id}
-              onClick={() => {
-                setQuery(id);
-                runSearch(id);
-              }}
-              className="text-xs px-2.5 py-1 rounded-full border border-gray-200 text-gray-600 hover:border-green-700 hover:text-green-800 transition-colors"
-            >
-              {id}
-            </button>
-          ))}
+        {/* Link out to the full order history */}
+        <div className="max-w-lg mx-auto flex items-center justify-center mb-8">
+          <Link
+            to="/orders"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-800 hover:underline"
+          >
+            <ListOrdered className="w-3.5 h-3.5" />
+            ดูคำสั่งซื้อทั้งหมดของฉัน
+          </Link>
         </div>
 
         {status === "loading" && !order && (
