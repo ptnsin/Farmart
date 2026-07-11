@@ -1,0 +1,18 @@
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6f3ed"/>
+      <stop offset="100%" stop-color="#eee3d2"/>
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" rx="24" fill="url(#bg)"/>
+  <rect x="4" y="4" width="292" height="292" rx="20" fill="none" stroke="#7e5a24" stroke-width="1.5" opacity="0.25"/>
+  
+        <path d="M 108,90 L 192,90 L 200,175 L 100,175 Z" fill="#e1ceb1" stroke="#7e5a24" stroke-width="4"/>
+        <path d="M 108,90 Q 108,70 130,70" fill="none" stroke="#7e5a24" stroke-width="4"/>
+        <path d="M 192,90 Q 192,70 170,70" fill="none" stroke="#7e5a24" stroke-width="4"/>
+        <rect x="120" y="110" width="60" height="30" fill="#d1cb47" opacity="0.85"/>
+        
+  <text x="150" y="225" text-anchor="middle" font-family="Noto Sans Thai, Noto Sans, sans-serif" font-size="17" font-weight="600" fill="#2d2d2d">ปุ๋ยสูตรเส</text><text x="150" y="247" text-anchor="middle" font-family="Noto Sans Thai, Noto Sans, sans-serif" font-size="17" font-weight="600" fill="#2d2d2d">มอ 15-15-15</text>
+  <text x="150" y="278" text-anchor="middle" font-family="Noto Sans, sans-serif" font-size="12" fill="#7e5a24" opacity="0.7">FT002</text>
+</svg>
