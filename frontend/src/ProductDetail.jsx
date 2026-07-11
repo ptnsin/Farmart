@@ -5,8 +5,8 @@ import {
   Search,
   Heart,
   ShoppingCart,
+  Bell,
   UserCircle2,
-  LayoutGrid,
   Star,
   Minus,
   Plus,
@@ -94,6 +94,13 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    navigate(query ? `/products?search=${encodeURIComponent(query)}` : "/products");
+  }
 
   const detailsRef = useRef(null);
   const reviewsRef = useRef(null);
@@ -206,30 +213,41 @@ export default function ProductDetail() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
-            <Link to="/home" className="hover:text-green-800">แนะนำ</Link>
-            <Link to="/products" className="text-green-800 font-semibold">ผลิตภัณฑ์</Link>
+            <Link to="/home" className="hover:text-green-800">หน้าแรก</Link>
+            <Link to="/products" className="hover:text-green-800">สินค้า</Link>
+            <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
             <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
-            <a href="#" className="hover:text-green-800">อุปกรณ์ครบชุด</a>
+            <Link to="/help-center" className="hover:text-green-800">ศูนย์ช่วยเหลือ</Link>
           </nav>
 
-          <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex-1 max-w-xs ml-auto relative hidden sm:block"
+          >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาสินค้า..."
               className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
             />
-          </div>
+          </form>
 
           <div className="flex items-center gap-1">
+            <Link
+              to="/tracking"
+              title="ติดตามพัสดุ"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
+              <Truck className="w-5 h-5" />
+            </Link>
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <LayoutGrid className="w-5 h-5" />
-            </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <Heart className="w-5 h-5" />
+              <Bell className="w-5 h-5" />
             </button>
             <Link
               to="/cart"
+              title="รถเข็นของคุณ"
               className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
             >
               <ShoppingCart className="w-5 h-5" />
