@@ -64,6 +64,8 @@ export default function AdminUsers() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(getCachedUser());
+  const [roleFilter, setRoleFilter] = useState("ALL");
+  const [roleFilterOpen, setRoleFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
@@ -105,18 +107,32 @@ export default function AdminUsers() {
   useEffect(() => {
     function handleClickOutside(e) {
       if (!e.target.closest("[data-user-menu]")) setOpenMenuId(null);
+      if (!e.target.closest("[data-role-filter]")) setRoleFilterOpen(false);
     }
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  const ROLE_FILTER_OPTIONS = [
+    { value: "ALL", label: "ทั้งหมด" },
+    { value: "CUSTOMER", label: "Customer" },
+    { value: "EMPLOYEE", label: "Employee" },
+    { value: "ADMIN", label: "Admin" },
+  ];
+
   const filteredUsers = useMemo(() => {
-    if (!query.trim()) return users;
-    const q = query.trim().toLowerCase();
-    return users.filter(
-      (u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-    );
-  }, [users, query]);
+    let result = users;
+    if (roleFilter !== "ALL") {
+      result = result.filter((u) => u.role === roleFilter);
+    }
+    if (query.trim()) {
+      const q = query.trim().toLowerCase();
+      result = result.filter(
+        (u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [users, query, roleFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -273,15 +289,36 @@ export default function AdminUsers() {
 
         {/* Filter row */}
         <div className="mt-8 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="relative flex items-center gap-2 text-sm text-slate-500" data-role-filter>
             <span>ตัวกรองรายการ:</span>
             <button
               type="button"
-              className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700"
+              onClick={() => setRoleFilterOpen((open) => !open)}
+              className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50"
             >
-              ทั้งหมด
-              <ChevronDown size={14} />
+              {ROLE_FILTER_OPTIONS.find((o) => o.value === roleFilter)?.label}
+              <ChevronDown size={14} className={roleFilterOpen ? "rotate-180" : ""} />
             </button>
+            {roleFilterOpen && (
+              <div className="absolute left-0 top-full z-10 mt-1 w-40 overflow-hidden rounded-lg border border-slate-100 bg-white py-1 shadow-lg">
+                {ROLE_FILTER_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setRoleFilter(opt.value);
+                      setRoleFilterOpen(false);
+                      setPage(1);
+                    }}
+                    className={`flex w-full items-center px-3 py-2 text-left text-sm hover:bg-slate-50 ${
+                      roleFilter === opt.value ? "font-medium text-emerald-700" : "text-slate-600"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <p className="text-sm text-slate-400">
             {filteredUsers.length === 0
