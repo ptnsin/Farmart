@@ -15,7 +15,6 @@ import {
   RotateCcw,
   UserCog,
   Leaf,
-  MessageCircle,
   Phone,
   Mail,
   Clock,
@@ -265,19 +264,7 @@ export default function HelpCenter() {
 
       {/* Contact support */}
       <section className="max-w-6xl mx-auto px-6 py-14">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="border border-gray-100 rounded-xl p-5 flex flex-col gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-800 flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">แชทสด</p>
-              <p className="text-xs text-gray-500 mt-1">ตอบกลับภายในไม่กี่นาที ทุกวัน 08:00-20:00 น.</p>
-            </div>
-            <button className="mt-auto text-xs font-semibold text-green-700 hover:underline text-left">
-              เริ่มแชท
-            </button>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div className="border border-gray-100 rounded-xl p-5 flex flex-col gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-800 flex items-center justify-center">
               <Phone className="w-5 h-5 text-white" />
@@ -344,40 +331,18 @@ export default function HelpCenter() {
       {/* Footer (shared with Home) */}
       <footer className="border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between gap-8">
-          <div className="max-w-xs">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-md bg-green-800 flex items-center justify-center">
-                <Sprout className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="font-bold text-gray-900 text-sm">Farmart</span>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-green-800 flex items-center justify-center">
+              <Sprout className="w-3.5 h-3.5 text-white" />
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              แพลตฟอร์มเชื่อมต่อเกษตรกรและผู้บริโภคเพื่อผลผลิตที่ยั่งยืน
-            </p>
+            <span className="font-bold text-gray-900 text-sm">Farmart</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-sm">
-            <div>
-              <p className="font-semibold text-gray-900 mb-2.5">Shipping</p>
-              <ul className="space-y-2 text-gray-500 text-xs">
-                <li><Link to="/tracking" className="hover:text-green-700">ติดตามพัสดุ</Link></li>
-                <li><a href="#" className="hover:text-green-700">นโยบายการจัดส่ง</a></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900 mb-2.5">Help</p>
-              <ul className="space-y-2 text-gray-500 text-xs">
-                <li><Link to="/help-center" className="hover:text-green-700">ศูนย์ช่วยเหลือ</Link></li>
-                <li><a href="#" className="hover:text-green-700">ติดต่อเรา</a></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900 mb-2.5">Legal</p>
-              <ul className="space-y-2 text-gray-500 text-xs">
-                <li><a href="#" className="hover:text-green-700">ข้อกำหนดการใช้งาน</a></li>
-                <li><a href="#" className="hover:text-green-700">นโยบายความเป็นส่วนตัว</a></li>
-              </ul>
-            </div>
+          <div className="text-sm">
+            <p className="font-semibold text-gray-900 mb-2.5">Help</p>
+            <ul className="space-y-2 text-gray-500 text-xs">
+              <li><Link to="/help-center" className="hover:text-green-700">ศูนย์ช่วยเหลือ</Link></li>
+            </ul>
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 pb-6">
