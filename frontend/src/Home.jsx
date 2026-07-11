@@ -110,7 +110,7 @@ export default function Home() {
             <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center">
               <Sprout className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">AgriHarvest</span>
+            <span className="font-bold text-gray-900">Farmart</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
@@ -286,11 +286,11 @@ export default function Home() {
         )}
       </section>
 
-      {/* Why AgriHarvest */}
+      {/* Why Farmart */}
       <section id="about" className="bg-green-950 text-white">
         <div className="max-w-6xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <div>
-            <h2 className="text-2xl font-bold mb-6">ทำไมต้องเลือก AgriHarvest?</h2>
+            <h2 className="text-2xl font-bold mb-6">ทำไมต้องเลือก Farmart?</h2>
             <div className="space-y-5">
               {perks.map((perk) => {
                 const Icon = perk.icon;
@@ -322,7 +322,7 @@ export default function Home() {
       <section className="bg-green-50">
         <div className="max-w-2xl mx-auto px-6 py-14 text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-2">
-            ร่วมเป็นส่วนหนึ่งของชุมชน AgriHarvest
+            ร่วมเป็นส่วนหนึ่งของชุมชน Farmart
           </h2>
           <p className="text-sm text-gray-600 mb-6">
             รับข่าวสารผลผลิตใหม่และโปรโมชั่นพิเศษก่อนใครทางอีเมล
@@ -344,7 +344,7 @@ export default function Home() {
               <div className="w-6 h-6 rounded-md bg-green-800 flex items-center justify-center">
                 <Sprout className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="font-bold text-gray-900 text-sm">AgriHarvest</span>
+              <span className="font-bold text-gray-900 text-sm">Farmart</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
               แพลตฟอร์มเชื่อมต่อเกษตรกรและผู้บริโภคเพื่อผลผลิตที่ยั่งยืน
@@ -393,7 +393,7 @@ export default function Home() {
           </div>
         </div>
         <p className="text-center text-xs text-gray-400 pb-6">
-          © 2024 AgriHarvest. Sustainable farming, delivered.
+          © 2024 Farmart. Sustainable farming, delivered.
         </p>
       </footer>
     </div>

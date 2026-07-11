@@ -40,7 +40,7 @@ export default function Orders() {
             <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center">
               <Sprout className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">AgriHarvest</span>
+            <span className="font-bold text-gray-900">Farmart</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">

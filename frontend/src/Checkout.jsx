@@ -207,7 +207,7 @@ export default function Checkout() {
             <div className="w-7 h-7 rounded-md bg-green-800 flex items-center justify-center">
               <Sprout className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">AgriHarvest</span>
+            <span className="font-bold text-gray-900">Farmart</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 font-medium">
@@ -566,10 +566,10 @@ export default function Checkout() {
               <div className="w-6 h-6 rounded-md bg-green-700 flex items-center justify-center">
                 <Sprout className="w-3.5 h-3.5 text-white" />
               </div>
-              <span className="font-bold text-white text-sm">AgriHarvest</span>
+              <span className="font-bold text-white text-sm">Farmart</span>
             </div>
             <p className="text-xs text-white/50">
-              © 2024 AgriHarvest. Cultivated trust through transparency.
+              © 2024 Farmart. Cultivated trust through transparency.
             </p>
           </div>
           <div className="flex items-center gap-6 text-xs text-white/70">
