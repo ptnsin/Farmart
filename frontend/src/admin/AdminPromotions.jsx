@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Bell, Plus, BadgePercent, Pencil, Trash2, Power } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 const STATUS_STYLES = {
   active: { dot: "bg-emerald-500", text: "text-emerald-600", label: "ใช้งานอยู่" },
@@ -42,7 +44,17 @@ const PROMOTIONS = [
 ];
 
 export default function AdminPromotions() {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(getCachedUser());
   const [promotions, setPromotions] = useState(PROMOTIONS);
+
+  useEffect(() => {
+    fetchCurrentUser()
+      .then(setCurrentUser)
+      .catch((err) => {
+        if (err.message.includes("เข้าสู่ระบบ")) navigate("/");
+      });
+  }, [navigate]);
 
   const toggleStatus = (id) =>
     setPromotions((prev) =>
@@ -82,13 +94,13 @@ export default function AdminPromotions() {
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
-              src="https://i.pravatar.cc/64?img=12"
+              src={currentUser?.avatar || "https://i.pravatar.cc/64?img=12"}
               alt=""
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">Admin</p>
-              <p className="text-xs text-slate-400">Logistics Manager</p>
+              <p className="text-sm font-medium text-slate-800">{currentUser?.name || "Admin"}</p>
+              <p className="text-xs text-slate-400">{currentUser?.role || "Admin"}</p>
             </div>
           </div>
         </div>

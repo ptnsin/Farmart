@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   Bell,
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
 import { getUsers, updateUserStatus, deleteUser } from "../data/userStore";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 const ROLE_STYLES = {
   EMPLOYEE: "text-slate-600",
@@ -60,14 +61,46 @@ function getPageNumbers(current, total) {
 }
 
 export default function AdminUsers() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(getCachedUser());
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
-    setUsers(getUsers());
-  }, []);
+    let cancelled = false;
+    setLoading(true);
+    getUsers()
+      .then((data) => {
+        if (!cancelled) setUsers(data);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // token หมดอายุ/ยังไม่ได้ login -> เด้งกลับไปหน้า login
+        if (err.message.includes("เข้าสู่ระบบ")) {
+          navigate("/");
+          return;
+        }
+        setLoadError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchCurrentUser()
+      .then(setCurrentUser)
+      .catch((err) => {
+        if (err.message.includes("เข้าสู่ระบบ")) navigate("/");
+      });
+  }, [navigate]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -129,20 +162,34 @@ export default function AdminUsers() {
     ];
   }, [users]);
 
-  const handleSuspend = (id) => {
-    setUsers(updateUserStatus(id, "suspended"));
+  const handleSuspend = async (id) => {
     setOpenMenuId(null);
-  };
-
-  const handleUnlock = (id) => {
-    setUsers(updateUserStatus(id, "active"));
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm("ต้องการลบผู้ใช้งานคนนี้ออกจากระบบหรือไม่?")) {
-      setUsers(deleteUser(id));
+    try {
+      const updated = await updateUserStatus(id, "suspended");
+      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+    } catch (err) {
+      alert(err.message);
     }
+  };
+
+  const handleUnlock = async (id) => {
+    try {
+      const updated = await updateUserStatus(id, "active");
+      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
     setOpenMenuId(null);
+    if (!window.confirm("ต้องการลบผู้ใช้งานคนนี้ออกจากระบบหรือไม่?")) return;
+    try {
+      const remaining = await deleteUser(id);
+      setUsers(remaining);
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   return (
@@ -150,6 +197,16 @@ export default function AdminUsers() {
       <AdminSidebar />
 
       <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
+        {loading && (
+          <div className="mb-4 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
+            กำลังโหลดข้อมูลผู้ใช้...
+          </div>
+        )}
+        {loadError && (
+          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            {loadError}
+          </div>
+        )}
         {/* Top bar */}
         <div className="mb-8 flex items-center gap-4">
           <div className="relative flex-1">
@@ -177,13 +234,13 @@ export default function AdminUsers() {
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
-              src="https://i.pravatar.cc/64?img=12"
+              src={currentUser?.avatar || "https://i.pravatar.cc/64?img=12"}
               alt=""
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">Admin</p>
-              <p className="text-xs text-slate-400">Logistics Manager</p>
+              <p className="text-sm font-medium text-slate-800">{currentUser?.name || "Admin"}</p>
+              <p className="text-xs text-slate-400">{currentUser?.role || "Admin"}</p>
             </div>
           </div>
         </div>

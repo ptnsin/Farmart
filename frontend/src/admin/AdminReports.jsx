@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Bell,
@@ -13,6 +15,7 @@ import {
   User,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 const STATS = [
   {
@@ -150,7 +153,17 @@ function StatCard({ label, value, note, icon: Icon, iconBg, iconColor }) {
 }
 
 export default function AdminReports() {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(getCachedUser());
   const maxValue = Math.max(...MONTHLY_SALES.map((m) => m.value));
+
+  useEffect(() => {
+    fetchCurrentUser()
+      .then(setCurrentUser)
+      .catch((err) => {
+        if (err.message.includes("เข้าสู่ระบบ")) navigate("/");
+      });
+  }, [navigate]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -179,13 +192,13 @@ export default function AdminReports() {
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
-              src="https://i.pravatar.cc/64?img=12"
+              src={currentUser?.avatar || "https://i.pravatar.cc/64?img=12"}
               alt=""
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">Admin</p>
-              <p className="text-xs text-slate-400">Logistics Manager</p>
+              <p className="text-sm font-medium text-slate-800">{currentUser?.name || "Admin"}</p>
+              <p className="text-xs text-slate-400">{currentUser?.role || "Admin"}</p>
             </div>
           </div>
         </div>

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
 import { getProducts } from "../data/productStore";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
@@ -49,6 +50,9 @@ function getPageNumbers(current, total) {
 export default function AdminInventory() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [currentUser, setCurrentUser] = useState(getCachedUser());
   const [selected, setSelected] = useState([]);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -56,8 +60,35 @@ export default function AdminInventory() {
   const [pageSizeMenuOpen, setPageSizeMenuOpen] = useState(false);
 
   useEffect(() => {
-    setProducts(getProducts());
-  }, []);
+    let cancelled = false;
+    setLoading(true);
+    getProducts()
+      .then((data) => {
+        if (!cancelled) setProducts(data);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        if (err.message.includes("เข้าสู่ระบบ")) {
+          navigate("/");
+          return;
+        }
+        setLoadError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchCurrentUser()
+      .then(setCurrentUser)
+      .catch((err) => {
+        if (err.message.includes("เข้าสู่ระบบ")) navigate("/");
+      });
+  }, [navigate]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -161,6 +192,16 @@ export default function AdminInventory() {
       <AdminSidebar />
 
       <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
+        {loading && (
+          <div className="mb-4 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
+            กำลังโหลดข้อมูลสินค้า...
+          </div>
+        )}
+        {loadError && (
+          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            {loadError}
+          </div>
+        )}
         {/* Top bar */}
         <div className="mb-6 flex items-center gap-4">
           <div className="relative flex-1">
@@ -188,13 +229,13 @@ export default function AdminInventory() {
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
-              src="https://i.pravatar.cc/64?img=12"
+              src={currentUser?.avatar || "https://i.pravatar.cc/64?img=12"}
               alt=""
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">Admin</p>
-              <p className="text-xs text-slate-400">Logistics Manager</p>
+              <p className="text-sm font-medium text-slate-800">{currentUser?.name || "Admin"}</p>
+              <p className="text-xs text-slate-400">{currentUser?.role || "Admin"}</p>
             </div>
           </div>
         </div>

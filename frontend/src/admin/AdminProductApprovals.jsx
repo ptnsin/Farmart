@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Bell,
@@ -15,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 const CHANGE_TYPE = {
   add: { label: "เพิ่มสินค้าใหม่", icon: Plus, color: "text-emerald-600 bg-emerald-50" },
@@ -99,11 +101,21 @@ function StatCard({ label, value, icon: Icon, iconBg, iconColor }) {
 }
 
 export default function AdminProductApprovals() {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(getCachedUser());
   const [expanded, setExpanded] = useState(null);
   const [batches, setBatches] = useState(BATCHES);
   const [query, setQuery] = useState("");
   const [approvedCount, setApprovedCount] = useState(9);
   const [rejectedCount, setRejectedCount] = useState(2);
+
+  useEffect(() => {
+    fetchCurrentUser()
+      .then(setCurrentUser)
+      .catch((err) => {
+        if (err.message.includes("เข้าสู่ระบบ")) navigate("/");
+      });
+  }, [navigate]);
 
   const filteredBatches = useMemo(() => {
     if (!query.trim()) return batches;
@@ -205,13 +217,13 @@ export default function AdminProductApprovals() {
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
-              src="https://i.pravatar.cc/64?img=12"
+              src={currentUser?.avatar || "https://i.pravatar.cc/64?img=12"}
               alt=""
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">Admin</p>
-              <p className="text-xs text-slate-400">Logistics Manager</p>
+              <p className="text-sm font-medium text-slate-800">{currentUser?.name || "Admin"}</p>
+              <p className="text-xs text-slate-400">{currentUser?.role || "Admin"}</p>
             </div>
           </div>
         </div>

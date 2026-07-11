@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Settings,
   User,
@@ -6,8 +7,11 @@ import {
   Lock,
   Globe,
   Save,
+  Loader2,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
+import { updateUser } from "../data/userStore";
 
 function Toggle({ checked, onChange }) {
   return (
@@ -28,11 +32,42 @@ function Toggle({ checked, onChange }) {
 }
 
 export default function AdminSettings() {
+  const navigate = useNavigate();
+  const cached = getCachedUser();
+  const [currentUser, setCurrentUser] = useState(cached);
   const [profile, setProfile] = useState({
-    name: "สมชาย รักเกษตร",
-    email: "somchai.r@gmail.com",
-    phone: "081-234-5678",
+    name: cached?.name || "",
+    email: cached?.email || "",
+    phone: cached?.phone || "",
   });
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+
+  useEffect(() => {
+    fetchCurrentUser()
+      .then((user) => {
+        setCurrentUser(user);
+        setProfile({ name: user.name || "", email: user.email || "", phone: user.phone || "" });
+      })
+      .catch((err) => {
+        if (err.message.includes("เข้าสู่ระบบ")) navigate("/");
+      });
+  }, [navigate]);
+
+  const handleSaveProfile = async () => {
+    if (!currentUser) return;
+    setSaving(true);
+    setSaveMessage("");
+    try {
+      const updated = await updateUser(currentUser.id, profile);
+      setCurrentUser(updated);
+      setSaveMessage("บันทึกข้อมูลเรียบร้อยแล้ว");
+    } catch (err) {
+      setSaveMessage(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const [notifications, setNotifications] = useState({
     newOrder: true,
@@ -80,13 +115,15 @@ export default function AdminSettings() {
 
             <div className="mt-4 flex items-center gap-4">
               <img
-                src="https://i.pravatar.cc/80?img=12"
+                src={currentUser?.avatar || "https://i.pravatar.cc/80?img=12"}
                 alt=""
                 className="h-16 w-16 rounded-full object-cover"
               />
               <div>
-                <p className="text-sm font-medium text-slate-800">Admin {profile.name}</p>
-                <p className="text-xs text-slate-400">สมาชิกตั้งแต่ มกราคม 2024</p>
+                <p className="text-sm font-medium text-slate-800">{profile.name || "Admin"}</p>
+                <p className="text-xs text-slate-400">
+                  {currentUser?.joined ? `สมาชิกตั้งแต่ ${currentUser.joined}` : ""}
+                </p>
               </div>
             </div>
 
@@ -120,12 +157,24 @@ export default function AdminSettings() {
               </div>
             </div>
 
+            {saveMessage && (
+              <p
+                className={`mt-3 text-sm ${
+                  saveMessage.includes("เรียบร้อย") ? "text-emerald-600" : "text-rose-600"
+                }`}
+              >
+                {saveMessage}
+              </p>
+            )}
+
             <button
               type="button"
-              className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+              onClick={handleSaveProfile}
+              disabled={saving}
+              className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
             >
-              <Save size={16} />
-              บันทึกการเปลี่ยนแปลง
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
             </button>
           </div>
 
