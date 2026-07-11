@@ -1,26 +1,53 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Search, Bell, ArrowLeft, UploadCloud } from "lucide-react";
+import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, Bell, ImagePlus, X, ChevronLeft } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
+
+const CATEGORIES = ["ข้าวและธัญพืช", "ผลไม้", "ผัก", "โปรตีน"];
 
 export default function EmployeeProductAdd() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [form, setForm] = useState({
     name: "",
-    category: "ผัก",
-    price: "",
+    category: CATEGORIES[0],
     stock: "",
-    description: "",
+    price: "",
   });
-  const [saved, setSaved] = useState(false);
 
-  const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const handleField = (key) => (e) => {
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  };
+
+  const handleImageChange = (file) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleFileInput = (e) => {
+    handleImageChange(e.target.files?.[0]);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    handleImageChange(e.dataTransfer.files?.[0]);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: เชื่อมต่อ API เพิ่มสินค้าจริง
-    setSaved(true);
-    setTimeout(() => navigate("/employee/warehouse"), 900);
+    // TODO: ส่ง form + imageFile ไปยัง API คลังสินค้าจริง (multipart/form-data)
+    console.log("New product:", { ...form, image: imageFile });
+    navigate("/employee/warehouse");
   };
 
   return (
@@ -49,7 +76,11 @@ export default function EmployeeProductAdd() {
             <Bell size={18} />
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
-            <img src="https://i.pravatar.cc/64?img=5" alt="" className="h-8 w-8 rounded-full object-cover" />
+            <img
+              src="https://i.pravatar.cc/64?img=5"
+              alt=""
+              className="h-8 w-8 rounded-full object-cover"
+            />
             <div className="leading-tight">
               <p className="text-sm font-medium text-slate-800">พนักงาน</p>
               <p className="text-xs text-slate-400">Warehouse Staff</p>
@@ -57,110 +88,166 @@ export default function EmployeeProductAdd() {
           </div>
         </div>
 
-        <Link
-          to="/employee/warehouse"
-          className="mb-2 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-emerald-700"
+        {/* Heading */}
+        <button
+          type="button"
+          onClick={() => navigate("/employee/warehouse")}
+          className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700"
         >
-          <ArrowLeft size={15} />
+          <ChevronLeft size={16} />
           กลับไปหน้าคลังสินค้า
-        </Link>
-
-        <div>
+        </button>
+        <div className="mt-3">
           <h1 className="text-2xl font-semibold text-emerald-800">เพิ่มสินค้าใหม่</h1>
-          <p className="mt-1 text-sm text-slate-400">กรอกรายละเอียดสินค้าเพื่อเพิ่มเข้าคลังสินค้า</p>
+          <p className="mt-1 text-sm text-slate-400">
+            กรอกรายละเอียดสินค้าและอัปโหลดรูปภาพเพื่อเพิ่มลงในคลังสินค้า
+          </p>
         </div>
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="mt-6 rounded-xl border border-slate-100 bg-white p-6"
+          className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3"
         >
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-slate-600">ชื่อสินค้า</label>
-              <input
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-                placeholder="เช่น ข้าวหอมมะลิ 100%"
-                value={form.name}
-                onChange={update("name")}
-                required
-              />
-            </div>
+          {/* Image upload */}
+          <div className="rounded-xl border border-slate-100 bg-white p-5 lg:col-span-1">
+            <p className="mb-3 text-sm font-medium text-slate-700">รูปภาพสินค้า</p>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-600">หมวดหมู่</label>
-              <select
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-                value={form.category}
-                onChange={update("category")}
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="พรีวิวสินค้า"
+                  className="h-56 w-full rounded-lg object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  aria-label="ลบรูปภาพ"
+                  className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900/60 text-white hover:bg-slate-900/80"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                className="flex h-56 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 text-center hover:border-emerald-300 hover:bg-emerald-50/40"
               >
-                <option>ผัก</option>
-                <option>ผลไม้</option>
-                <option>ข้าวและธัญพืช</option>
-                <option>โปรตีน</option>
-                <option>อื่น ๆ</option>
-              </select>
-            </div>
+                <ImagePlus size={28} className="text-slate-400" />
+                <p className="text-sm font-medium text-slate-600">
+                  ลากรูปมาวาง หรือคลิกเพื่อเลือกไฟล์
+                </p>
+                <p className="text-xs text-slate-400">PNG, JPG ขนาดไม่เกิน 5MB</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInput}
+                  className="hidden"
+                />
+              </label>
+            )}
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-600">ราคาต่อหน่วย (บาท)</label>
-              <input
-                type="number"
-                min="0"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-                placeholder="0.00"
-                value={form.price}
-                onChange={update("price")}
-                required
-              />
-            </div>
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-3 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                เปลี่ยนรูปภาพ
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInput}
+                  className="hidden"
+                />
+              </button>
+            )}
+          </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-600">จำนวนคงเหลือ</label>
-              <input
-                type="number"
-                min="0"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-                placeholder="0"
-                value={form.stock}
-                onChange={update("stock")}
-                required
-              />
-            </div>
+          {/* Fields */}
+          <div className="rounded-xl border border-slate-100 bg-white p-5 lg:col-span-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  ชื่อสินค้า
+                </label>
+                <input
+                  required
+                  value={form.name}
+                  onChange={handleField("name")}
+                  type="text"
+                  placeholder="เช่น ข้าวหอมมะลิ 100%"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-600">รูปภาพสินค้า</label>
-              <div className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 px-4 py-6 text-center text-slate-400 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700">
-                <UploadCloud size={22} className="mb-2" />
-                <p className="text-sm">ลากไฟล์มาวาง หรือคลิกเพื่อเลือกรูปภาพ</p>
-                <p className="mt-1 text-xs text-slate-400">รองรับ JPG, PNG ไม่เกิน 5MB</p>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  หมวดหมู่
+                </label>
+                <select
+                  value={form.category}
+                  onChange={handleField("category")}
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  ราคาต่อหน่วย (บาท)
+                </label>
+                <input
+                  required
+                  value={form.price}
+                  onChange={handleField("price")}
+                  type="number"
+                  min="0"
+                  placeholder="0.00"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  จำนวนคงเหลือ
+                </label>
+                <input
+                  required
+                  value={form.stock}
+                  onChange={handleField("stock")}
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
               </div>
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-slate-600">รายละเอียดสินค้า</label>
-              <textarea
-                rows={4}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-                placeholder="อธิบายรายละเอียด แหล่งที่มา หรือวิธีการเก็บรักษา"
-                value={form.description}
-                onChange={update("description")}
-              />
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/employee/warehouse")}
+                className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                className="rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
+              >
+                บันทึกสินค้า
+              </button>
             </div>
-          </div>
-
-          <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-5">
-            <Link
-              to="/employee/warehouse"
-              className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-            >
-              ยกเลิก
-            </Link>
-            <button
-              type="submit"
-              className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
-            >
-              {saved ? "บันทึกแล้ว ✓" : "บันทึกสินค้า"}
-            </button>
           </div>
         </form>
       </main>
