@@ -194,9 +194,6 @@ export default function Home() {
             >
               เลือกซื้อสินค้า
             </Link>
-            <button className="bg-white/10 hover:bg-white/20 text-white text-sm font-semibold px-5 py-2.5 rounded-lg border border-white/30 transition-colors">
-              เรียนรู้เพิ่มเติม
-            </button>
           </div>
         </div>
       </section>
@@ -338,22 +335,12 @@ export default function Home() {
           <p className="text-sm text-gray-600 mb-6">
             รับข่าวสารผลผลิตใหม่และโปรโมชั่นพิเศษก่อนใครทางอีเมล
           </p>
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="flex items-center gap-2 max-w-sm mx-auto"
+          <Link
+            to="/profile"
+            className="inline-block bg-green-900 hover:bg-green-800 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
           >
-            <input
-              type="email"
-              placeholder="อีเมลของคุณ"
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-700"
-            />
-            <button
-              type="submit"
-              className="bg-green-900 hover:bg-green-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
-            >
-              สมัคร
-            </button>
-          </form>
+            สมัครสมาชิก
+          </Link>
         </div>
       </section>
 
