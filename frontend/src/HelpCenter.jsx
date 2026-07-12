@@ -20,6 +20,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useCart } from "./CartContext";
+import Footer from "./Footer";
 
 const categories = [
   {
@@ -174,6 +175,7 @@ export default function HelpCenter() {
         </div>
       </header>
 
+
       {/* Help hero */}
       <section className="relative overflow-hidden bg-green-950">
         <img
@@ -263,7 +265,8 @@ export default function HelpCenter() {
       </section>
 
       {/* Contact support */}
-      <section className="max-w-6xl mx-auto px-6 py-14">
+{/* Contact support */}
+      <section id="contact" className="max-w-6xl mx-auto px-6 py-14 scroll-mt-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div className="border border-gray-100 rounded-xl p-5 flex flex-col gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-800 flex items-center justify-center">
@@ -327,28 +330,7 @@ export default function HelpCenter() {
           </div>
         </div>
       </section>
-
-      {/* Footer (shared with Home) */}
-      <footer className="border-t border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between gap-8">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-green-800 flex items-center justify-center">
-              <Sprout className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-bold text-gray-900 text-sm">Farmart</span>
-          </div>
-
-          <div className="text-sm">
-            <p className="font-semibold text-gray-900 mb-2.5">Help</p>
-            <ul className="space-y-2 text-gray-500 text-xs">
-              <li><Link to="/help-center" className="hover:text-green-700">ศูนย์ช่วยเหลือ</Link></li>
-            </ul>
-          </div>
-        </div>
-        <p className="text-center text-xs text-gray-400 pb-6">
-          © 2024 Farmart. Sustainable farming, delivered.
-        </p>
-      </footer>
+<Footer />
     </div>
   );
 }

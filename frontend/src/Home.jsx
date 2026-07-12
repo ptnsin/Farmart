@@ -13,6 +13,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useCart } from "./CartContext";
+import Footer from "./Footer";
 
 const featured = [
   {
@@ -336,35 +337,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between gap-8">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-green-800 flex items-center justify-center">
-              <Sprout className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-bold text-gray-900 text-sm">Farmart</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 text-sm">
-            <div>
-              <p className="font-semibold text-gray-900 mb-2.5">Shipping</p>
-              <ul className="space-y-2 text-gray-500 text-xs">
-                <li><Link to="/tracking" className="hover:text-green-700">ติดตามพัสดุ</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900 mb-2.5">Help</p>
-              <ul className="space-y-2 text-gray-500 text-xs">
-                <li><Link to="/help-center" className="hover:text-green-700">ศูนย์ช่วยเหลือ</Link></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <p className="text-center text-xs text-gray-400 pb-6">
-          © 2024 Farmart. Sustainable farming, delivered.
-        </p>
-      </footer>
+<Footer />
     </div>
   );
 }

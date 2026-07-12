@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Search,
   Bell,
-  Settings,
   Truck,
   ClipboardList,
   CircleCheck,
@@ -137,12 +136,12 @@ export default function EmployeeShipping() {
     <div className="flex h-screen overflow-hidden bg-slate-50">
       <EmployeeSidebar active="shipping" />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
         {/* Top bar */}
-        <div className="flex items-center justify-between border-b border-slate-100 bg-white px-8 py-4">
-          <div className="relative w-72">
+        <div className="mb-8 flex items-center gap-4">
+          <div className="relative flex-1">
             <Search
-              size={16}
+              size={18}
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
@@ -150,20 +149,17 @@ export default function EmployeeShipping() {
               onChange={(e) => setQuery(e.target.value)}
               type="text"
               placeholder="ค้นหาข้อมูล"
-              className="w-[1400px] rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
+          <button
             type="button"
             aria-label="แจ้งเตือน"
             className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
           >
             <Bell size={18} />
-            </button>
-            
-            <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
+          </button>
+          <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
               src="https://i.pravatar.cc/64?img=5"
               alt=""
@@ -174,169 +170,166 @@ export default function EmployeeShipping() {
               <p className="text-xs text-slate-400">Warehouse Staff</p>
             </div>
           </div>
-          </div>
         </div>
 
-        <div className="px-8 py-6">
-          {/* Heading */}
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-800">จัดการการขนส่ง</h1>
-            <p className="mt-1 text-sm text-slate-400">
-              ภาพรวมสถานะการจัดส่งสินค้าเกษตรและเส้นทางการกระจายสินค้า
-            </p>
-          </div>
+        {/* Heading */}
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-800">จัดการการขนส่ง</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            ภาพรวมสถานะการจัดส่งสินค้าเกษตรและเส้นทางการกระจายสินค้า
+          </p>
+        </div>
 
-          {/* Stats */}
-          <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {STATS.map((s) => (
-              <StatCard key={s.label} {...s} />
-            ))}
-          </div>
+        {/* Stats */}
+        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {STATS.map((s) => (
+            <StatCard key={s.label} {...s} />
+          ))}
+        </div>
 
-          {/* Content: table + right rail */}
-          <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
-            {/* Orders table */}
-            <div className="overflow-hidden rounded-xl border border-slate-100 bg-white xl:col-span-2">
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <h2 className="text-sm font-semibold text-slate-800">รายการคำสั่งซื้อล่าสุด</h2>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search
-                      size={14}
-                      className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                      type="text"
-                      placeholder="ค้นหารหัส หรือลูกค้า"
-                      className="w-44 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs outline-none placeholder:text-slate-400 focus:border-emerald-400"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    aria-label="ตัวกรอง"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"
-                  >
-                    <Filter size={14} />
-                  </button>
-                </div>
-              </div>
-
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 text-xs text-slate-400">
-                    <th className="px-6 py-3 font-medium">รหัสคำสั่งซื้อ</th>
-                    <th className="px-6 py-3 font-medium">ข้อมูลลูกค้า</th>
-                    <th className="px-6 py-3 font-medium">ปลายทาง</th>
-                    <th className="px-6 py-3 font-medium">วิธีการส่ง</th>
-                    <th className="px-6 py-3 font-medium">สถานะ</th>
-                    <th className="px-6 py-3 text-right font-medium">จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOrders.map((o) => {
-                    const status = STATUS_STYLES[o.status];
-                    return (
-                      <tr key={o.id} className="border-b border-slate-50 last:border-0">
-                        <td className="px-6 py-3.5 font-medium text-slate-800">{o.id}</td>
-                        <td className="px-6 py-3.5">
-                          <p className="font-medium text-slate-800">{o.customer}</p>
-                          <p className="text-xs text-slate-400">{o.phone}</p>
-                        </td>
-                        <td className="px-6 py-3.5 text-slate-600">{o.destination}</td>
-                        <td className="px-6 py-3.5 text-slate-600">{o.method}</td>
-                        <td className="px-6 py-3.5">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${status.bg} ${status.text}`}
-                          >
-                            {status.label}
-                          </span>
-                        </td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center justify-end gap-3 text-slate-400">
-                            <button type="button" aria-label="ดูรายละเอียด" className="hover:text-slate-600">
-                              <Eye size={16} />
-                            </button>
-                            <button type="button" aria-label="ดูใบงาน" className="hover:text-slate-600">
-                              <FileText size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              <div className="flex items-center justify-between border-t border-slate-100 px-6 py-3.5">
-                <p className="text-sm text-slate-400">แสดง 1 - 4 จาก 45 รายการ</p>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={`flex h-7 w-7 items-center justify-center rounded-md text-sm font-medium ${
-                        n === 1 ? "bg-emerald-600 text-white" : "text-slate-500 hover:bg-slate-50"
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Right rail */}
-            <div className="space-y-6">
-              {/* Real-time map */}
-              <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
-                <div className="flex items-center justify-between px-5 pt-5">
-                  <h2 className="text-sm font-semibold text-slate-800">
-                    สถานะการขนส่งแบบ Real-time
-                  </h2>
-                  <button type="button" className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:underline">
-                    <Map size={12} />
-                    ดูแผนที่เต็ม
-                  </button>
-                </div>
-                <div className="relative mx-5 mt-3 mb-5 h-36 overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50 to-sky-50">
-                  <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,theme(colors.slate.300)_1px,transparent_1px),linear-gradient(to_bottom,theme(colors.slate.300)_1px,transparent_1px)] [background-size:16px_16px]" />
-                  <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-emerald-600 shadow-sm">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    Active Deliveries
-                  </span>
-                </div>
-              </div>
-
-              {/* Couriers */}
-              <div className="rounded-xl border border-slate-100 bg-white p-5">
-                <h2 className="text-sm font-semibold text-slate-800">
-                  พนักงานส่งสินค้าและงานที่รับผิดชอบ
-                </h2>
-                <div className="mt-4 space-y-4">
-                  {COURIERS.map((c) => (
-                    <div key={c.name} className="flex items-center gap-3">
-                      <img
-                        src={c.avatar}
-                        alt=""
-                        className="h-9 w-9 rounded-full object-cover"
-                      />
-                      <div className="flex-1 leading-tight">
-                        <p className="text-sm font-medium text-slate-800">{c.name}</p>
-                        <p className="text-xs text-slate-400">{c.route}</p>
-                      </div>
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                        {c.jobs} งาน
-                      </span>
-                    </div>
-                  ))}
+        {/* Content: table + right rail */}
+        <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+          {/* Orders table */}
+          <div className="overflow-hidden rounded-xl border border-slate-100 bg-white xl:col-span-2">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <h2 className="text-sm font-semibold text-slate-800">รายการคำสั่งซื้อล่าสุด</h2>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search
+                    size={14}
+                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="ค้นหารหัส หรือลูกค้า"
+                    className="w-44 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs outline-none placeholder:text-slate-400 focus:border-emerald-400"
+                  />
                 </div>
                 <button
                   type="button"
-                  className="mt-4 w-full rounded-lg border border-slate-200 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  aria-label="ตัวกรอง"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"
                 >
-                  ดูพนักงานทั้งหมด
+                  <Filter size={14} />
                 </button>
               </div>
+            </div>
+
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 text-xs text-slate-400">
+                  <th className="px-6 py-3 font-medium">รหัสคำสั่งซื้อ</th>
+                  <th className="px-6 py-3 font-medium">ข้อมูลลูกค้า</th>
+                  <th className="px-6 py-3 font-medium">ปลายทาง</th>
+                  <th className="px-6 py-3 font-medium">วิธีการส่ง</th>
+                  <th className="px-6 py-3 font-medium">สถานะ</th>
+                  <th className="px-6 py-3 text-right font-medium">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map((o) => {
+                  const status = STATUS_STYLES[o.status];
+                  return (
+                    <tr key={o.id} className="border-b border-slate-50 last:border-0">
+                      <td className="px-6 py-3.5 font-medium text-slate-800">{o.id}</td>
+                      <td className="px-6 py-3.5">
+                        <p className="font-medium text-slate-800">{o.customer}</p>
+                        <p className="text-xs text-slate-400">{o.phone}</p>
+                      </td>
+                      <td className="px-6 py-3.5 text-slate-600">{o.destination}</td>
+                      <td className="px-6 py-3.5 text-slate-600">{o.method}</td>
+                      <td className="px-6 py-3.5">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${status.bg} ${status.text}`}
+                        >
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center justify-end gap-3 text-slate-400">
+                          <button type="button" aria-label="ดูรายละเอียด" className="hover:text-slate-600">
+                            <Eye size={16} />
+                          </button>
+                          <button type="button" aria-label="ดูใบงาน" className="hover:text-slate-600">
+                            <FileText size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            <div className="flex items-center justify-between border-t border-slate-100 px-6 py-3.5">
+              <p className="text-sm text-slate-400">แสดง 1 - 4 จาก 45 รายการ</p>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`flex h-7 w-7 items-center justify-center rounded-md text-sm font-medium ${
+                      n === 1 ? "bg-emerald-600 text-white" : "text-slate-500 hover:bg-slate-50"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right rail */}
+          <div className="space-y-6">
+            {/* Real-time map */}
+            <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
+              <div className="flex items-center justify-between px-5 pt-5">
+                <h2 className="text-sm font-semibold text-slate-800">
+                  สถานะการขนส่งแบบ Real-time
+                </h2>
+                <button type="button" className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:underline">
+                  <Map size={12} />
+                  ดูแผนที่เต็ม
+                </button>
+              </div>
+              <div className="relative mx-5 mt-3 mb-5 h-36 overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50 to-sky-50">
+                <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,theme(colors.slate.300)_1px,transparent_1px),linear-gradient(to_bottom,theme(colors.slate.300)_1px,transparent_1px)] [background-size:16px_16px]" />
+                <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-emerald-600 shadow-sm">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Active Deliveries
+                </span>
+              </div>
+            </div>
+
+            {/* Couriers */}
+            <div className="rounded-xl border border-slate-100 bg-white p-5">
+              <h2 className="text-sm font-semibold text-slate-800">
+                พนักงานส่งสินค้าและงานที่รับผิดชอบ
+              </h2>
+              <div className="mt-4 space-y-4">
+                {COURIERS.map((c) => (
+                  <div key={c.name} className="flex items-center gap-3">
+                    <img
+                      src={c.avatar}
+                      alt=""
+                      className="h-9 w-9 rounded-full object-cover"
+                    />
+                    <div className="flex-1 leading-tight">
+                      <p className="text-sm font-medium text-slate-800">{c.name}</p>
+                      <p className="text-xs text-slate-400">{c.route}</p>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      {c.jobs} งาน
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="mt-4 w-full rounded-lg border border-slate-200 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                ดูพนักงานทั้งหมด
+              </button>
             </div>
           </div>
         </div>

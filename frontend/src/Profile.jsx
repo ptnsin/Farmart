@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Sprout,
@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useCart } from "./CartContext";
+import Footer from "./Footer";
 
 const sidebarItems = [
   { key: "info", label: "ข้อมูลส่วนตัว", icon: UserCircle2 },
@@ -107,6 +108,49 @@ function Toast({ message }) {
   );
 }
 
+// Centered, modal-style alert — used for the address feature instead of the
+// top-right toast. Shows over a dim backdrop, auto-dismisses after a few
+// seconds, and can also be closed early (backdrop click or the X button).
+function CenterAlert({ message, onClose }) {
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(onClose, 2200);
+    return () => clearTimeout(timer);
+  }, [message, onClose]);
+
+  if (!message) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 animate-[fadeIn_0.15s_ease-out]"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-xs bg-white rounded-2xl shadow-xl px-6 py-7 flex flex-col items-center text-center"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-300 hover:text-gray-500"
+          aria-label="ปิด"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-3">
+          <CheckCircle2 className="w-6 h-6 text-green-700" />
+        </div>
+        <p className="text-sm font-semibold text-gray-900">{message}</p>
+        <button
+          onClick={onClose}
+          className="mt-5 text-sm font-semibold text-green-700 hover:text-green-800 px-4 py-1.5 rounded-lg hover:bg-green-50 transition-colors"
+        >
+          ตกลง
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const { itemCount } = useCart();
   const fileInputRef = useRef(null);
@@ -117,6 +161,7 @@ export default function Profile() {
     validTabs.includes(tabParam) ? tabParam : "info"
   );
   const [toast, setToast] = useState("");
+  const [centerAlert, setCenterAlert] = useState("");
 
   // ----- Profile info -----
   const [avatar, setAvatar] = useState(
@@ -134,6 +179,10 @@ export default function Profile() {
     setToast(msg);
     setTimeout(() => setToast(""), 2500);
   };
+
+  // Centered alert — used for the address feature (add / edit / delete /
+  // set default). Auto-dismiss timing lives inside CenterAlert itself.
+  const showCenterAlert = (msg) => setCenterAlert(msg);
 
   const handleAvatarClick = () => fileInputRef.current?.click();
 
@@ -212,27 +261,27 @@ export default function Profile() {
           a.id === editingAddressId ? { ...a, ...addressForm } : a
         )
       );
-      showToast("แก้ไขที่อยู่เรียบร้อยแล้ว");
+      showCenterAlert("แก้ไขที่อยู่เรียบร้อยแล้ว");
     } else {
       setAddresses((list) => [
         ...list,
         { id: Date.now(), isDefault: list.length === 0, ...addressForm },
       ]);
-      showToast("เพิ่มที่อยู่ใหม่เรียบร้อยแล้ว");
+      showCenterAlert("เพิ่มที่อยู่ใหม่เรียบร้อยแล้ว");
     }
     setShowAddressForm(false);
   };
 
   const handleDeleteAddress = (id) => {
     setAddresses((list) => list.filter((a) => a.id !== id));
-    showToast("ลบที่อยู่แล้ว");
+    showCenterAlert("ลบที่อยู่แล้ว");
   };
 
   const handleSetDefaultAddress = (id) => {
     setAddresses((list) =>
       list.map((a) => ({ ...a, isDefault: a.id === id }))
     );
-    showToast("ตั้งเป็นที่อยู่หลักแล้ว");
+    showCenterAlert("ตั้งเป็นที่อยู่หลักแล้ว");
   };
 
   // ----- Settings -----
@@ -271,6 +320,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen w-full bg-white text-gray-900 flex flex-col">
       <Toast message={toast} />
+      <CenterAlert message={centerAlert} onClose={() => setCenterAlert("")} />
 
       {/* Top nav — matches Home / Products / Tracking / HelpCenter */}
       <header className="sticky top-0 z-20 bg-white border-b border-gray-100">
@@ -808,31 +858,7 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-green-950 text-white mt-auto">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-green-700 flex items-center justify-center">
-              <Sprout className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <p className="font-bold text-sm">Farmart</p>
-              <p className="text-xs text-white/50">
-                © 2024 Farmart. Cultivating trust through transparency.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6 text-xs text-white/70 font-medium flex-wrap justify-center">
-            <a href="#" className="hover:text-white">Sustainability</a>
-            <a href="#" className="hover:text-white">Wholesale</a>
-            <a href="#" className="hover:text-white">Privacy Policy</a>
-            <a href="#" className="hover:text-white">Terms of Service</a>
-            <a href="#" className="hover:text-white">Shipping Info</a>
-            <a href="#" className="hover:text-white">Contact Us</a>
-          </div>
-        </div>
-      </footer>
+<Footer />
     </div>
   );
 }
