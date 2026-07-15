@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { api } from "./data/apiClient";
 import {
   Sprout,
   Search,
@@ -13,7 +14,9 @@ import {
   Truck,
   CreditCard,
 } from "lucide-react";
-import { ORDERS } from "./Tracking";
+
+
+
 
 // Small presentational helper — same status labels/order used by Tracking's
 // stepper, just condensed into a single badge for the list view.
@@ -124,17 +127,53 @@ function ProductBadge({ item, size = "md" }) {
 
 export default function Orders() {
   const [openId, setOpenId] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        const data = await api.get("/api/orders");
+        setOrders(data.orders);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadOrders();
+  }, []);
 
   // Turn the ORDERS map into a sorted array (newest order id first). Order
   // ids are date-based (AGH-YYYYMMDD), so a reverse string sort works fine.
-  const orderList = Object.entries(ORDERS)
-    .map(([id, order]) => {
-      const total = order.items.reduce((sum, i) => sum + i.price * i.qty, 0);
-      const itemCount = order.items.reduce((sum, i) => sum + i.qty, 0);
-      const itemsSummary = order.items.map((i) => i.name).join(", ");
-      return { id, ...order, total, itemCount, itemsSummary, date: formatOrderDate(id) };
-    })
-    .sort((a, b) => b.id.localeCompare(a.id));
+ const orderList = orders
+  .map((order) => {
+    const total = order.items.reduce(
+      (sum, i) => sum + i.price * i.quantity,
+      0
+    );
+
+    const itemCount = order.items.reduce(
+      (sum, i) => sum + i.quantity,
+      0
+    );
+
+    const itemsSummary = order.items
+      .map((i) => i.name)
+      .join(", ");
+
+    return {
+      ...order,
+      total,
+      itemCount,
+      itemsSummary,
+      date: order.createdAt
+        ? new Date(order.createdAt).toLocaleDateString("th-TH")
+        : "-"
+    };
+  })
+  .sort((a, b) => b.id.localeCompare(a.id));
 
   return (
     <div className="min-h-screen w-full bg-gray-50 text-gray-900">
@@ -275,9 +314,8 @@ export default function Orders() {
                       </div>
 
                       <ChevronDown
-                        className={`w-4 h-4 text-gray-300 shrink-0 justify-self-end transition-transform ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
+                        className={`w-4 h-4 text-gray-300 shrink-0 justify-self-end transition-transform ${isOpen ? "rotate-180" : ""
+                          }`}
                       />
                     </button>
 
@@ -296,7 +334,7 @@ export default function Orders() {
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
                                   <p className="text-xs text-gray-500">
-                                    ฿{item.price.toLocaleString()} × {item.qty}
+                                    ฿{item.price.toLocaleString()} × {item.quantity}
                                   </p>
                                 </div>
                                 <p className="text-sm font-bold text-gray-800 shrink-0">
