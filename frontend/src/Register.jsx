@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Sprout, User, Mail, Phone, Lock, Tractor } from "lucide-react";
+import { Sprout, User, Mail, Phone, Lock, Tractor, Eye, EyeOff } from "lucide-react";
 import { registerUser } from "./data/userStore";
 
 export default function AgriHarvestRegister() {
@@ -15,9 +15,24 @@ export default function AgriHarvestRegister() {
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // เบอร์โทรไทย: ตัวเลขล้วน 10 หลัก ขึ้นต้นด้วย 0
+  const phoneRegex = /^0[0-9]{9}$/;
+  // อีเมล: รูปแบบมาตรฐาน
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const update = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  // กันไม่ให้พิมพ์ตัวอักษรในช่องเบอร์โทรตั้งแต่ตอนพิมพ์เลย
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    if (value.length <= 10) {
+      setForm((prev) => ({ ...prev, phone: value }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,6 +45,18 @@ export default function AgriHarvestRegister() {
       !form.confirmPassword
     ) {
       setError("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+      return;
+    }
+    if (!emailRegex.test(form.email.trim())) {
+      setError("กรุณากรอกอีเมลให้ถูกต้อง เช่น example@mail.com");
+      return;
+    }
+    if (!phoneRegex.test(form.phone.trim())) {
+      setError("กรุณากรอกเบอร์โทรศัพท์เป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0");
+      return;
+    }
+    if (form.password.length < 8) {
+      setError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -152,9 +179,11 @@ export default function AgriHarvestRegister() {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="tel"
+                  inputMode="numeric"
                   value={form.phone}
-                  onChange={update("phone")}
+                  onChange={handlePhoneChange}
                   placeholder="08x-xxx-xxxx"
+                  maxLength={10}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
                 />
               </div>
@@ -168,12 +197,20 @@ export default function AgriHarvestRegister() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={form.password}
                     onChange={update("password")}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+                    className="w-full pl-10 pr-9 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
               <div>
@@ -183,12 +220,20 @@ export default function AgriHarvestRegister() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={form.confirmPassword}
                     onChange={update("confirmPassword")}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
+                    className="w-full pl-10 pr-9 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
             </div>
