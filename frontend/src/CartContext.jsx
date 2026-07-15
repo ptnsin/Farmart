@@ -35,8 +35,16 @@ function makeKey(id, variant) {
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(loadStoredCart);
-  useEffect(() => {
-  setItems(loadStoredCart());
+ useEffect(() => {
+  function handleUserChanged() {
+    setItems(loadStoredCart());
+  }
+
+  window.addEventListener("userChanged", handleUserChanged);
+
+  return () => {
+    window.removeEventListener("userChanged", handleUserChanged);
+  };
 }, []);
 
   // items: [{ key, id, name, subtitle, price, image, emoji, variant, quantity }]
