@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { useCart } from "./CartContext";
+import { createOrder, toOrderItems } from "./data/orderStore";
 
 const SHIPPING_METHODS = [
   {
@@ -157,6 +158,7 @@ export default function Checkout() {
   const fileInputRef = useRef(null);
 
   const [placing, setPlacing] = useState(false);
+  const [orderError, setOrderError] = useState("");
 
   const shippingFee =
     SHIPPING_METHODS.find((m) => m.key === shippingMethod)?.fee ?? 0;
@@ -188,14 +190,29 @@ export default function Checkout() {
 
   const needsSlip = paymentMethod === "bank" || paymentMethod === "promptpay";
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (items.length === 0) return;
     setPlacing(true);
-    // Mock order placement — replace with a real API call when the backend is ready.
-    setTimeout(() => {
+    setOrderError("");
+
+    const addr = addresses.find((a) => a.id === selectedAddress);
+    const addressText = addr
+      ? `${addr.name} (${addr.phone}) ${addr.detail} ${addr.sub}`.trim()
+      : "";
+
+    try {
+      await createOrder({
+        items: toOrderItems(items),
+        address: addressText,
+        paymentMethod,
+      });
       clearCart();
       navigate("/orders");
-    }, 900);
+    } catch (err) {
+      setOrderError(err.message || "สั่งซื้อไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -502,6 +519,13 @@ export default function Checkout() {
                   ฿{total.toLocaleString()}
                 </span>
               </div>
+
+              {orderError && (
+                <div className="flex items-start gap-2 mb-3 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                  <X className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{orderError}</span>
+                </div>
+              )}
 
               <button
                 disabled={items.length === 0 || placing}

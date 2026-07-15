@@ -1,5 +1,33 @@
 [
   {
+    "id": "ORD-10232",
+    "userId": 8,
+    "customer": "we",
+    "items": [
+      {
+        "productId": "mixed-seeds",
+        "name": "เมล็ดพันธุ์ผสม",
+        "price": 85,
+        "quantity": 4,
+        "image": "https://images.unsplash.com/photo-1635372638513-8a960010a0ff?q=80&w=600&auto=format&fit=crop"
+      },
+      {
+        "productId": "seedling-kit",
+        "name": "ชุดปลูกกล้าไม้ระดับมืออาชีพ",
+        "price": 150,
+        "quantity": 3,
+        "image": "https://images.unsplash.com/photo-1741027911956-db63415dcedf?q=80&w=600&auto=format&fit=crop"
+      }
+    ],
+    "total": 790,
+    "date": "2026-07-15",
+    "status": "pending",
+    "statusStep": 0,
+    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
+    "paymentMethod": "promptpay"
+  },
+  {
     "id": "ORD-10231",
     "userId": 2,
     "customer": "กัญญา วนาวรรณ",
