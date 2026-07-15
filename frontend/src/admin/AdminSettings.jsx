@@ -8,9 +8,10 @@ import {
   Globe,
   Save,
   Loader2,
+  LogOut,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { getCachedUser, fetchCurrentUser } from "../data/authStore";
+import { getCachedUser, fetchCurrentUser, logout } from "../data/authStore";
 import { updateUser } from "../data/userStore";
 
 function Toggle({ checked, onChange }) {
@@ -92,18 +93,42 @@ export default function AdminSettings() {
   const toggleNotification = (field) => () =>
     setNotifications((n) => ({ ...n, [field]: !n[field] }));
 
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      navigate("/");
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       <AdminSidebar />
 
       <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
-        <div className="flex items-center gap-2 text-emerald-700">
-          <Settings size={20} />
-          <h1 className="text-2xl font-semibold text-slate-800">ตั้งค่า</h1>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-emerald-700">
+              <Settings size={20} />
+              <h1 className="text-2xl font-semibold text-slate-800">ตั้งค่า</h1>
+            </div>
+            <p className="mt-1 text-sm text-slate-400">
+              จัดการข้อมูลบัญชี การแจ้งเตือน ความปลอดภัย และการตั้งค่าระบบของ Admin Console
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-2 rounded-lg border border-rose-200 px-4 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+          >
+            {loggingOut ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
+            {loggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
+          </button>
         </div>
-        <p className="mt-1 text-sm text-slate-400">
-          จัดการข้อมูลบัญชี การแจ้งเตือน ความปลอดภัย และการตั้งค่าระบบของ Admin Console
-        </p>
 
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Profile */}

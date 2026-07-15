@@ -107,7 +107,7 @@ function addReview(req, res) {
   res.status(201).json({ product });
 }
 
-/** POST /api/products/:id/reviews/:reviewId/reply (employee/admin) - ร้านตอบกลับรีวิว */
+/** POST /api/products/:id/reviews/:reviewId/reply (employee/admin) - ร้านตอบกลับ/แก้ไขคำตอบรีวิว */
 function replyToReview(req, res) {
   const { reply } = req.body || {};
   if (!reply) return res.status(400).json({ error: "กรุณากรอกข้อความตอบกลับ" });
@@ -115,6 +115,32 @@ function replyToReview(req, res) {
   const product = productModel.replyToReview(req.params.id, req.params.reviewId, reply);
   if (!product) return res.status(404).json({ error: "ไม่พบสินค้า" });
   res.json({ product });
+}
+
+/** DELETE /api/products/:id/reviews/:reviewId/reply (employee/admin) - ลบคำตอบของทีมงาน */
+function deleteReply(req, res) {
+  const existing = productModel.getProductById(req.params.id);
+  if (!existing) return res.status(404).json({ error: "ไม่พบสินค้า" });
+  const review = (existing.reviews || []).find(
+    (r) => String(r.id) === String(req.params.reviewId)
+  );
+  if (!review) return res.status(404).json({ error: "ไม่พบรีวิวนี้" });
+
+  const product = productModel.deleteReply(req.params.id, req.params.reviewId);
+  res.json({ product, message: "ลบคำตอบเรียบร้อยแล้ว" });
+}
+
+/** DELETE /api/products/:id/reviews/:reviewId (employee/admin) - ลบรีวิวของลูกค้า */
+function deleteReview(req, res) {
+  const existing = productModel.getProductById(req.params.id);
+  if (!existing) return res.status(404).json({ error: "ไม่พบสินค้า" });
+  const review = (existing.reviews || []).find(
+    (r) => String(r.id) === String(req.params.reviewId)
+  );
+  if (!review) return res.status(404).json({ error: "ไม่พบรีวิวนี้" });
+
+  const product = productModel.deleteReview(req.params.id, req.params.reviewId);
+  res.json({ product, message: "ลบรีวิวเรียบร้อยแล้ว" });
 }
 
 module.exports = {
@@ -126,4 +152,6 @@ module.exports = {
   updateApproval,
   addReview,
   replyToReview,
+  deleteReply,
+  deleteReview,
 };

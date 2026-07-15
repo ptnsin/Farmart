@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Send, MapPin, Package } from "lucide-react";
+import { ArrowLeft, Star, Send, MapPin, Package, Pencil, Trash2, X } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { getProductById, replyToReview } from "../data/productStore";
+import { getProductById, replyToReview, deleteReply, deleteReview } from "../data/productStore";
 
 function Stars({ value }) {
   return (
@@ -23,21 +23,86 @@ export default function AdminProductDetail() {
   const navigate = useNavigate();
   const [product, setProduct] = useState(undefined); // undefined = ยังโหลดไม่เสร็จ, null = ไม่พบสินค้า
   const [drafts, setDrafts] = useState({});
+  const [replyingId, setReplyingId] = useState(null);
+  const [editingId, setEditingId] = useState(null); // reviewId ที่กำลังแก้ไข/ตอบใหม่อยู่
+  const [deletingReplyId, setDeletingReplyId] = useState(null);
+  const [deletingReviewId, setDeletingReviewId] = useState(null);
 
   useEffect(() => {
-    setProduct(getProductById(id));
+    let cancelled = false;
+    setProduct(undefined);
     setDrafts({});
-  }, [id]);
+    getProductById(id)
+      .then((data) => {
+        if (!cancelled) setProduct(data ?? null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        if (err.message.includes("เข้าสู่ระบบ")) {
+          navigate("/");
+          return;
+        }
+        // ไม่พบสินค้า/error อื่น ๆ ถือว่าไม่พบสินค้า
+        setProduct(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, navigate]);
 
   const updateDraft = (reviewId, value) =>
     setDrafts((prev) => ({ ...prev, [reviewId]: value }));
 
-  const submitReply = (reviewId) => {
+  const startEdit = (review) => {
+    setDrafts((prev) => ({ ...prev, [review.id]: review.reply || "" }));
+    setEditingId(review.id);
+  };
+
+  const cancelEdit = (reviewId) => {
+    setEditingId(null);
+    setDrafts((prev) => ({ ...prev, [reviewId]: "" }));
+  };
+
+  const submitReply = async (reviewId) => {
     const text = (drafts[reviewId] || "").trim();
     if (!text) return;
-    const updated = replyToReview(product.id, reviewId, text);
-    setProduct(updated);
-    setDrafts((prev) => ({ ...prev, [reviewId]: "" }));
+    setReplyingId(reviewId);
+    try {
+      const updated = await replyToReview(product.id, reviewId, text);
+      setProduct(updated);
+      setDrafts((prev) => ({ ...prev, [reviewId]: "" }));
+      setEditingId(null);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setReplyingId(null);
+    }
+  };
+
+  const handleDeleteReply = async (reviewId) => {
+    if (!window.confirm("ต้องการลบคำตอบนี้หรือไม่?")) return;
+    setDeletingReplyId(reviewId);
+    try {
+      const updated = await deleteReply(product.id, reviewId);
+      setProduct(updated);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeletingReplyId(null);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm("ต้องการลบรีวิวนี้หรือไม่? การลบไม่สามารถย้อนกลับได้")) return;
+    setDeletingReviewId(reviewId);
+    try {
+      const updated = await deleteReview(product.id, reviewId);
+      setProduct(updated);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeletingReviewId(null);
+    }
   };
 
   if (product === undefined) {
@@ -138,23 +203,55 @@ export default function AdminProductDetail() {
                   <div key={review.id} className="border-b border-slate-50 pb-5 last:border-0 last:pb-0">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-slate-800">{review.customer}</p>
-                      <p className="text-xs text-slate-400">{review.date}</p>
+                      <div className="flex items-center gap-3">
+                        <p className="text-xs text-slate-400">{review.date}</p>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(review.id)}
+                          disabled={deletingReviewId === review.id}
+                          aria-label="ลบรีวิวนี้"
+                          className="text-slate-300 hover:text-rose-500 disabled:opacity-50"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                     <div className="mt-1">
                       <Stars value={review.rating} />
                     </div>
                     <p className="mt-2 text-sm text-slate-600">{review.comment}</p>
 
-                    {review.reply && (
+                    {review.reply && editingId !== review.id && (
                       <div className="mt-3 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                        <p className="mb-0.5 text-xs font-medium text-emerald-600">
-                          คำตอบจากทีมงาน Farmart
-                        </p>
+                        <div className="mb-0.5 flex items-center justify-between">
+                          <p className="text-xs font-medium text-emerald-600">
+                            คำตอบจากทีมงาน Farmart
+                          </p>
+                          <div className="flex items-center gap-2 text-emerald-500">
+                            <button
+                              type="button"
+                              onClick={() => startEdit(review)}
+                              aria-label="แก้ไขคำตอบ"
+                              className="hover:text-emerald-700"
+                            >
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReply(review.id)}
+                              disabled={deletingReplyId === review.id}
+                              aria-label="ลบคำตอบ"
+                              className="hover:text-rose-500 disabled:opacity-50"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
                         {review.reply}
                       </div>
                     )}
 
-                    {!review.reply && (
+                    {(!review.reply || editingId === review.id) && (
                       <div className="mt-3 flex items-center gap-2">
                         <input
                           value={drafts[review.id] || ""}
@@ -166,11 +263,26 @@ export default function AdminProductDetail() {
                         <button
                           type="button"
                           onClick={() => submitReply(review.id)}
-                          className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                          disabled={replyingId === review.id}
+                          className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
                         >
                           <Send size={14} />
-                          ส่ง
+                          {replyingId === review.id
+                            ? "กำลังส่ง..."
+                            : editingId === review.id
+                            ? "บันทึก"
+                            : "ส่ง"}
                         </button>
+                        {editingId === review.id && (
+                          <button
+                            type="button"
+                            onClick={() => cancelEdit(review.id)}
+                            aria-label="ยกเลิกการแก้ไข"
+                            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

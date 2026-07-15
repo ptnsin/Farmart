@@ -199,6 +199,17 @@ export default function AdminUsers() {
 
   const handleDelete = async (id) => {
     setOpenMenuId(null);
+    const target = users.find((u) => u.id === id);
+
+    if (currentUser && id === currentUser.id) {
+      alert("ไม่สามารถลบบัญชีของตัวเองได้");
+      return;
+    }
+    if (target?.role === "ADMIN") {
+      alert("ไม่สามารถลบบัญชี Admin ด้วยกันเองได้");
+      return;
+    }
+
     if (!window.confirm("ต้องการลบผู้ใช้งานคนนี้ออกจากระบบหรือไม่?")) return;
     try {
       const remaining = await deleteUser(id);
@@ -404,13 +415,23 @@ export default function AdminUsers() {
                                 >
                                   ระงับการใช้งาน
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDelete(user.id)}
-                                  className="block w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50"
-                                >
-                                  ลบผู้ใช้งาน
-                                </button>
+                                {user.id === currentUser?.id ? (
+                                  <p className="block w-full px-4 py-2 text-left text-xs text-slate-300">
+                                    ลบบัญชีตัวเองไม่ได้
+                                  </p>
+                                ) : user.role === "ADMIN" ? (
+                                  <p className="block w-full px-4 py-2 text-left text-xs text-slate-300">
+                                    ลบ Admin ด้วยกันไม่ได้
+                                  </p>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDelete(user.id)}
+                                    className="block w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50"
+                                  >
+                                    ลบผู้ใช้งาน
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>

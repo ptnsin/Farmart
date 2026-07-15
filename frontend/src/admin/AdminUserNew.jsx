@@ -1,6 +1,19 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Save, X, User, Mail, Phone, Shield, Camera, Trash2, Loader2 } from "lucide-react";
+import {
+  Save,
+  X,
+  User,
+  Mail,
+  Phone,
+  Shield,
+  Camera,
+  Trash2,
+  Loader2,
+  Lock,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
 import { addUser } from "../data/userStore";
 
@@ -18,7 +31,9 @@ export default function AdminUserNew() {
     role: "EMPLOYEE",
     status: "active",
     avatar: "",
+    password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -61,7 +76,7 @@ export default function AdminUserNew() {
 
   const handleRemoveAvatar = () => setForm((f) => ({ ...f, avatar: "" }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -69,13 +84,17 @@ export default function AdminUserNew() {
       setError("กรุณากรอกชื่อ-นามสกุลและอีเมลให้ครบถ้วน");
       return;
     }
+    if (form.password && form.password.length < 6) {
+      setError("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
 
     setSaving(true);
     try {
-      addUser(form);
+      await addUser(form);
       navigate("/admin/users");
-    } catch {
-      setError("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } catch (err) {
+      setError(err.message || "บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
       setSaving(false);
     }
   };
@@ -223,6 +242,34 @@ export default function AdminUserNew() {
                   placeholder="081-234-5678"
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                 />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-1 flex items-center gap-1.5 text-sm text-slate-600">
+                  <Lock size={14} className="text-slate-400" />
+                  รหัสผ่าน
+                </label>
+                <div className="relative">
+                  <input
+                    value={form.password}
+                    onChange={update("password")}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="เว้นว่างไว้เพื่อให้ระบบตั้งรหัสผ่านเริ่มต้นให้"
+                    minLength={form.password ? 6 : undefined}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 pr-10 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <p className="mt-1.5 text-xs text-slate-400">
+                  ถ้าไม่กรอก ระบบจะตั้งรหัสผ่านเริ่มต้นให้อัตโนมัติ ควรแจ้งผู้ใช้ให้เปลี่ยนรหัสผ่านทีหลัง
+                  (อย่างน้อย 6 ตัวอักษรถ้ากรอกเอง)
+                </p>
               </div>
             </div>
           </div>

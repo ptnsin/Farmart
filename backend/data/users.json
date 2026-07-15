@@ -1,5 +1,17 @@
 [
   {
+    "id": 9,
+    "name": "ลูน่า จัง",
+    "email": "pattharanan5331@gmail.com",
+    "phone": "0984465331",
+    "password": "ppbkpenfangun",
+    "role": "ADMIN",
+    "status": "active",
+    "joined": "15 ก.ค. 2026",
+    "createdAt": "2026-07-15T01:25:41.414Z",
+    "avatar": "http://localhost:4000/uploads/avatars/1784078695515-600554139.jpg"
+  },
+  {
     "id": 8,
     "name": "we",
     "email": "we@gmail.com",
@@ -58,18 +70,6 @@
     "joined": "12 ก.ค. 2023",
     "createdAt": "2023-07-12T00:00:00.000Z",
     "avatar": "https://i.pravatar.cc/64?img=47"
-  },
-  {
-    "id": 2,
-    "name": "ธนาชัย นรินทร์",
-    "email": "thanachai.n@email.com",
-    "phone": "089-234-5672",
-    "password": "password123",
-    "role": "CUSTOMER",
-    "status": "suspended",
-    "joined": "05 มิ.ย. 2023",
-    "createdAt": "2023-06-05T00:00:00.000Z",
-    "avatar": "https://i.pravatar.cc/64?img=52"
   },
   {
     "id": 3,

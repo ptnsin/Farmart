@@ -82,11 +82,23 @@ export async function addReview(productId, { rating, comment }) {
   return data.product;
 }
 
-/** ตอบกลับรีวิวของสินค้า (employee/admin เท่านั้น) */
+/** ตอบกลับ/แก้ไขคำตอบรีวิวของสินค้า (employee/admin เท่านั้น) เรียกซ้ำได้เรื่อย ๆ เพื่อแก้ไขคำตอบเดิม */
 export async function replyToReview(productId, reviewId, replyText) {
   const data = await api.post(`/api/products/${productId}/reviews/${reviewId}/reply`, {
     reply: replyText,
   });
+  return data.product;
+}
+
+/** ลบคำตอบของทีมงานออกจากรีวิว (รีวิวยังอยู่ แต่กลับไปสถานะยังไม่มีคำตอบ) */
+export async function deleteReply(productId, reviewId) {
+  const data = await api.delete(`/api/products/${productId}/reviews/${reviewId}/reply`);
+  return data.product;
+}
+
+/** ลบรีวิวของลูกค้าออกทั้งรายการ (employee/admin เท่านั้น) */
+export async function deleteReview(productId, reviewId) {
+  const data = await api.delete(`/api/products/${productId}/reviews/${reviewId}`);
   return data.product;
 }
 

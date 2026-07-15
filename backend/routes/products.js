@@ -32,4 +32,16 @@ router.post(
   productController.replyToReview
 );
 
+router.delete(
+  "/:id/reviews/:reviewId/reply",
+  requireRole("EMPLOYEE", "ADMIN"),
+  productController.deleteReply
+);
+
+router.delete(
+  "/:id/reviews/:reviewId",
+  requireRole("EMPLOYEE", "ADMIN"),
+  productController.deleteReview
+);
+
 module.exports = router;

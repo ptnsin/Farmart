@@ -74,6 +74,31 @@ function replyToReview(productId, reviewId, replyText) {
   return products.find((p) => String(p.id) === String(productId)) || null;
 }
 
+/** ลบคำตอบของทีมงานออกจากรีวิว (รีวิวยังอยู่ แต่กลับไปสถานะยังไม่มีคำตอบ) */
+function deleteReply(productId, reviewId) {
+  const products = getProducts().map((p) => {
+    if (String(p.id) !== String(productId)) return p;
+    return {
+      ...p,
+      reviews: p.reviews.map((r) =>
+        String(r.id) === String(reviewId) ? { ...r, reply: "" } : r
+      ),
+    };
+  });
+  saveProducts(products);
+  return products.find((p) => String(p.id) === String(productId)) || null;
+}
+
+/** ลบรีวิวของลูกค้าออกทั้งรายการ (รวมคำตอบที่ตอบไปด้วย) */
+function deleteReview(productId, reviewId) {
+  const products = getProducts().map((p) => {
+    if (String(p.id) !== String(productId)) return p;
+    return { ...p, reviews: (p.reviews || []).filter((r) => String(r.id) !== String(reviewId)) };
+  });
+  saveProducts(products);
+  return products.find((p) => String(p.id) === String(productId)) || null;
+}
+
 function addReview(productId, { customer, rating, comment }) {
   const products = getProducts();
   const product = products.find((p) => String(p.id) === String(productId));
@@ -103,5 +128,7 @@ module.exports = {
   updateProduct,
   deleteProduct,
   replyToReview,
+  deleteReply,
+  deleteReview,
   addReview,
 };

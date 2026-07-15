@@ -98,6 +98,13 @@ function deleteUser(req, res) {
   const existing = userModel.getUserById(req.params.id);
   if (!existing) return res.status(404).json({ error: "ไม่พบผู้ใช้งาน" });
 
+  if (req.user && existing.id === req.user.id) {
+    return res.status(403).json({ error: "ไม่สามารถลบบัญชีของตัวเองได้" });
+  }
+  if (existing.role === "ADMIN") {
+    return res.status(403).json({ error: "ไม่สามารถลบบัญชี Admin ด้วยกันเองได้" });
+  }
+
   const users = userModel.deleteUser(req.params.id);
   res.json({ users: users.map(toSafeUser), message: "ลบผู้ใช้งานเรียบร้อยแล้ว" });
 }
