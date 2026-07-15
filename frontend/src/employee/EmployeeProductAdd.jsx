@@ -1,22 +1,46 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Bell, ImagePlus, X, ChevronLeft } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
+import { addProduct } from "../data/productStore";
+import { api } from "../data/apiClient";
 
-const CATEGORIES = ["ข้าวและธัญพืช", "ผลไม้", "ผัก", "โปรตีน"];
+// รายการหมวดหมู่ตามข้อมูลสินค้าจริงในระบบ (ร้านขายอุปกรณ์การเกษตร ไม่ใช่พืชผักสด)
+const CATEGORIES = [
+  "เมล็ดพันธุ์",
+  "ฮอร์โมน",
+  "ปุ๋ย",
+  "อุปกรณ์จัดการดิน",
+  "อุปกรณ์รดน้ำ",
+  "กระถาง",
+];
 
 export default function EmployeeProductAdd() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const [user, setUser] = useState(getCachedUser());
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [form, setForm] = useState({
     name: "",
     category: CATEGORIES[0],
+    unit: "",
     stock: "",
     price: "",
+    cost: "",
+    farmer: "",
+    location: "",
+    description: "",
   });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    fetchCurrentUser().then(setUser).catch(() => {});
+  }, []);
 
   const handleField = (key) => (e) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -43,11 +67,46 @@ export default function EmployeeProductAdd() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: ส่ง form + imageFile ไปยัง API คลังสินค้าจริง (multipart/form-data)
-    console.log("New product:", { ...form, image: imageFile });
-    navigate("/employee/warehouse");
+    setSaveError("");
+    setSaving(true);
+    try {
+      let imageUrl;
+      if (imageFile) {
+        setUploading(true);
+        try {
+          const formData = new FormData();
+          formData.append("file", imageFile);
+          const uploadResult = await api.post("/api/upload/product", formData);
+          imageUrl = uploadResult.url;
+        } catch (err) {
+          setSaveError(err.message || "อัปโหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+          setSaving(false);
+          setUploading(false);
+          return;
+        }
+        setUploading(false);
+      }
+
+      // backend จะตั้งสถานะ approvalStatus เป็น pending ให้เองสำหรับสินค้าที่พนักงานเพิ่ม
+      await addProduct({
+        name: form.name,
+        category: form.category,
+        unit: form.unit || "หน่วย",
+        price: Number(form.price),
+        cost: form.cost ? Number(form.cost) : undefined,
+        stockUnits: Number(form.stock),
+        farmer: form.farmer,
+        location: form.location,
+        description: form.description,
+        ...(imageUrl ? { image: imageUrl, images: [imageUrl] } : {}),
+      });
+      navigate("/employee/warehouse");
+    } catch (err) {
+      setSaveError(err.message || "บันทึกสินค้าไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      setSaving(false);
+    }
   };
 
   return (
@@ -77,12 +136,12 @@ export default function EmployeeProductAdd() {
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
-              src="https://i.pravatar.cc/64?img=5"
+              src={user?.avatar || "https://i.pravatar.cc/64?img=5"}
               alt=""
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">พนักงาน</p>
+              <p className="text-sm font-medium text-slate-800">{user?.name || "พนักงาน"}</p>
               <p className="text-xs text-slate-400">Warehouse Staff</p>
             </div>
           </div>
@@ -204,6 +263,19 @@ export default function EmployeeProductAdd() {
 
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  หน่วยนับ
+                </label>
+                <input
+                  value={form.unit}
+                  onChange={handleField("unit")}
+                  type="text"
+                  placeholder="เช่น ซอง, ขวด, ถุง 25 กก."
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   ราคาต่อหน่วย (บาท)
                 </label>
                 <input
@@ -217,7 +289,21 @@ export default function EmployeeProductAdd() {
                 />
               </div>
 
-              <div className="sm:col-span-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  ต้นทุนต่อหน่วย (บาท)
+                </label>
+                <input
+                  value={form.cost}
+                  onChange={handleField("cost")}
+                  type="number"
+                  min="0"
+                  placeholder="0.00 (ไม่บังคับ)"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   จำนวนคงเหลือ
                 </label>
@@ -231,21 +317,64 @@ export default function EmployeeProductAdd() {
                   className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                 />
               </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  ผู้จำหน่าย
+                </label>
+                <input
+                  value={form.farmer}
+                  onChange={handleField("farmer")}
+                  type="text"
+                  placeholder="ชื่อผู้ผลิตหรือผู้จำหน่าย"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  แหล่งผลิต
+                </label>
+                <input
+                  value={form.location}
+                  onChange={handleField("location")}
+                  type="text"
+                  placeholder="เช่น เชียงใหม่"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  รายละเอียดสินค้า
+                </label>
+                <textarea
+                  rows={3}
+                  value={form.description}
+                  onChange={handleField("description")}
+                  placeholder="อธิบายรายละเอียดสินค้า"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
             </div>
+
+            {saveError && <p className="mt-4 text-sm text-rose-500">{saveError}</p>}
 
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => navigate("/employee/warehouse")}
-                className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                disabled={saving}
+                className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
               >
                 ยกเลิก
               </button>
               <button
                 type="submit"
-                className="rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
+                disabled={saving}
+                className="rounded-lg bg-emerald-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
               >
-                บันทึกสินค้า
+                {uploading ? "กำลังอัปโหลดรูป..." : saving ? "กำลังบันทึก..." : "บันทึกสินค้า"}
               </button>
             </div>
           </div>

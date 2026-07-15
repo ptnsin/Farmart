@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Bell,
@@ -8,6 +8,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import EmployeeSidebar from "./Employeesidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 const TABS = [
   { key: "pending", label: "รอการตรวจสอบ" },
@@ -63,9 +64,14 @@ function StatCard({ label, value, note, noteColor }) {
 }
 
 export default function EmployeeOrders() {
+  const [user, setUser] = useState(getCachedUser());
   const [tab, setTab] = useState("pending");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    fetchCurrentUser().then(setUser).catch(() => {});
+  }, []);
 
   const filteredOrders = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -106,12 +112,12 @@ export default function EmployeeOrders() {
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
-              src="https://i.pravatar.cc/64?img=5"
+              src={user?.avatar || "https://i.pravatar.cc/64?img=5"}
               alt=""
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">พนักงาน</p>
+              <p className="text-sm font-medium text-slate-800">{user?.name || "พนักงาน"}</p>
               <p className="text-xs text-slate-400">Warehouse Staff</p>
             </div>
           </div>

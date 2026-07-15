@@ -4,6 +4,28 @@
 const db = require("../utils/db");
 const SEED = require("../data/products.seed.json");
 
+// prefix SKU ตามหมวดหมู่ ให้ตรงกับรูปแบบเดิมใน products.seed.json
+// (เมล็ดพันธุ์ -> SD, ฮอร์โมน -> HM, ปุ๋ย -> FT, อุปกรณ์จัดการดิน -> SL, อุปกรณ์รดน้ำ -> WT, กระถาง -> PT)
+const CATEGORY_SKU_PREFIX = {
+  "เมล็ดพันธุ์": "SD",
+  "ฮอร์โมน": "HM",
+  "ปุ๋ย": "FT",
+  "อุปกรณ์จัดการดิน": "SL",
+  "อุปกรณ์รดน้ำ": "WT",
+  "กระถาง": "PT",
+};
+
+/** สร้าง SKU ถัดไปตามหมวดหมู่ เช่น เมล็ดพันธุ์ตัวล่าสุดคือ SD060 -> ตัวใหม่ได้ SD061 */
+function generateSku(category, products) {
+  const prefix = CATEGORY_SKU_PREFIX[category] || "GN"; // GN = ทั่วไป กรณีไม่รู้จักหมวดหมู่
+  const pattern = new RegExp(`^${prefix}(\\d+)$`);
+  const maxNum = products.reduce((max, p) => {
+    const match = pattern.exec(p.sku || "");
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+  return `${prefix}${String(maxNum + 1).padStart(3, "0")}`;
+}
+
 function getProducts() {
   return db.read("products", SEED);
 }
@@ -25,7 +47,7 @@ function addProduct(data) {
   const id = db.nextId(products);
   const newProduct = {
     id,
-    sku: data.sku || `SKU${String(id).padStart(4, "0")}`,
+    sku: data.sku || generateSku(data.category, products),
     name: data.name?.trim() || "",
     category: data.category || "",
     unit: data.unit || "",

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Search,
@@ -12,60 +12,20 @@ import {
   ChevronDown,
 } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
+import { getProducts, deleteProduct } from "../data/productStore";
 
-// ตัวอย่างข้อมูลสินค้า — เชื่อมกับ API คลังสินค้าจริงภายหลัง
-export const INITIAL_PRODUCTS = [
-  {
-    id: "P-001",
-    name: "ข้าวหอมมะลิ 100%",
-    category: "ข้าวและธัญพืช",
-    stock: 82,
-    price: 120,
-    status: "active",
-    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=64&h=64&fit=crop",
-  },
-  {
-    id: "P-002",
-    name: "มะม่วงน้ำดอกไม้",
-    category: "ผลไม้",
-    stock: 6,
-    price: 150,
-    status: "low",
-    image: "https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=64&h=64&fit=crop",
-  },
-  {
-    id: "P-003",
-    name: "ผักกาดขาว",
-    category: "ผัก",
-    stock: 0,
-    price: 45,
-    status: "out",
-    image: "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?w=64&h=64&fit=crop",
-  },
-  {
-    id: "P-004",
-    name: "ไข่ไก่เบอร์ 0",
-    category: "โปรตีน",
-    stock: 140,
-    price: 105,
-    status: "active",
-    image: "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=64&h=64&fit=crop",
-  },
-  {
-    id: "P-005",
-    name: "ทุเรียนหมอนทอง",
-    category: "ผลไม้",
-    stock: 4,
-    price: 600,
-    status: "low",
-    image: "https://images.unsplash.com/photo-1629671305893-73c5a4a2f9f1?w=64&h=64&fit=crop",
-  },
-];
-
+// สถานะสต๊อกอิงตาม stockLevel ที่ backend ส่งมาจริง ("healthy" | "low" | "out")
 const STATUS_STYLES = {
-  active: { dot: "bg-emerald-500", text: "text-emerald-600", label: "พร้อมขาย" },
+  healthy: { dot: "bg-emerald-500", text: "text-emerald-600", label: "พร้อมขาย" },
   low: { dot: "bg-amber-500", text: "text-amber-600", label: "ใกล้หมด" },
   out: { dot: "bg-rose-500", text: "text-rose-500", label: "สินค้าหมด" },
+};
+
+// สถานะการอนุมัติสินค้า (สินค้าที่พนักงานเพิ่มเองต้องรอ admin อนุมัติก่อนขึ้นขายจริง)
+const APPROVAL_STYLES = {
+  pending: { text: "text-amber-600", bg: "bg-amber-50", label: "รอ admin อนุมัติ" },
+  rejected: { text: "text-rose-500", bg: "bg-rose-50", label: "ถูกปฏิเสธ" },
 };
 
 function StatCard({ label, value, note, icon: Icon, iconBg, iconColor }) {
@@ -84,14 +44,41 @@ function StatCard({ label, value, note, icon: Icon, iconBg, iconColor }) {
 }
 
 export default function EmployeeWarehouse() {
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [user, setUser] = useState(getCachedUser());
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    fetchCurrentUser().then(setUser).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError("");
+    getProducts()
+      .then((data) => {
+        if (!cancelled) setProducts(data);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError("โหลดข้อมูลสินค้าไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const stats = useMemo(() => {
     const total = products.length;
-    const low = products.filter((p) => p.status === "low").length;
-    const out = products.filter((p) => p.status === "out").length;
+    const low = products.filter((p) => p.stockLevel === "low").length;
+    const out = products.filter((p) => p.stockLevel === "out").length;
     return { total, low, out };
   }, [products]);
 
@@ -99,13 +86,24 @@ export default function EmployeeWarehouse() {
     const q = query.trim().toLowerCase();
     if (!q) return products;
     return products.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        String(p.id).toLowerCase().includes(q) ||
+        p.sku?.toLowerCase().includes(q)
     );
   }, [products, query]);
 
-  const confirmDelete = () => {
-    setProducts((prev) => prev.filter((p) => p.id !== pendingDelete.id));
-    setPendingDelete(null);
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      const remaining = await deleteProduct(pendingDelete.id);
+      setProducts(remaining);
+      setPendingDelete(null);
+    } catch {
+      alert("ลบสินค้าไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -137,12 +135,12 @@ export default function EmployeeWarehouse() {
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
-              src="https://i.pravatar.cc/64?img=5"
+              src={user?.avatar || "https://i.pravatar.cc/64?img=5"}
               alt=""
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">พนักงาน</p>
+              <p className="text-sm font-medium text-slate-800">{user?.name || "พนักงาน"}</p>
               <p className="text-xs text-slate-400">Warehouse Staff</p>
             </div>
           </div>
@@ -224,58 +222,94 @@ export default function EmployeeWarehouse() {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((p) => {
-                const status = STATUS_STYLES[p.status];
-                return (
-                  <tr key={p.id} className="border-b border-slate-50 last:border-0">
-                    <td className="px-6 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={p.image}
-                          alt={p.name}
-                          className="h-9 w-9 rounded-lg object-cover"
-                        />
-                        <div>
-                          <p className="font-medium text-slate-800">{p.name}</p>
-                          <p className="text-xs text-slate-400">{p.id}</p>
+              {loading && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
+                    กำลังโหลดข้อมูลสินค้า...
+                  </td>
+                </tr>
+              )}
+              {!loading && loadError && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-sm text-rose-500">
+                    {loadError}
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                !loadError &&
+                filteredProducts.map((p) => {
+                  const status = STATUS_STYLES[p.stockLevel] || STATUS_STYLES.healthy;
+                  const approval =
+                    p.approvalStatus && p.approvalStatus !== "approved"
+                      ? APPROVAL_STYLES[p.approvalStatus]
+                      : null;
+                  return (
+                    <tr key={p.id} className="border-b border-slate-50 last:border-0">
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src =
+                                "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36'><rect width='36' height='36' rx='8' fill='%23f1f5f9'/></svg>";
+                            }}
+                            className="h-9 w-9 rounded-lg border border-slate-100 object-cover"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-slate-800">{p.name}</p>
+                              {approval && (
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${approval.bg} ${approval.text}`}
+                                >
+                                  {approval.label}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-400">{p.sku || p.id}</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-3.5 text-slate-600">{p.category}</td>
-                    <td className="px-6 py-3.5 font-medium text-slate-800">{p.stock} หน่วย</td>
-                    <td className="px-6 py-3.5 text-slate-600">฿{p.price.toLocaleString()}</td>
-                    <td className="px-6 py-3.5">
-                      <span className={`inline-flex items-center gap-1.5 text-xs ${status.text}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3.5">
-                      <div className="flex items-center justify-end gap-3 text-slate-400">
-                        <button type="button" aria-label="ดูรายละเอียด" className="hover:text-slate-600">
-                          <Eye size={16} />
-                        </button>
-                        <Link
-                          to={`/employee/warehouse/edit/${p.id}`}
-                          aria-label="แก้ไขสินค้า"
-                          className="hover:text-slate-600"
-                        >
-                          <Pencil size={16} />
-                        </Link>
-                        <button
-                          type="button"
-                          aria-label="ลบสินค้า"
-                          onClick={() => setPendingDelete(p)}
-                          className="hover:text-rose-500"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {filteredProducts.length === 0 && (
+                      </td>
+                      <td className="px-6 py-3.5 text-slate-600">{p.category}</td>
+                      <td className="px-6 py-3.5 font-medium text-slate-800">
+                        {p.stockUnits} {p.unit || "หน่วย"}
+                      </td>
+                      <td className="px-6 py-3.5 text-slate-600">฿{Number(p.price).toLocaleString()}</td>
+                      <td className="px-6 py-3.5">
+                        <span className={`inline-flex items-center gap-1.5 text-xs ${status.text}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center justify-end gap-3 text-slate-400">
+                          <button type="button" aria-label="ดูรายละเอียด" className="hover:text-slate-600">
+                            <Eye size={16} />
+                          </button>
+                          <Link
+                            to={`/employee/warehouse/edit/${p.id}`}
+                            aria-label="แก้ไขสินค้า"
+                            className="hover:text-slate-600"
+                          >
+                            <Pencil size={16} />
+                          </Link>
+                          <button
+                            type="button"
+                            aria-label="ลบสินค้า"
+                            onClick={() => setPendingDelete(p)}
+                            className="hover:text-rose-500"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              {!loading && !loadError && filteredProducts.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
                     ไม่พบสินค้าที่ตรงกับคำค้นหา
@@ -298,16 +332,18 @@ export default function EmployeeWarehouse() {
               <button
                 type="button"
                 onClick={() => setPendingDelete(null)}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                disabled={deleting}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
               >
                 ยกเลิก
               </button>
               <button
                 type="button"
                 onClick={confirmDelete}
-                className="rounded-lg bg-rose-500 px-4 py-2 text-sm font-medium text-white hover:bg-rose-600"
+                disabled={deleting}
+                className="rounded-lg bg-rose-500 px-4 py-2 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-50"
               >
-                ลบสินค้า
+                {deleting ? "กำลังลบ..." : "ลบสินค้า"}
               </button>
             </div>
           </div>

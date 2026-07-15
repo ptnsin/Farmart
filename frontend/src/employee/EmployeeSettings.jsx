@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Bell } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 export default function EmployeeSettings() {
+  const [user, setUser] = useState(getCachedUser());
   const [profile, setProfile] = useState({
     name: "พนักงานคลังสินค้า",
     email: "employee@farmart.co.th",
@@ -14,6 +16,21 @@ export default function EmployeeSettings() {
     shippingUpdate: false,
   });
   const [savedMsg, setSavedMsg] = useState("");
+
+  useEffect(() => {
+    fetchCurrentUser().then(setUser).catch(() => {});
+  }, []);
+
+  // พอโหลดข้อมูลผู้ใช้ที่ล็อกอินอยู่มาได้แล้ว ให้เติมลงฟอร์มแทนค่า placeholder เริ่มต้น
+  useEffect(() => {
+    if (!user) return;
+    setProfile((p) => ({
+      ...p,
+      name: user.name || p.name,
+      email: user.email || p.email,
+      phone: user.phone || p.phone,
+    }));
+  }, [user]);
 
   const updateProfile = (key) => (e) => setProfile((p) => ({ ...p, [key]: e.target.value }));
   const toggleNotify = (key) => setNotify((n) => ({ ...n, [key]: !n[key] }));
@@ -51,9 +68,9 @@ export default function EmployeeSettings() {
             <Bell size={18} />
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
-            <img src="https://i.pravatar.cc/64?img=5" alt="" className="h-8 w-8 rounded-full object-cover" />
+            <img src={user?.avatar || "https://i.pravatar.cc/64?img=5"} alt="" className="h-8 w-8 rounded-full object-cover" />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">พนักงาน</p>
+              <p className="text-sm font-medium text-slate-800">{user?.name || "พนักงาน"}</p>
               <p className="text-xs text-slate-400">Warehouse Staff</p>
             </div>
           </div>

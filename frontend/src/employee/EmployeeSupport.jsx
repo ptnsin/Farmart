@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Bell, LifeBuoy, ChevronDown } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
+import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 const FAQS = [
   {
@@ -22,9 +23,14 @@ const FAQS = [
 ];
 
 export default function EmployeeSupport() {
+  const [user, setUser] = useState(getCachedUser());
   const [openIdx, setOpenIdx] = useState(0);
   const [form, setForm] = useState({ subject: "", message: "" });
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    fetchCurrentUser().then(setUser).catch(() => {});
+  }, []);
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -62,9 +68,9 @@ export default function EmployeeSupport() {
             <Bell size={18} />
           </button>
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
-            <img src="https://i.pravatar.cc/64?img=5" alt="" className="h-8 w-8 rounded-full object-cover" />
+            <img src={user?.avatar || "https://i.pravatar.cc/64?img=5"} alt="" className="h-8 w-8 rounded-full object-cover" />
             <div className="leading-tight">
-              <p className="text-sm font-medium text-slate-800">พนักงาน</p>
+              <p className="text-sm font-medium text-slate-800">{user?.name || "พนักงาน"}</p>
               <p className="text-xs text-slate-400">Warehouse Staff</p>
             </div>
           </div>

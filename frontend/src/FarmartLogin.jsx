@@ -98,7 +98,7 @@ export default function FarmartLogin() {
             {/* Email */}
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-1.5">
-                Email or Username
+                Email
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

@@ -1,5 +1,29 @@
 [
   {
+    "id": 11,
+    "name": "Mr. WASIN CHANTHAVON",
+    "email": "wasin.chn@spumail.net",
+    "phone": "0841167890",
+    "password": "ะำฟทะำหะ",
+    "role": "CUSTOMER",
+    "status": "active",
+    "joined": "15 ก.ค. 2026",
+    "createdAt": "2026-07-15T04:46:14.087Z",
+    "avatar": "https://i.pravatar.cc/64?img=12"
+  },
+  {
+    "id": 10,
+    "name": "โทม่าฟ้อก",
+    "email": "Toma@gmail.com",
+    "phone": "0967676767",
+    "password": "rukpor9",
+    "role": "EMPLOYEE",
+    "status": "active",
+    "joined": "15 ก.ค. 2026",
+    "createdAt": "2026-07-15T02:47:25.092Z",
+    "avatar": "http://localhost:4000/uploads/avatars/1784083575270-644010138.jpg"
+  },
+  {
     "id": 9,
     "name": "ลูน่า จัง",
     "email": "pattharanan5331@gmail.com",
