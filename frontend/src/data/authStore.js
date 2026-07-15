@@ -17,6 +17,7 @@ export async function login(email, password, keepSignedIn = false) {
   const data = await api.post("/api/auth/login", { email, password, keepSignedIn });
   setToken(data.token);
   cacheUser(data.user);
+  window.dispatchEvent(new Event("userChanged"));
   return data.user;
 }
 
@@ -31,6 +32,7 @@ export async function register(data) {
   const res = await api.post("/api/auth/register", data);
   setToken(res.token);
   cacheUser(res.user);
+  window.dispatchEvent(new Event("userChanged"));
   return res.user;
 }
 
@@ -43,6 +45,7 @@ export async function logout() {
   }
   clearToken();
   cacheUser(null);
+  window.dispatchEvent(new Event("userChanged"));
 }
 
 /** ดึงข้อมูล user ปัจจุบันจาก backend (ยืนยันว่า token ยังใช้ได้จริง) */

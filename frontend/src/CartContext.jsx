@@ -1,12 +1,25 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const CartContext = createContext(null);
-const CART_STORAGE_KEY = "farmart_cart_items";
 
+
+function getCartStorageKey() {
+  try {
+    const raw = localStorage.getItem("farmart_current_user");
+
+    if (!raw) return "farmart_cart_guest";
+
+    const user = JSON.parse(raw);
+
+    return `farmart_cart_${user.id}`;
+  } catch {
+    return "farmart_cart_guest";
+  }
+}
 // โหลดตะกร้าที่เคยบันทึกไว้ตอนเปิดแอปครั้งแรก (กันของหายตอนรีเฟรชหน้า)
 function loadStoredCart() {
   try {
-    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    const raw = localStorage.getItem(getCartStorageKey());
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -22,12 +35,16 @@ function makeKey(id, variant) {
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(loadStoredCart);
+  useEffect(() => {
+  setItems(loadStoredCart());
+}, []);
+
   // items: [{ key, id, name, subtitle, price, image, emoji, variant, quantity }]
 
   // ทุกครั้งที่ตะกร้าเปลี่ยน ให้บันทึกลง localStorage ทันที
   useEffect(() => {
     try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(getCartStorageKey(), JSON.stringify(items));
     } catch {
       // เผื่อ localStorage เต็มหรือถูกบล็อก ก็ปล่อยผ่าน ไม่ทำให้แอปพัง
     }
