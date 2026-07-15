@@ -55,6 +55,20 @@ export async function fetchCurrentUser() {
   return data.user;
 }
 
+/**
+ * อัปเดตข้อมูลโปรไฟล์ของผู้ใช้ปัจจุบัน (name / email / phone)
+ * เรียก PUT /api/auth/me แล้วอัปเดต cache + แจ้ง userChanged เพื่อให้ทุกที่ที่ใช้ getCachedUser() sync กัน
+ * @param {{name?:string, email?:string, phone?:string}} patch
+ * @returns {object} user ที่อัปเดตแล้ว
+ * @throws {Error} เช่น "รูปแบบอีเมลไม่ถูกต้อง"
+ */
+export async function updateProfile(patch) {
+  const data = await api.put("/api/auth/me", patch);
+  cacheUser(data.user);
+  window.dispatchEvent(new Event("userChanged"));
+  return data.user;
+}
+
 /** ดึงข้อมูล user ที่แคชไว้แบบเร็ว ๆ (sync, ไม่เช็คกับ server) ใช้โชว์ UI ทันทีระหว่างรอ fetchCurrentUser */
 export function getCachedUser() {
   try {

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useCart } from "./CartContext";
 import Footer from "./Footer";
+import { fetchCurrentUser, getCachedUser, updateProfile } from "./data/authStore";
 
 const sidebarItems = [
   { key: "info", label: "ข้อมูลส่วนตัว", icon: UserCircle2 },
@@ -174,6 +175,45 @@ export default function Profile() {
   });
   const [savedForm, setSavedForm] = useState(form);
   const [formErrors, setFormErrors] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
+
+  // ----- โหลดข้อมูลผู้ใช้จาก backend ตอนเข้าหน้า Profile -----
+  useEffect(() => {
+    // โชว์ข้อมูลที่แคชไว้ก่อนทันที (ไม่ต้องรอ network)
+    const cached = getCachedUser();
+    if (cached) {
+      const cachedForm = {
+        name: cached.name ?? "",
+        email: cached.email ?? "",
+        phone: cached.phone ?? "",
+      };
+      setForm(cachedForm);
+      setSavedForm(cachedForm);
+      if (cached.avatarUrl) setAvatar(cached.avatarUrl);
+    }
+
+    // แล้วยืนยันกับ backend ว่า token ยังใช้ได้ + ได้ข้อมูลล่าสุด
+    const loadProfile = async () => {
+      try {
+        const user = await fetchCurrentUser();
+        const nextForm = {
+          name: user.name ?? "",
+          email: user.email ?? "",
+          phone: user.phone ?? "",
+        };
+        setForm(nextForm);
+        setSavedForm(nextForm);
+        if (user.avatarUrl) setAvatar(user.avatarUrl);
+      } catch (err) {
+        setFetchError(err.message || "โหลดข้อมูลไม่สำเร็จ กรุณาเข้าสู่ระบบใหม่");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -207,10 +247,15 @@ export default function Profile() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!validateForm()) return;
-    setSavedForm(form);
-    showToast("บันทึกการเปลี่ยนแปลงเรียบร้อยแล้ว");
+    try {
+      await updateProfile(form);
+      setSavedForm(form);
+      showToast("บันทึกการเปลี่ยนแปลงเรียบร้อยแล้ว");
+    } catch (err) {
+      showToast(err.message || "บันทึกไม่สำเร็จ");
+    }
   };
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(savedForm);
@@ -413,6 +458,16 @@ export default function Profile() {
             {/* ---------------- ข้อมูลส่วนตัว ---------------- */}
             {activeTab === "info" && (
               <>
+                {loading && (
+                  <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 mb-4 text-sm text-gray-500">
+                    กำลังโหลดข้อมูลโปรไฟล์...
+                  </div>
+                )}
+                {fetchError && !loading && (
+                  <div className="bg-red-50 border border-red-100 rounded-xl shadow-sm p-4 mb-4 text-sm text-red-600">
+                    {fetchError}
+                  </div>
+                )}
                 <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="relative shrink-0">

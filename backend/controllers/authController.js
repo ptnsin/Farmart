@@ -60,4 +60,27 @@ function me(req, res) {
   res.json({ user: req.user });
 }
 
-module.exports = { register, login, logout, me };
+/**
+ * PUT /api/auth/me - แก้ไขข้อมูลโปรไฟล์ของตัวเอง (name / email / phone)
+ * หมายเหตุ: สมมติว่า userModel มีฟังก์ชัน updateUser(id, patch) อยู่แล้ว
+ * ถ้าชื่อฟังก์ชันจริงใน models/userModel.js ไม่ตรง ให้แก้บรรทัดที่เรียกด้านล่างนี้
+ */
+function updateMe(req, res) {
+  const { name, email, phone } = req.body || {};
+
+  if (!name || !String(name).trim()) {
+    return res.status(400).json({ error: "กรุณากรอกชื่อ-นามสกุล" });
+  }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ error: "รูปแบบอีเมลไม่ถูกต้อง" });
+  }
+
+  try {
+    const updated = userModel.updateUser(req.user.id, { name, email, phone });
+    res.json({ user: toSafeUser(updated) });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+module.exports = { register, login, logout, me, updateMe };
