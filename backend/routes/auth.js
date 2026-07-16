@@ -16,4 +16,7 @@ router.post("/logout", requireAuth, authController.logout);
 // GET /api/auth/me
 router.get("/me", requireAuth, authController.me);
 
+// PUT /api/auth/me - แก้ไขโปรไฟล์ของตัวเอง (ทุก role ทำได้ แก้ได้แค่ของตัวเอง)
+router.put("/me", requireAuth, authController.updateMe);
+
 module.exports = router;

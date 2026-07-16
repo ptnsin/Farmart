@@ -21,7 +21,8 @@ import {
 } from "lucide-react";
 import { useCart } from "./CartContext";
 import Footer from "./Footer";
-import { fetchCurrentUser, getCachedUser, updateProfile } from "./data/authStore";
+import { fetchCurrentUser, getCachedUser, updateMe } from "./data/authStore";
+import { api } from "./data/apiClient";
 
 const sidebarItems = [
   { key: "info", label: "ข้อมูลส่วนตัว", icon: UserCircle2 },
@@ -190,7 +191,7 @@ export default function Profile() {
       };
       setForm(cachedForm);
       setSavedForm(cachedForm);
-      if (cached.avatarUrl) setAvatar(cached.avatarUrl);
+      if (cached.avatar) setAvatar(cached.avatar);
     }
 
     // แล้วยืนยันกับ backend ว่า token ยังใช้ได้ + ได้ข้อมูลล่าสุด
@@ -204,7 +205,7 @@ export default function Profile() {
         };
         setForm(nextForm);
         setSavedForm(nextForm);
-        if (user.avatarUrl) setAvatar(user.avatarUrl);
+        if (user.avatar) setAvatar(user.avatar);
       } catch (err) {
         setFetchError(err.message || "โหลดข้อมูลไม่สำเร็จ กรุณาเข้าสู่ระบบใหม่");
       } finally {
@@ -226,12 +227,31 @@ export default function Profile() {
 
   const handleAvatarClick = () => fileInputRef.current?.click();
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = ""; // ให้เลือกไฟล์เดิมซ้ำได้ในครั้งถัดไป
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAvatar(url);
-    showToast("อัปเดตรูปโปรไฟล์แล้ว");
+
+    if (!file.type.startsWith("image/")) {
+      showToast("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("ขนาดรูปต้องไม่เกิน 2MB");
+      return;
+    }
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const uploaded = await api.post("/api/upload/avatar", body);
+      // อัปโหลดไฟล์ขึ้น server แล้ว บันทึกลงบัญชีทันที (ปุ่มดินสอไม่มีขั้นตอน "บันทึก" แยก)
+      await updateMe({ avatar: uploaded.url });
+      setAvatar(uploaded.url);
+      showToast("อัปเดตรูปโปรไฟล์แล้ว");
+    } catch (err) {
+      showToast(err.message || "อัปโหลดรูปไม่สำเร็จ");
+    }
   };
 
   const handleFormChange = (field, value) => {
@@ -250,7 +270,7 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     if (!validateForm()) return;
     try {
-      await updateProfile(form);
+      await updateMe(form);
       setSavedForm(form);
       showToast("บันทึกการเปลี่ยนแปลงเรียบร้อยแล้ว");
     } catch (err) {
@@ -344,7 +364,7 @@ export default function Profile() {
     setNotif((n) => ({ ...n, [key]: !n[key] }));
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!pwd.current || !pwd.next || !pwd.confirm) {
       setPwdError("กรุณากรอกข้อมูลให้ครบทุกช่อง");
       return;
@@ -358,8 +378,15 @@ export default function Profile() {
       return;
     }
     setPwdError("");
-    setPwd({ current: "", next: "", confirm: "" });
-    showToast("เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
+    try {
+      // หมายเหตุ: backend (PUT /api/auth/me) ยังไม่ได้เช็ค pwd.current กับรหัสผ่านเดิมจริง ๆ
+      // (แค่ยาว >= 6 ตัวอักษรก็ตั้งได้เลย) ถ้าจะให้ปลอดภัยขึ้นต้องเพิ่มการเช็คฝั่ง backend ทีหลัง
+      await updateMe({ password: pwd.next });
+      setPwd({ current: "", next: "", confirm: "" });
+      showToast("เปลี่ยนรหัสผ่านเรียบร้อยแล้ว");
+    } catch (err) {
+      setPwdError(err.message || "เปลี่ยนรหัสผ่านไม่สำเร็จ");
+    }
   };
 
   return (
@@ -897,6 +924,9 @@ export default function Profile() {
                         <button
                           onClick={() => {
                             setShowDeleteConfirm(false);
+                            // TODO: ยังไม่มี endpoint ให้ผู้ใช้ลบบัญชีตัวเอง
+                            // (DELETE /api/users/:id ตอนนี้เป็นสิทธิ์ ADMIN เท่านั้น)
+                            // ต้องเพิ่ม DELETE /api/auth/me ฝั่ง backend ก่อนถึงจะเชื่อมของจริงได้
                             showToast("ลบบัญชีเรียบร้อยแล้ว");
                           }}
                           className="text-sm font-semibold text-white bg-red-600 hover:bg-red-700 px-4 py-2.5 rounded-lg"

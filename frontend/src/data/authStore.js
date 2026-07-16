@@ -17,7 +17,6 @@ export async function login(email, password, keepSignedIn = false) {
   const data = await api.post("/api/auth/login", { email, password, keepSignedIn });
   setToken(data.token);
   cacheUser(data.user);
-  window.dispatchEvent(new Event("userChanged"));
   return data.user;
 }
 
@@ -32,7 +31,6 @@ export async function register(data) {
   const res = await api.post("/api/auth/register", data);
   setToken(res.token);
   cacheUser(res.user);
-  window.dispatchEvent(new Event("userChanged"));
   return res.user;
 }
 
@@ -45,7 +43,6 @@ export async function logout() {
   }
   clearToken();
   cacheUser(null);
-  window.dispatchEvent(new Event("userChanged"));
 }
 
 /** ดึงข้อมูล user ปัจจุบันจาก backend (ยืนยันว่า token ยังใช้ได้จริง) */
@@ -56,16 +53,15 @@ export async function fetchCurrentUser() {
 }
 
 /**
- * อัปเดตข้อมูลโปรไฟล์ของผู้ใช้ปัจจุบัน (name / email / phone)
- * เรียก PUT /api/auth/me แล้วอัปเดต cache + แจ้ง userChanged เพื่อให้ทุกที่ที่ใช้ getCachedUser() sync กัน
- * @param {{name?:string, email?:string, phone?:string}} patch
+ * แก้ไขโปรไฟล์ของตัวเอง (PUT /api/auth/me) — ใช้ได้ทุก role เพราะแก้ได้แค่ของตัวเอง
+ * ห้ามส่ง role/status ไปเปลี่ยนเอง (backend จะตัดทิ้งอยู่แล้วแต่กันไว้ก่อน)
+ * @param {{name?:string, email?:string, phone?:string, avatar?:string, password?:string}} patch
  * @returns {object} user ที่อัปเดตแล้ว
- * @throws {Error} เช่น "รูปแบบอีเมลไม่ถูกต้อง"
+ * @throws {Error} เช่น "อีเมลนี้ถูกใช้งานแล้ว"
  */
-export async function updateProfile(patch) {
+export async function updateMe(patch) {
   const data = await api.put("/api/auth/me", patch);
   cacheUser(data.user);
-  window.dispatchEvent(new Event("userChanged"));
   return data.user;
 }
 

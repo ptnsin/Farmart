@@ -61,26 +61,47 @@ function me(req, res) {
 }
 
 /**
- * PUT /api/auth/me - แก้ไขข้อมูลโปรไฟล์ของตัวเอง (name / email / phone)
- * หมายเหตุ: สมมติว่า userModel มีฟังก์ชัน updateUser(id, patch) อยู่แล้ว
- * ถ้าชื่อฟังก์ชันจริงใน models/userModel.js ไม่ตรง ให้แก้บรรทัดที่เรียกด้านล่างนี้
+ * PUT /api/auth/me - แก้ไขข้อมูลโปรไฟล์ของ "ตัวเอง" เท่านั้น
+ * ใช้ req.user.id จาก token เสมอ ไม่รับ id จากภายนอก กัน user แก้ไขบัญชีคนอื่น
+ * ทุก role (ADMIN/EMPLOYEE/CUSTOMER) เรียกได้ เพราะแก้ได้แค่ของตัวเอง ไม่กระทบคนอื่น
  */
 function updateMe(req, res) {
-  const { name, email, phone } = req.body || {};
+  const patch = { ...req.body };
 
-  if (!name || !String(name).trim()) {
+  // ป้องกันการยกระดับสิทธิ์ตัวเอง หรือแก้ field ที่ไม่ควรแก้ผ่าน endpoint นี้
+  // (เปลี่ยน role/status ต้องให้ ADMIN ทำผ่าน PUT /api/users/:id เท่านั้น)
+  delete patch.id;
+  delete patch.role;
+  delete patch.status;
+  delete patch.createdAt;
+  delete patch.confirmPassword;
+
+  if (patch.name !== undefined && !String(patch.name).trim()) {
     return res.status(400).json({ error: "กรุณากรอกชื่อ-นามสกุล" });
   }
-  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-    return res.status(400).json({ error: "รูปแบบอีเมลไม่ถูกต้อง" });
+
+  if (patch.email !== undefined) {
+    if (!String(patch.email).trim()) {
+      return res.status(400).json({ error: "กรุณากรอกอีเมล" });
+    }
+    const dup = userModel.findUserByEmail(patch.email);
+    if (dup && dup.id !== req.user.id) {
+      return res.status(409).json({ error: "อีเมลนี้ถูกใช้งานแล้ว" });
+    }
   }
 
-  try {
-    const updated = userModel.updateUser(req.user.id, { name, email, phone });
-    res.json({ user: toSafeUser(updated) });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+  if (patch.password) {
+    if (String(patch.password).length < 6) {
+      return res.status(400).json({ error: "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร" });
+    }
+  } else {
+    delete patch.password; // ไม่ส่งมา หรือส่งค่าว่างมา = ไม่เปลี่ยนรหัสผ่าน
   }
+
+  const user = userModel.updateUser(req.user.id, patch);
+  if (!user) return res.status(404).json({ error: "ไม่พบผู้ใช้งาน" });
+
+  res.json({ user: toSafeUser(user) });
 }
 
 module.exports = { register, login, logout, me, updateMe };
