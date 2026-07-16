@@ -1,5 +1,26 @@
 [
   {
+    "id": "ORD-10244",
+    "userId": 8,
+    "customer": "we",
+    "items": [
+      {
+        "productId": 61,
+        "name": "เมล็ดมะเขือเทศปีศาจ",
+        "price": 900,
+        "quantity": 1,
+        "image": "http://localhost:4000/uploads/products/1784089423997-777393992.jpg"
+      }
+    ],
+    "total": 900,
+    "date": "2026-07-16",
+    "status": "pending",
+    "statusStep": 0,
+    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
+    "paymentMethod": "promptpay"
+  },
+  {
     "id": "ORD-10243",
     "userId": 13,
     "customer": "ShiBas0happy",

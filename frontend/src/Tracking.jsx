@@ -5,6 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getOrderById, getMyOrders } from "./data/orderStore";
 import { fetchCurrentUser, getCachedUser } from "./data/authStore";
+import { useCart } from "./CartContext";
 import {
   Sprout,
   Search,
@@ -150,6 +151,7 @@ async function fetchOrder(rawQuery) {
 }
 
 export default function Tracking() {
+  const { itemCount } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("order") || "";
 
@@ -287,9 +289,15 @@ export default function Tracking() {
             </button>
             <Link
               to="/cart"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+              title="รถเข็นของคุณ"
+              className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
             >
               <ShoppingCart className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-green-700 text-white text-[10px] font-bold flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
             </Link>
             <Link
               to="/profile"
