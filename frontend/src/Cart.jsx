@@ -69,14 +69,7 @@ export default function Cart() {
             onSubmit={handleSearchSubmit}
             className="flex-1 max-w-xs ml-auto relative hidden sm:block"
           >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาสินค้า..."
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
-            />
+          
           </form>
 
           <div className="flex items-center gap-1">

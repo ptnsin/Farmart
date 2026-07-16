@@ -275,12 +275,7 @@ export default function Tracking() {
           </nav>
 
           <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="ค้นหาสินค้า..."
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
-            />
+           
           </div>
 
           <div className="flex items-center gap-1">

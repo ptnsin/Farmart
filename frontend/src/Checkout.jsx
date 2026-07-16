@@ -146,7 +146,6 @@ export default function Checkout() {
   const { items, itemCount, subtotal, clearCart } = useCart();
   const navigate = useNavigate();
 
-  // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
   const [avatar, setAvatar] = useState(null);
   useEffect(() => {
     const cached = getCachedUser();
@@ -247,12 +246,7 @@ export default function Checkout() {
           </nav>
 
           <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="ค้นหาสินค้า..."
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
-            />
+            
           </div>
 
           <div className="flex items-center gap-1">
@@ -468,12 +462,12 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Right column: order summary */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white border border-gray-100 rounded-xl p-5 sticky top-20">
-              <h2 className="text-sm font-bold text-gray-900 mb-4">สรุปคำสั่งซื้อ</h2>
+          {/* Right column: order summary + Slip Upload (Sticky Together) */}
+          <div className="lg:col-span-1">
+            <div className="bg-white border border-gray-100 rounded-xl p-5 sticky top-20 max-h-[calc(100vh-120px)] overflow-y-auto space-y-4">
+              <h2 className="text-sm font-bold text-gray-900 mb-2">สรุปคำสั่งซื้อ</h2>
 
-              <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
                 {items.length === 0 ? (
                   <p className="text-xs text-gray-400">ไม่มีสินค้าในตะกร้า</p>
                 ) : (
@@ -506,9 +500,9 @@ export default function Checkout() {
                 )}
               </div>
 
-              <div className="border-t border-gray-100 my-4" />
+              <div className="border-t border-gray-100 my-3" />
 
-              <div className="space-y-2.5 text-sm">
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>ยอดรวมสินค้า (Subtotal)</span>
                   <span className="font-medium text-gray-900">
@@ -529,17 +523,54 @@ export default function Checkout() {
                 </div>
               </div>
 
-              <div className="border-t border-gray-100 my-4" />
+              <div className="border-t border-gray-100 my-3" />
 
-              <div className="flex justify-between items-baseline mb-5">
+              <div className="flex justify-between items-baseline mb-4">
                 <span className="text-sm font-bold text-gray-900">ยอดรวมสุทธิ</span>
                 <span className="text-lg font-bold text-green-800">
                   ฿{total.toLocaleString()}
                 </span>
               </div>
 
+              {/* Slip upload section moved inside the sticky box */}
+              {needsSlip && (
+                <div className="pt-4 border-t border-gray-100 space-y-2">
+                  <p className="text-sm font-bold text-gray-900">
+                    สลิปหลักฐานการโอนเงิน (Slip)
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB
+                  </p>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png, image/jpeg"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full border-2 border-dashed border-gray-200 hover:border-green-300 rounded-xl py-4 flex flex-col items-center gap-1 text-gray-400 transition-colors"
+                  >
+                    <UploadCloud className="w-5 h-5 text-gray-400" />
+                    <span className="text-xs">
+                      {slipFile ? "เปลี่ยนไฟล์" : "คลิกเพื่อเลือกไฟล์หลักฐาน"}
+                    </span>
+                  </button>
+
+                  {slipFile && (
+                    <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-1.5">
+                      <Check className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{slipFile.name}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {orderError && (
-                <div className="flex items-start gap-2 mb-3 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                <div className="flex items-start gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
                   <X className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span>{orderError}</span>
                 </div>
@@ -554,48 +585,11 @@ export default function Checkout() {
                 {!placing && <ArrowRight className="w-4 h-4" />}
               </button>
 
-              <div className="flex items-start gap-2 mt-4 text-xs text-gray-400">
+              <div className="flex items-start gap-2 text-xs text-gray-400 pt-2">
                 <ShieldCheck className="w-4 h-4 text-green-700 mt-0.5 shrink-0" />
                 <span>ข้อมูลการชำระเงินของคุณปลอดภัยและได้รับการเข้ารหัส</span>
               </div>
             </div>
-
-            {/* Slip upload */}
-            {needsSlip && (
-              <div className="bg-white border border-gray-100 rounded-xl p-5">
-                <p className="text-sm font-bold text-gray-900 mb-1">
-                  สลิปหลักฐานการโอนเงิน (Slip)
-                </p>
-                <p className="text-xs text-gray-400 mb-3">
-                  รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB
-                </p>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/png, image/jpeg"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-gray-200 hover:border-green-300 rounded-xl py-6 flex flex-col items-center gap-2 text-gray-400 transition-colors"
-                >
-                  <UploadCloud className="w-6 h-6" />
-                  <span className="text-xs">
-                    {slipFile ? "เปลี่ยนไฟล์" : "ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์"}
-                  </span>
-                </button>
-
-                {slipFile && (
-                  <div className="flex items-center gap-2 mt-3 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">
-                    <Check className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{slipFile.name}</span>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
