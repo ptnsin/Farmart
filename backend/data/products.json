@@ -27,33 +27,6 @@
     "lotCode": "LOT-20260715-062"
   },
   {
-    "id": 61,
-    "sku": "SD021",
-    "name": "เมล็ดมะเขือเทศปีศาจ",
-    "category": "เมล็ดพันธุ์",
-    "unit": "ซอง",
-    "price": 900,
-    "cost": 90,
-    "stockUnits": 10,
-    "stockPercent": 0,
-    "stockLevel": "healthy",
-    "farmer": "ตาฟอส",
-    "location": "อโศก",
-    "description": "ปลูกแล้วระวังหมากัด",
-    "image": "http://localhost:4000/uploads/products/1784089423997-777393992.jpg",
-    "images": [
-      "http://localhost:4000/uploads/products/1784089423997-777393992.jpg"
-    ],
-    "reviews": [],
-    "approvalStatus": "approved",
-    "submittedBy": {
-      "id": 10,
-      "name": "โทม่าฟ้อก"
-    },
-    "submittedAt": "2026-07-15T02:47:25.092Z",
-    "lotCode": "LOT-20260715-061"
-  },
-  {
     "id": 1,
     "sku": "SD001",
     "name": "เมล็ดพันธุ์ข้าวโพดหวาน",

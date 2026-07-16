@@ -23,7 +23,31 @@
 // - POST รีวิว: ต้อง login (role อะไรก็ได้)
 // - ตอบกลับรีวิว: ต้อง login เป็น EMPLOYEE หรือ ADMIN
 
-import { api } from "./apiClient";
+import { api, API_URL } from "./apiClient";
+
+/**
+ * แปลง path รูปที่ backend ส่งมาให้เป็น URL เต็มที่ browser โหลดได้จริง
+ * - ถ้าเป็น URL เต็มอยู่แล้ว (http://, https://, data:) ปล่อยผ่านเลย ไม่ต้องแตะ
+ * - ถ้าเป็น relative path เช่น "/uploads/xxx.jpg" หรือ "uploads/xxx.jpg" ให้ต่อกับ API_URL ของ backend
+ *   (เพราะ frontend กับ backend รันคนละ origin กัน เช่น :5173 vs :4000
+ *    ใส่แค่ "/uploads/xxx.jpg" ตรง ๆ ใน <img src> browser จะไปหาไฟล์ที่ origin ของ frontend แทน เลยไม่เจอ)
+ * - ถ้าไม่มีค่าเลย คืน "" (ให้ onError ใน UI แสดง placeholder ตามที่ตั้งไว้)
+ */
+function resolveImageUrl(path) {
+  if (!path) return "";
+  if (/^(https?:\/\/|data:)/i.test(path)) return path;
+  return `${API_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+/** แปลง field รูปของสินค้า 1 ชิ้น (image + images[]) ให้เป็น URL เต็มทั้งหมด */
+function withResolvedImages(product) {
+  if (!product) return product;
+  return {
+    ...product,
+    image: resolveImageUrl(product.image),
+    images: Array.isArray(product.images) ? product.images.map(resolveImageUrl) : product.images,
+  };
+}
 
 /**
  * ดึงสินค้าทั้งหมด รองรับ filter ผ่าน query string
@@ -35,31 +59,31 @@ export async function getProducts(filters = {}) {
   );
   const qs = params.toString();
   const data = await api.get(`/api/products${qs ? `?${qs}` : ""}`);
-  return data.products;
+  return data.products.map(withResolvedImages);
 }
 
 /** ดึงสินค้าชิ้นเดียวด้วย id */
 export async function getProductById(id) {
   const data = await api.get(`/api/products/${id}`);
-  return data.product;
+  return withResolvedImages(data.product);
 }
 
 /** เพิ่มสินค้าใหม่ (employee เพิ่มแล้วจะเข้าสถานะ pending รอ admin อนุมัติ ระบบฝั่ง backend จัดการให้เอง) */
 export async function addProduct(data) {
   const res = await api.post("/api/products", data);
-  return res.product;
+  return withResolvedImages(res.product);
 }
 
 /** แก้ไขข้อมูลสินค้า (ส่งเฉพาะ field ที่จะเปลี่ยนก็ได้) */
 export async function updateProduct(id, patch) {
   const data = await api.put(`/api/products/${id}`, patch);
-  return data.product;
+  return withResolvedImages(data.product);
 }
 
 /** ลบสินค้า - คืนค่ารายการสินค้าที่เหลือทั้งหมดกลับมา */
 export async function deleteProduct(id) {
   const data = await api.delete(`/api/products/${id}`);
-  return data.products;
+  return data.products.map(withResolvedImages);
 }
 
 /**
@@ -69,7 +93,7 @@ export async function deleteProduct(id) {
  */
 export async function updateApproval(id, approvalStatus) {
   const data = await api.patch(`/api/products/${id}/approval`, { approvalStatus });
-  return data.product;
+  return withResolvedImages(data.product);
 }
 
 /**
@@ -79,7 +103,7 @@ export async function updateApproval(id, approvalStatus) {
  */
 export async function addReview(productId, { rating, comment }) {
   const data = await api.post(`/api/products/${productId}/reviews`, { rating, comment });
-  return data.product;
+  return withResolvedImages(data.product);
 }
 
 /** ตอบกลับ/แก้ไขคำตอบรีวิวของสินค้า (employee/admin เท่านั้น) เรียกซ้ำได้เรื่อย ๆ เพื่อแก้ไขคำตอบเดิม */
@@ -87,19 +111,19 @@ export async function replyToReview(productId, reviewId, replyText) {
   const data = await api.post(`/api/products/${productId}/reviews/${reviewId}/reply`, {
     reply: replyText,
   });
-  return data.product;
+  return withResolvedImages(data.product);
 }
 
 /** ลบคำตอบของทีมงานออกจากรีวิว (รีวิวยังอยู่ แต่กลับไปสถานะยังไม่มีคำตอบ) */
 export async function deleteReply(productId, reviewId) {
   const data = await api.delete(`/api/products/${productId}/reviews/${reviewId}/reply`);
-  return data.product;
+  return withResolvedImages(data.product);
 }
 
 /** ลบรีวิวของลูกค้าออกทั้งรายการ (employee/admin เท่านั้น) */
 export async function deleteReview(productId, reviewId) {
   const data = await api.delete(`/api/products/${productId}/reviews/${reviewId}`);
-  return data.product;
+  return withResolvedImages(data.product);
 }
 
 /**
@@ -107,6 +131,9 @@ export async function deleteReview(productId, reviewId) {
  * ให้อยู่ในรูปแบบที่หน้า Products.jsx / ProductDetail.jsx (ที่แต่เดิมออกแบบมาคู่กับ productsData.js mock)
  * ใช้งานได้เลยโดยไม่ต้องเขียน UI ใหม่ทั้งหมด — คำนวณ rating/ratingCount จาก reviews จริง
  * และ map field ที่ชื่อไม่ตรงกัน (origin <- location, gallery <- images, specs <- sku/unit/farmer/location)
+ *
+ * หมายเหตุ: รับ product ที่ผ่าน withResolvedImages มาแล้ว (จากฟังก์ชันข้างบน) image/images
+ * จึงเป็น URL เต็มอยู่แล้ว ไม่ต้องแปลงซ้ำตรงนี้
  */
 export function toDisplayProduct(p) {
   if (!p) return null;
