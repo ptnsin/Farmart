@@ -1,6 +1,6 @@
 // models/shipmentModel.js
 const db = require("../utils/db");
-const SEED = require("../data/shipments.seed.json");
+const SEED = require("../data/shipments.json");
 
 const NEXT_STATUS = { preparing: "in_transit", in_transit: "delivered" };
 

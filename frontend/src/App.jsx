@@ -22,6 +22,7 @@ import EmployeeProductEdit from "./employee/EmployeeProductEdit";
 import EmployeeShipping from "./employee/EmployeeShipping";
 import EmployeeSettings from "./employee/EmployeeSettings";
 import EmployeeSupport from "./employee/EmployeeSupport";
+import EmployeeProfile from "./employee/EmployeeProfile";
 
 // Admin
 import AdminUsers from "./admin/AdminUsers";
@@ -59,6 +60,7 @@ function App() {
       <Route path="/employee/shipping" element={<EmployeeShipping />} />
       <Route path="/employee/settings" element={<EmployeeSettings />} />
       <Route path="/employee/support" element={<EmployeeSupport />} />
+      <Route path="/employee/profile" element={<EmployeeProfile />} />
 
       {/* Admin Routes */}
       <Route path="/admin/users" element={<AdminUsers />} />

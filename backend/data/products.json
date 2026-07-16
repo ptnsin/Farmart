@@ -18,7 +18,13 @@
       "http://localhost:4000/uploads/products/1784089876288-426981523.jpg"
     ],
     "reviews": [],
-    "approvalStatus": "pending"
+    "approvalStatus": "pending",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-062"
   },
   {
     "id": 61,
@@ -39,7 +45,13 @@
       "http://localhost:4000/uploads/products/1784089423997-777393992.jpg"
     ],
     "reviews": [],
-    "approvalStatus": "pending"
+    "approvalStatus": "pending",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-061"
   },
   {
     "id": 1,
@@ -77,7 +89,13 @@
         "reply": "ขอบคุณสำหรับความเห็นครับ ทางร้านจะปรับปรุงบรรจุภัณฑ์ให้แข็งแรงขึ้นในล็อตถัดไป"
       }
     ],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-001"
   },
   {
     "id": 2,
@@ -98,7 +116,13 @@
       "/uploads/products/SD002.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-002"
   },
   {
     "id": 3,
@@ -119,7 +143,13 @@
       "/uploads/products/SD004.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-003"
   },
   {
     "id": 4,
@@ -140,7 +170,13 @@
       "/uploads/products/SD007.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-004"
   },
   {
     "id": 5,
@@ -161,7 +197,13 @@
       "/uploads/products/SD019.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-005"
   },
   {
     "id": 6,
@@ -182,7 +224,13 @@
       "/uploads/products/SD020.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-006"
   },
   {
     "id": 7,
@@ -203,7 +251,13 @@
       "/uploads/products/HM001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-007"
   },
   {
     "id": 8,
@@ -224,7 +278,13 @@
       "/uploads/products/HM002.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-008"
   },
   {
     "id": 9,
@@ -245,7 +305,13 @@
       "/uploads/products/HM003.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-009"
   },
   {
     "id": 10,
@@ -266,7 +332,13 @@
       "/uploads/products/HM005.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-010"
   },
   {
     "id": 11,
@@ -287,7 +359,13 @@
       "/uploads/products/HM007.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-011"
   },
   {
     "id": 12,
@@ -308,7 +386,13 @@
       "/uploads/products/HM011.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-012"
   },
   {
     "id": 13,
@@ -329,7 +413,13 @@
       "/uploads/products/FT001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-013"
   },
   {
     "id": 14,
@@ -350,7 +440,13 @@
       "/uploads/products/FT002.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-014"
   },
   {
     "id": 15,
@@ -371,7 +467,13 @@
       "/uploads/products/FT003.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-015"
   },
   {
     "id": 16,
@@ -392,7 +494,13 @@
       "/uploads/products/FT009.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-016"
   },
   {
     "id": 17,
@@ -413,7 +521,13 @@
       "/uploads/products/FT010.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-017"
   },
   {
     "id": 18,
@@ -434,7 +548,13 @@
       "/uploads/products/FT012.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-018"
   },
   {
     "id": 19,
@@ -455,7 +575,13 @@
       "/uploads/products/IN001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-019"
   },
   {
     "id": 20,
@@ -476,7 +602,13 @@
       "/uploads/products/IN002.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-020"
   },
   {
     "id": 21,
@@ -497,7 +629,13 @@
       "/uploads/products/IN003.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-021"
   },
   {
     "id": 22,
@@ -518,7 +656,13 @@
       "/uploads/products/IN005.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-022"
   },
   {
     "id": 23,
@@ -539,7 +683,13 @@
       "/uploads/products/IN019.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-023"
   },
   {
     "id": 24,
@@ -560,7 +710,13 @@
       "/uploads/products/IN020.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-024"
   },
   {
     "id": 25,
@@ -581,7 +737,13 @@
       "/uploads/products/HB001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-025"
   },
   {
     "id": 26,
@@ -602,7 +764,13 @@
       "/uploads/products/HB002.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-026"
   },
   {
     "id": 27,
@@ -623,7 +791,13 @@
       "/uploads/products/HB004.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-027"
   },
   {
     "id": 28,
@@ -644,7 +818,13 @@
       "/uploads/products/HB007.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-028"
   },
   {
     "id": 29,
@@ -665,7 +845,13 @@
       "/uploads/products/HB011.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-029"
   },
   {
     "id": 30,
@@ -686,7 +872,13 @@
       "/uploads/products/HB017.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-030"
   },
   {
     "id": 31,
@@ -707,7 +899,13 @@
       "/uploads/products/FL001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-031"
   },
   {
     "id": 32,
@@ -728,7 +926,13 @@
       "/uploads/products/FL003.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-032"
   },
   {
     "id": 33,
@@ -749,7 +953,13 @@
       "/uploads/products/FL004.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-033"
   },
   {
     "id": 34,
@@ -770,7 +980,13 @@
       "/uploads/products/FL007.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-034"
   },
   {
     "id": 35,
@@ -791,7 +1007,13 @@
       "/uploads/products/FL013.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-035"
   },
   {
     "id": 36,
@@ -812,7 +1034,13 @@
       "/uploads/products/FL021.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-036"
   },
   {
     "id": 37,
@@ -833,7 +1061,13 @@
       "/uploads/products/FR001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-037"
   },
   {
     "id": 38,
@@ -854,7 +1088,13 @@
       "/uploads/products/FR004.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-038"
   },
   {
     "id": 39,
@@ -875,7 +1115,13 @@
       "/uploads/products/FR006.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-039"
   },
   {
     "id": 40,
@@ -896,7 +1142,13 @@
       "/uploads/products/FR007.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-040"
   },
   {
     "id": 41,
@@ -917,7 +1169,13 @@
       "/uploads/products/FR012.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-041"
   },
   {
     "id": 42,
@@ -938,7 +1196,13 @@
       "/uploads/products/FR017.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-042"
   },
   {
     "id": 43,
@@ -959,7 +1223,13 @@
       "/uploads/products/SL001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-043"
   },
   {
     "id": 44,
@@ -980,7 +1250,13 @@
       "/uploads/products/SL002.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-044"
   },
   {
     "id": 45,
@@ -1001,7 +1277,13 @@
       "/uploads/products/SL007.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-045"
   },
   {
     "id": 46,
@@ -1022,7 +1304,13 @@
       "/uploads/products/SL009.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-046"
   },
   {
     "id": 47,
@@ -1043,7 +1331,13 @@
       "/uploads/products/SL010.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-047"
   },
   {
     "id": 48,
@@ -1064,7 +1358,13 @@
       "/uploads/products/SL014.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-048"
   },
   {
     "id": 49,
@@ -1085,7 +1385,13 @@
       "/uploads/products/WT001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-049"
   },
   {
     "id": 50,
@@ -1106,7 +1412,13 @@
       "/uploads/products/WT002.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-050"
   },
   {
     "id": 51,
@@ -1127,7 +1439,13 @@
       "/uploads/products/WT003.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-051"
   },
   {
     "id": 52,
@@ -1148,7 +1466,13 @@
       "/uploads/products/WT004.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-052"
   },
   {
     "id": 53,
@@ -1169,7 +1493,13 @@
       "/uploads/products/WT009.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-053"
   },
   {
     "id": 54,
@@ -1190,7 +1520,13 @@
       "/uploads/products/WT022.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-054"
   },
   {
     "id": 55,
@@ -1211,7 +1547,13 @@
       "/uploads/products/PT001.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-055"
   },
   {
     "id": 56,
@@ -1232,7 +1574,13 @@
       "/uploads/products/PT002.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-056"
   },
   {
     "id": 57,
@@ -1253,7 +1601,13 @@
       "/uploads/products/PT007.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-057"
   },
   {
     "id": 58,
@@ -1274,7 +1628,13 @@
       "/uploads/products/PT013.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-058"
   },
   {
     "id": 59,
@@ -1295,7 +1655,13 @@
       "/uploads/products/PT018.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-059"
   },
   {
     "id": 60,
@@ -1316,6 +1682,12 @@
       "/uploads/products/PT019.svg"
     ],
     "reviews": [],
-    "approvalStatus": "approved"
+    "approvalStatus": "approved",
+    "submittedBy": {
+      "id": 10,
+      "name": "โทม่าฟ้อก"
+    },
+    "submittedAt": "2026-07-15T02:47:25.092Z",
+    "lotCode": "LOT-20260715-060"
   }
 ]

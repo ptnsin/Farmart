@@ -3,7 +3,7 @@
 
 const db = require("../utils/db");
 
-const SEED = require("../data/users.seed.json");
+const SEED = require("../data/users.json");
 
 const THAI_MONTHS = [
   "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
