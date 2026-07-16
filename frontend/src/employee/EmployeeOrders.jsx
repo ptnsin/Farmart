@@ -48,22 +48,41 @@ export default function EmployeeOrders() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
+  // orders = "ชุดข้อมูลเต็ม" ใช้คำนวณสถิติ (การ์ดด้านบน) เท่านั้น ไม่ผูกกับ tab
   const [orders, setOrders] = useState([]);
+  // tableOrders = ข้อมูลที่ backend filter ตามสถานะมาให้แล้ว (?status=pending เป็นต้น) ใช้แสดงในตาราง
+  const [tableOrders, setTableOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actingId, setActingId] = useState(null); // order id ที่กำลังกดอนุมัติ/ปฏิเสธ
+  // เก็บ id ที่เพิ่งกด "อนุมัติ" สำเร็จในเซสชันนี้ ใช้กับสถิติ "อนุมัติแล้ววันนี้"
+  // (backend ไม่มีฟิลด์ approvedAt เก็บวันที่อนุมัติจริง มีแต่ date = วันที่สร้างออเดอร์
+  //  ถ้าใช้ o.date === today แบบเดิมจะได้ตัวเลขผิด เพราะเทียบวันที่สร้าง ไม่ใช่วันที่อนุมัติ)
+  const [approvedTodayIds, setApprovedTodayIds] = useState(() => new Set());
 
   useEffect(() => {
     fetchCurrentUser().then(setUser).catch(() => {});
   }, []);
 
-  const loadOrders = useCallback(async () => {
+  // ดึงชุดข้อมูลเต็ม (ไม่ filter) ไว้คำนวณสถิติการ์ดด้านบนเสมอ ไม่ขึ้นกับ tab ที่เลือก
+  const loadStatsOrders = useCallback(async () => {
+    try {
+      const data = await api.get("/api/orders");
+      setOrders(Array.isArray(data) ? data : data.orders || []);
+    } catch {
+      // เงียบไว้ก็พอ ตารางหลักจะโชว์ error เองอยู่แล้ว ไม่ต้องซ้ำ
+    }
+  }, []);
+
+  // ดึงข้อมูลตาราง โดยส่ง ?status= ไปให้ backend filter ให้เลย (ลดข้อมูลที่โหลดเวลาออเดอร์เยอะ)
+  // ยกเว้น tab "ทั้งหมด" ที่ไม่ส่ง status เลย เพราะต้องการทุกสถานะอยู่แล้ว
+  const loadTableOrders = useCallback(async (statusTab) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get("/api/orders");
-      // รองรับทั้งกรณี backend ตอบเป็น array ตรง ๆ หรือ { orders: [...] }
-      setOrders(Array.isArray(data) ? data : data.orders || []);
+      const qs = statusTab && statusTab !== "all" ? `?status=${statusTab}` : "";
+      const data = await api.get(`/api/orders${qs}`);
+      setTableOrders(Array.isArray(data) ? data : data.orders || []);
     } catch (err) {
       setError(err.message || "โหลดคำสั่งซื้อไม่สำเร็จ");
     } finally {
@@ -71,34 +90,52 @@ export default function EmployeeOrders() {
     }
   }, []);
 
+  const loadOrders = useCallback(() => {
+    loadStatsOrders();
+    loadTableOrders(tab);
+  }, [loadStatsOrders, loadTableOrders, tab]);
+
+  // โหลดใหม่ทุกครั้งที่เปลี่ยน tab (เปลี่ยน status ที่ขอจาก backend)
   useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+    loadTableOrders(tab);
+  }, [tab, loadTableOrders]);
+
+  // โหลดสถิติแค่ครั้งแรกที่เข้าหน้า (ไม่ต้องผูกกับ tab)
+  useEffect(() => {
+    loadStatsOrders();
+  }, [loadStatsOrders]);
 
   // กลับไปหน้า 1 ทุกครั้งที่เปลี่ยน tab หรือค้นหาใหม่
   useEffect(() => {
     setPage(1);
   }, [tab, query]);
 
+  // ค้นหาด้วยข้อความยัง filter ที่ client เหมือนเดิม เพราะ backend ไม่มี text-search endpoint
+  // ส่วน filter สถานะ backend กรองมาให้แล้วจาก loadTableOrders จึงไม่ต้องกรองซ้ำที่นี่
   const filteredOrders = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return orders.filter((o) => {
-      const matchesTab = tab === "all" || o.status === tab;
-      const matchesQuery =
-        !q ||
-        o.id.toLowerCase().includes(q) ||
-        (o.customer || "").toLowerCase().includes(q);
-      return matchesTab && matchesQuery;
-    });
-  }, [orders, tab, query]);
+    if (!q) return tableOrders;
+    return tableOrders.filter(
+      (o) =>
+        String(o.id ?? "").toLowerCase().includes(q) ||
+        String(o.customer ?? "").toLowerCase().includes(q)
+    );
+  }, [tableOrders, query]);
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const pagedOrders = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  // ถ้าหน้าปัจจุบันเกินจำนวนหน้าที่มีจริงแล้ว (เช่น อนุมัติ/ปฏิเสธรายการสุดท้ายของหน้าสุดท้ายไป)
+  // ให้ดึงกลับมาหน้าสุดท้ายที่ยังมีข้อมูลอยู่ ไม่ปล่อยให้ค้างเป็นหน้าว่าง
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
   const stats = useMemo(() => {
     const pending = orders.filter((o) => o.status === "pending");
-    const today = new Date().toISOString().slice(0, 10);
-    const approvedToday = orders.filter((o) => o.status === "approved" && o.date === today);
+    const approvedToday = orders.filter(
+      (o) => o.status === "approved" && approvedTodayIds.has(o.id)
+    );
     const pendingValue = pending.reduce((sum, o) => sum + (o.total || 0), 0);
     return [
       { label: "รอการอนุมัติ", value: String(pending.length) },
@@ -106,16 +143,34 @@ export default function EmployeeOrders() {
       { label: "คำสั่งซื้อทั้งหมด", value: String(orders.length) },
       { label: "อนุมัติแล้ววันนี้", value: String(approvedToday.length) },
     ];
-  }, [orders]);
+  }, [orders, approvedTodayIds]);
 
   async function handleStatusChange(orderId, status) {
+    if (status === "rejected") {
+      const ok = window.confirm("ยืนยันปฏิเสธคำสั่งซื้อนี้? การกระทำนี้ย้อนกลับยาก");
+      if (!ok) return;
+    }
     setActingId(orderId);
     try {
       const data = await api.patch(`/api/orders/${orderId}/status`, { status });
       const updated = data?.order || data;
+
+      // อัปเดตชุดข้อมูลเต็ม (ใช้คำนวณสถิติ)
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, ...updated, status } : o))
       );
+
+      // อัปเดตตาราง: ถ้าอยู่ที่ tab เจาะจงสถานะ (pending/approved) และสถานะใหม่ไม่ตรง tab แล้ว
+      // ให้เอาออกจากตารางเลย เพราะถ้าไปยิง GET /api/orders?status=xxx ใหม่ backend ก็จะไม่คืนแถวนี้มาอยู่ดี
+      setTableOrders((prev) =>
+        tab !== "all" && status !== tab
+          ? prev.filter((o) => o.id !== orderId)
+          : prev.map((o) => (o.id === orderId ? { ...o, ...updated, status } : o))
+      );
+
+      if (status === "approved") {
+        setApprovedTodayIds((prev) => new Set(prev).add(orderId));
+      }
     } catch (err) {
       alert(err.message || "อัปเดตสถานะไม่สำเร็จ");
     } finally {

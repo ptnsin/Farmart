@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, Pencil, Trash2, Plus, Package, AlertTriangle, ChevronDown } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
@@ -31,13 +31,34 @@ function StatCard({ label, value, note, icon: Icon, iconBg, iconColor }) {
   );
 }
 
+const STOCK_FILTERS = [
+  { value: "all", label: "ทั้งหมด" },
+  { value: "healthy", label: "พร้อมขาย" },
+  { value: "low", label: "ใกล้หมด" },
+  { value: "out", label: "สินค้าหมด" },
+];
+
 export default function EmployeeWarehouse() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [query, setQuery] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const filterMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!filterMenuOpen) return;
+    function handleClickOutside(e) {
+      if (filterMenuRef.current && !filterMenuRef.current.contains(e.target)) {
+        setFilterMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [filterMenuOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,14 +88,16 @@ export default function EmployeeWarehouse() {
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        String(p.id).toLowerCase().includes(q) ||
-        p.sku?.toLowerCase().includes(q)
-    );
-  }, [products, query]);
+    return products.filter((p) => {
+      const matchesStock = stockFilter === "all" || p.stockLevel === stockFilter;
+      const matchesQuery =
+        !q ||
+        String(p.name ?? "").toLowerCase().includes(q) ||
+        String(p.id ?? "").toLowerCase().includes(q) ||
+        String(p.sku ?? "").toLowerCase().includes(q);
+      return matchesStock && matchesQuery;
+    });
+  }, [products, query, stockFilter]);
 
   const confirmDelete = async () => {
     setDeleting(true);
@@ -119,12 +142,35 @@ export default function EmployeeWarehouse() {
         </div>
 
         <div className="mt-8 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="relative flex items-center gap-2 text-sm text-slate-500" ref={filterMenuRef}>
             <span>ตัวกรองรายการ:</span>
-            <button type="button" className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700">
-              ทั้งหมด
+            <button
+              type="button"
+              onClick={() => setFilterMenuOpen((v) => !v)}
+              className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50"
+            >
+              {STOCK_FILTERS.find((f) => f.value === stockFilter)?.label}
               <ChevronDown size={14} />
             </button>
+            {filterMenuOpen && (
+              <div className="absolute left-24 top-full z-10 mt-1 w-40 rounded-lg border border-slate-100 bg-white py-1 shadow-lg">
+                {STOCK_FILTERS.map((f) => (
+                  <button
+                    key={f.value}
+                    type="button"
+                    onClick={() => {
+                      setStockFilter(f.value);
+                      setFilterMenuOpen(false);
+                    }}
+                    className={`block w-full px-3 py-1.5 text-left text-xs hover:bg-slate-50 ${
+                      stockFilter === f.value ? "font-semibold text-emerald-600" : "text-slate-600"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <p className="text-sm text-slate-400">
             แสดงผล {filteredProducts.length} จาก {products.length} รายการ

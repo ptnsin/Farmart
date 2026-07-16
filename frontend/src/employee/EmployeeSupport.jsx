@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Bell, LifeBuoy, ChevronDown } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
 import { getCachedUser, fetchCurrentUser } from "../data/authStore";
+import { api } from "../data/apiClient";
 
 const FAQS = [
   {
@@ -25,21 +26,40 @@ const FAQS = [
 export default function EmployeeSupport() {
   const [user, setUser] = useState(getCachedUser());
   const [openIdx, setOpenIdx] = useState(0);
+  const [faqQuery, setFaqQuery] = useState("");
   const [form, setForm] = useState({ subject: "", message: "" });
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   useEffect(() => {
     fetchCurrentUser().then(setUser).catch(() => {});
   }, []);
 
+  const filteredFaqs = useMemo(() => {
+    const q = faqQuery.trim().toLowerCase();
+    if (!q) return FAQS;
+    return FAQS.filter(
+      (item) => item.q.toLowerCase().includes(q) || item.a.toLowerCase().includes(q)
+    );
+  }, [faqQuery]);
+
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: เชื่อมต่อ API ส่งคำร้องขอความแจ้งเตือนจริง
-    setSent(true);
-    setForm({ subject: "", message: "" });
-    setTimeout(() => setSent(false), 3000);
+    setSendError("");
+    setSending(true);
+    try {
+      await api.post("/api/support", { subject: form.subject, message: form.message });
+      setSent(true);
+      setForm({ subject: "", message: "" });
+      setTimeout(() => setSent(false), 3000);
+    } catch (err) {
+      setSendError(err.message || "ส่งคำร้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -56,6 +76,8 @@ export default function EmployeeSupport() {
             />
             <input
               type="text"
+              value={faqQuery}
+              onChange={(e) => setFaqQuery(e.target.value)}
               placeholder="ค้นหาคำถามที่พบบ่อย..."
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
             />
@@ -86,24 +108,30 @@ export default function EmployeeSupport() {
             <div className="border-b border-slate-100 px-6 py-4">
               <h2 className="text-base font-semibold text-slate-800">คำถามที่พบบ่อย</h2>
             </div>
-            {FAQS.map((item, idx) => (
-              <div key={item.q} className="border-b border-slate-50 last:border-0">
-                <button
-                  type="button"
-                  onClick={() => setOpenIdx(openIdx === idx ? -1 : idx)}
-                  className="flex w-full items-center justify-between px-6 py-4 text-left text-sm font-medium text-slate-800"
-                >
-                  {item.q}
-                  <ChevronDown
-                    size={16}
-                    className={`text-slate-400 transition-transform ${openIdx === idx ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {openIdx === idx && (
-                  <p className="px-6 pb-4 text-sm leading-relaxed text-slate-500">{item.a}</p>
-                )}
-              </div>
-            ))}
+            {filteredFaqs.length === 0 ? (
+              <p className="px-6 py-6 text-center text-sm text-slate-400">
+                ไม่พบคำถามที่ตรงกับการค้นหา
+              </p>
+            ) : (
+              filteredFaqs.map((item, idx) => (
+                <div key={item.q} className="border-b border-slate-50 last:border-0">
+                  <button
+                    type="button"
+                    onClick={() => setOpenIdx(openIdx === idx ? -1 : idx)}
+                    className="flex w-full items-center justify-between px-6 py-4 text-left text-sm font-medium text-slate-800"
+                  >
+                    {item.q}
+                    <ChevronDown
+                      size={16}
+                      className={`text-slate-400 transition-transform ${openIdx === idx ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {openIdx === idx && (
+                    <p className="px-6 pb-4 text-sm leading-relaxed text-slate-500">{item.a}</p>
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           <form
@@ -141,15 +169,18 @@ export default function EmployeeSupport() {
               </div>
             </div>
 
+            {sendError && <p className="mt-4 text-sm text-rose-500">{sendError}</p>}
+
             <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
               <span className="text-sm text-emerald-600">
                 {sent ? "ส่งคำร้องเรียบร้อยแล้ว ทีมงานจะติดต่อกลับเร็ว ๆ นี้" : ""}
               </span>
               <button
                 type="submit"
-                className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800"
+                disabled={sending}
+                className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
               >
-                ส่งคำร้อง
+                {sending ? "กำลังส่ง..." : "ส่งคำร้อง"}
               </button>
             </div>
           </form>

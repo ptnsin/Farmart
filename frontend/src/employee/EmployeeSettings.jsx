@@ -41,6 +41,11 @@ export default function EmployeeSettings() {
       phone: user.phone || p.phone,
     }));
     setAvatarUrl(user.avatar || "");
+    // เดิมไม่เคยดึงค่าที่เคยตั้งไว้กลับมาเลย รีเฟรชแล้วค่าที่ติ๊กไว้หายทุกครั้ง
+    // ถ้า user ยังไม่เคยมี notify (บัญชีเก่า) ให้ใช้ default เดิมไปก่อน
+    if (user.notify) {
+      setNotify((n) => ({ ...n, ...user.notify }));
+    }
   }, [user]);
 
   const handleAvatarChange = async (e) => {
@@ -104,6 +109,7 @@ export default function EmployeeSettings() {
         email: profile.email.trim(),
         phone: profile.phone.trim(),
         avatar: avatarUrl || undefined,
+        notify, // เดิมไม่เคยส่งค่านี้ไป backend เลย ติ๊กแล้วไม่ถูกบันทึกจริง
       };
       if (passwordFields.password) patch.password = passwordFields.password;
 

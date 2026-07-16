@@ -16,6 +16,7 @@ const NAV_ITEMS = [
 
 // Active item is detected automatically from the current URL (via useLocation),
 // so callers no longer need to pass an "active" prop.
+export default function Employeesidebar() {
   const { pathname } = useLocation();
 
   return (

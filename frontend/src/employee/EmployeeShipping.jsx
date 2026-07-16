@@ -662,4 +662,28 @@ export default function EmployeeShipping() {
       )}
     </div>
   );
+  
+// /api/users เป็น ADMIN-only เท่านั้น (ดู backend/routes/users.js: requireRole("ADMIN"))
+  // เดิมยิง request นี้ทุกครั้งไม่ว่า role อะไร ทำให้ employee โดน 403 รับประกันทุกครั้งที่เข้าหน้านี้
+  // เช็ค role ก่อนที่ client เลย ไม่ต้องเสีย request ที่รู้อยู่แล้วว่าพังแน่ๆ
+  useEffect(() => {
+    if (user?.role !== "ADMIN") {
+      setCouriers(null);
+      return;
+    }
+    let cancelled = false;
+    api
+      .get("/api/users?role=EMPLOYEE")
+      .then((data) => {
+        if (cancelled) return;
+        const list = (data?.users || []).filter((u) => !u.role || u.role === "EMPLOYEE");
+        setCouriers(list);
+      })
+      .catch(() => {
+        if (!cancelled) setCouriers(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 }
