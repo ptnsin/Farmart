@@ -2,7 +2,7 @@
 // พอร์ตมาจาก frontend/src/data/productStore.js ให้ทำงานฝั่ง server แทน localStorage
 
 const db = require("../utils/db");
-const SEED = require("../data/products.seed.json");
+const SEED = require("../data/products.json");
 
 // prefix SKU ตามหมวดหมู่ ให้ตรงกับรูปแบบเดิมใน products.seed.json
 // (เมล็ดพันธุ์ -> SD, ฮอร์โมน -> HM, ปุ๋ย -> FT, อุปกรณ์จัดการดิน -> SL, อุปกรณ์รดน้ำ -> WT, กระถาง -> PT)

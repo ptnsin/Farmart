@@ -2,7 +2,7 @@
 // จัดการข้อมูลหมวดหมู่สินค้า อ่าน/เขียนผ่าน utils/db.js (JSON file database)
 
 const db = require("../utils/db");
-const SEED = require("../data/categories.seed.json");
+const SEED = require("../data/categories.json");
 
 /** ดึงหมวดหมู่ทั้งหมด */
 function getCategories() {

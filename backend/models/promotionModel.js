@@ -1,6 +1,6 @@
 // models/promotionModel.js
 const db = require("../utils/db");
-const SEED = require("../data/promotions.seed.json");
+const SEED = require("../data/promotions.json");
 
 function getPromotions() {
   return db.read("promotions", SEED);

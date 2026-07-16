@@ -1,6 +1,6 @@
 // models/supportModel.js
 const db = require("../utils/db");
-const SEED = require("../data/support.seed.json");
+const SEED = require("../data/support.json");
 
 function getTickets() {
   return db.read("support", SEED);

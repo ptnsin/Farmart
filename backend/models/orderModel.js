@@ -1,6 +1,6 @@
 // models/orderModel.js
 const db = require("../utils/db");
-const SEED = require("../data/orders.seed.json");
+const SEED = require("../data/orders.json");
 
 function getOrders() {
   return db.read("orders", SEED);
