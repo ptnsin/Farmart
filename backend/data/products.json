@@ -45,7 +45,7 @@
       "http://localhost:4000/uploads/products/1784089423997-777393992.jpg"
     ],
     "reviews": [],
-    "approvalStatus": "pending",
+    "approvalStatus": "approved",
     "submittedBy": {
       "id": 10,
       "name": "โทม่าฟ้อก"

@@ -62,7 +62,7 @@ export default function AdminInventory() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    getProducts()
+    getProducts({ approvalStatus: "approved" })
       .then((data) => {
         if (!cancelled) setProducts(data);
       })
