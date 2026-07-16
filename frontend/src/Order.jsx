@@ -130,6 +130,7 @@ export default function Orders() {
   const [openId, setOpenId] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
   const [avatar, setAvatar] = useState(null);
@@ -188,6 +189,16 @@ export default function Orders() {
   })
   .sort((a, b) => b.id.localeCompare(a.id));
 
+  // กรองตามคำค้นหา — ค้นได้ทั้งเลขคำสั่งซื้อและชื่อสินค้าในออเดอร์
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredOrders = normalizedQuery
+    ? orderList.filter(
+        (order) =>
+          order.id.toLowerCase().includes(normalizedQuery) ||
+          order.itemsSummary.toLowerCase().includes(normalizedQuery)
+      )
+    : orderList;
+
   return (
     <div className="min-h-screen w-full bg-gray-50 text-gray-900">
       {/* Top nav — shared with Home / Tracking */}
@@ -211,7 +222,9 @@ export default function Orders() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="ค้นหาสินค้า..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="ค้นหาด้วยเลขคำสั่งซื้อหรือชื่อสินค้า..."
               className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
             />
           </div>
@@ -251,7 +264,15 @@ export default function Orders() {
           </div>
           {orderList.length > 0 && (
             <p className="text-sm text-gray-500">
-              ทั้งหมด <span className="font-semibold text-gray-800">{orderList.length}</span> คำสั่งซื้อ
+              {normalizedQuery ? (
+                <>
+                  พบ <span className="font-semibold text-gray-800">{filteredOrders.length}</span> รายการที่ตรงกับ "{searchQuery.trim()}"
+                </>
+              ) : (
+                <>
+                  ทั้งหมด <span className="font-semibold text-gray-800">{orderList.length}</span> คำสั่งซื้อ
+                </>
+              )}
             </p>
           )}
         </div>
@@ -261,6 +282,14 @@ export default function Orders() {
             <PackageSearch className="w-10 h-10 text-gray-300 mb-3" />
             <p className="text-sm font-semibold text-gray-800 mb-1">ยังไม่มีคำสั่งซื้อ</p>
             <p className="text-sm text-gray-500">เมื่อคุณสั่งซื้อสินค้า รายการจะแสดงที่นี่</p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="flex flex-col items-center text-center py-16 bg-white rounded-xl border border-gray-100">
+            <PackageSearch className="w-10 h-10 text-gray-300 mb-3" />
+            <p className="text-sm font-semibold text-gray-800 mb-1">
+              ไม่พบคำสั่งซื้อที่ตรงกับ "{searchQuery.trim()}"
+            </p>
+            <p className="text-sm text-gray-500">ลองค้นหาด้วยเลขคำสั่งซื้อหรือชื่อสินค้าอื่น</p>
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -275,7 +304,7 @@ export default function Orders() {
             </div>
 
             <div className="divide-y divide-gray-100">
-              {orderList.map((order) => {
+              {filteredOrders.map((order) => {
                 const isOpen = openId === order.id;
                 return (
                   <div key={order.id} className="group">
