@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet"
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getOrderById, getMyOrders } from "./data/orderStore";
+import { fetchCurrentUser, getCachedUser } from "./data/authStore";
 import {
   Sprout,
   Search,
@@ -152,6 +153,18 @@ export default function Tracking() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("order") || "";
 
+  // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
+  const [avatar, setAvatar] = useState(null);
+  useEffect(() => {
+    const cached = getCachedUser();
+    if (cached?.avatar) setAvatar(cached.avatar);
+    fetchCurrentUser()
+      .then((user) => {
+        if (user?.avatar) setAvatar(user.avatar);
+      })
+      .catch(() => {});
+  }, []);
+
   const [query, setQuery] = useState(initialQuery);
   const [order, setOrder] = useState(null);
   const [status, setStatus] = useState("idle"); // idle | loading | error
@@ -280,9 +293,14 @@ export default function Tracking() {
             </Link>
             <Link
               to="/profile"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+              title="โปรไฟล์"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 overflow-hidden"
             >
-              <UserCircle2 className="w-6 h-6" />
+              {avatar ? (
+                <img src={avatar} alt="โปรไฟล์" className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle2 className="w-6 h-6" />
+              )}
             </Link>
           </div>
         </div>

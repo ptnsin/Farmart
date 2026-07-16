@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Sprout,
@@ -20,6 +20,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useCart } from "./CartContext";
+import { fetchCurrentUser, getCachedUser } from "./data/authStore";
 import Footer from "./Footer";
 
 const categories = [
@@ -115,6 +116,18 @@ export default function HelpCenter() {
   const [openIndex, setOpenIndex] = useState(0);
   const [query, setQuery] = useState("");
 
+  // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
+  const [avatar, setAvatar] = useState(null);
+  useEffect(() => {
+    const cached = getCachedUser();
+    if (cached?.avatar) setAvatar(cached.avatar);
+    fetchCurrentUser()
+      .then((user) => {
+        if (user?.avatar) setAvatar(user.avatar);
+      })
+      .catch(() => {});
+  }, []);
+
   const filteredFaqs = faqs.filter(
     (f) =>
       f.q.toLowerCase().includes(query.toLowerCase()) ||
@@ -167,9 +180,14 @@ export default function HelpCenter() {
             </Link>
             <Link
               to="/profile"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+              title="โปรไฟล์"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 overflow-hidden"
             >
-              <UserCircle2 className="w-6 h-6" />
+              {avatar ? (
+                <img src={avatar} alt="โปรไฟล์" className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle2 className="w-6 h-6" />
+              )}
             </Link>
           </div>
         </div>

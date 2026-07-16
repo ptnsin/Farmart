@@ -15,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { getProducts, toDisplayProduct } from "./data/productStore";
+import { fetchCurrentUser, getCachedUser } from "./data/authStore";
 import { useCart } from "./CartContext";
 import Footer from "./Footer";
 
@@ -40,6 +41,18 @@ function Badge({ badge }) {
 
 export default function Products() {
   const { addItem, itemCount } = useCart();
+
+  // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
+  const [avatar, setAvatar] = useState(null);
+  useEffect(() => {
+    const cached = getCachedUser();
+    if (cached?.avatar) setAvatar(cached.avatar);
+    fetchCurrentUser()
+      .then((user) => {
+        if (user?.avatar) setAvatar(user.avatar);
+      })
+      .catch(() => {});
+  }, []);
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -195,9 +208,14 @@ export default function Products() {
             </Link>
             <Link
               to="/profile"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+              title="โปรไฟล์"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 overflow-hidden"
             >
-              <UserCircle2 className="w-6 h-6" />
+              {avatar ? (
+                <img src={avatar} alt="โปรไฟล์" className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle2 className="w-6 h-6" />
+              )}
             </Link>
           </div>
         </div>

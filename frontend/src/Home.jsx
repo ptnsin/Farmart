@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Sprout,
@@ -11,52 +11,12 @@ import {
   BadgeCheck,
   Star,
   Plus,
+  Loader2,
 } from "lucide-react";
 import { useCart } from "./CartContext";
+import { getProducts, toDisplayProduct } from "./data/productStore";
+import { fetchCurrentUser, getCachedUser } from "./data/authStore";
 import Footer from "./Footer";
-
-const featured = [
-  {
-    id: "mixed-seeds",
-    name: "เมล็ดพันธุ์ผสม",
-    price: 85,
-    priceLabel: "฿85.00",
-    rating: "4.8 (120)",
-    image:
-      "https://images.unsplash.com/photo-1635372638513-8a960010a0ff?q=80&w=600&auto=format&fit=crop",
-    subtitle: "แหล่งที่มา: เชียงใหม่, ประเทศไทย",
-  },
-  {
-    id: "seedling-kit",
-    name: "ชุดปลูกกล้าไม้ระดับมืออาชีพ",
-    price: 150,
-    priceLabel: "฿150.00",
-    rating: "4.9 (80)",
-    image:
-      "https://images.unsplash.com/photo-1741027911956-db63415dcedf?q=80&w=600&auto=format&fit=crop",
-    subtitle: "แหล่งที่มา: เชียงราย, ประเทศไทย",
-  },
-  {
-    id: "organic-fertilizer",
-    name: "ปุ๋ยอินทรีย์ (5 กก.)",
-    price: 1250,
-    priceLabel: "฿1,250.00",
-    rating: "4.7 (65)",
-    image:
-      "https://images.unsplash.com/photo-1457530378978-8bac673b8062?q=80&w=600&auto=format&fit=crop",
-    subtitle: "แหล่งที่มา: สุพรรณบุรี, ประเทศไทย",
-  },
-  {
-    id: "fresh-veg-set-2",
-    name: "ผักสดจากไร่ ชุดที่ 2",
-    price: 65,
-    priceLabel: "฿65.00",
-    rating: "4.9 (210)",
-    image:
-      "https://images.unsplash.com/photo-1567547981970-2a44cc30cf66?q=80&w=600&auto=format&fit=crop",
-    subtitle: "แหล่งที่มา: นครปฐม, ประเทศไทย",
-  },
-];
 
 const perks = [
   {
@@ -80,12 +40,63 @@ export default function Home() {
   const { addItem, itemCount } = useCart();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  function handleAddToCart(product) {
+  // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
+  const [avatar, setAvatar] = useState(null);
+
+  useEffect(() => {
+    // โชว์รูปที่แคชไว้ก่อนทันที (ไม่ต้องรอ network) เหมือนหน้า Profile
+    const cached = getCachedUser();
+    if (cached?.avatar) setAvatar(cached.avatar);
+
+    // แล้วค่อยยืนยัน/อัปเดตกับ backend
+    fetchCurrentUser()
+      .then((user) => {
+        if (user?.avatar) setAvatar(user.avatar);
+      })
+      .catch(() => {
+        // ยังไม่ได้ล็อกอิน หรือ token หมดอายุ — ใช้ไอคอนเริ่มต้นต่อไป ไม่ต้องแจ้ง error
+      });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getProducts()
+      .then((data) => {
+        if (cancelled) return;
+        setProducts((data || []).map(toDisplayProduct));
+        setLoadError("");
+      })
+      .catch((err) => {
+        if (!cancelled) setLoadError(err?.message || "โหลดสินค้าไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // "สินค้าขายดี" — best sellers by rating (falls back to newest-first order
+  // from the API when ratings tie), capped to 8 so the grid stays tidy.
+  const featured = useMemo(() => {
+    return [...products]
+      .sort((a, b) => (b.rating || 0) * (b.ratingCount || 0) - (a.rating || 0) * (a.ratingCount || 0))
+      .slice(0, 8);
+  }, [products]);
+
+  function handleAddToCart(e, product) {
+    e.preventDefault();
+    e.stopPropagation();
     addItem({
       id: product.id,
       name: product.name,
-      subtitle: product.subtitle,
+      subtitle: product.tag,
       price: product.price,
       image: product.image,
     });
@@ -153,9 +164,18 @@ export default function Home() {
             </Link>
             <Link
               to="/profile"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+              title="โปรไฟล์"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 overflow-hidden"
             >
-              <UserCircle2 className="w-6 h-6" />
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt="โปรไฟล์"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <UserCircle2 className="w-6 h-6" />
+              )}
             </Link>
           </div>
         </div>
@@ -246,16 +266,24 @@ export default function Home() {
           </Link>
         </div>
 
-        {filteredFeatured.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin mb-3" />
+            <p className="text-sm">กำลังโหลดสินค้า...</p>
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-12 text-sm text-red-500">{loadError}</div>
+        ) : filteredFeatured.length === 0 ? (
           <div className="text-center py-12 text-sm text-gray-500">
             ไม่พบสินค้าที่ตรงกับ "{searchQuery.trim()}"
           </div>
         ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {filteredFeatured.map((p) => (
-            <div
-              key={p.name}
-              className="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+            <Link
+              to={`/product/${p.id}`}
+              key={p.id}
+              className="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow block"
             >
               <div className="relative aspect-square bg-gray-50">
                 <img
@@ -264,7 +292,7 @@ export default function Home() {
                   className="w-full h-full object-cover"
                 />
                 <button
-                  onClick={() => handleAddToCart(p)}
+                  onClick={(e) => handleAddToCart(e, p)}
                   title="เพิ่มลงตะกร้า"
                   className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-green-800 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-green-700"
                 >
@@ -275,13 +303,13 @@ export default function Home() {
                 <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2 mb-1">
                   {p.name}
                 </p>
-                <p className="text-sm font-bold text-gray-900">{p.priceLabel}</p>
+                <p className="text-sm font-bold text-gray-900">฿{p.price.toLocaleString()}</p>
                 <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  {p.rating}
+                  {p.ratingCount > 0 ? `${p.rating.toFixed(1)} (${p.ratingCount})` : "ยังไม่มีรีวิว"}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
         )}

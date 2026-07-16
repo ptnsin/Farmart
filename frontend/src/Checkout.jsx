@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Sprout,
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useCart } from "./CartContext";
 import { createOrder, toOrderItems } from "./data/orderStore";
+import { fetchCurrentUser, getCachedUser } from "./data/authStore";
 
 const SHIPPING_METHODS = [
   {
@@ -145,6 +146,18 @@ export default function Checkout() {
   const { items, itemCount, subtotal, clearCart } = useCart();
   const navigate = useNavigate();
 
+  // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
+  const [avatar, setAvatar] = useState(null);
+  useEffect(() => {
+    const cached = getCachedUser();
+    if (cached?.avatar) setAvatar(cached.avatar);
+    fetchCurrentUser()
+      .then((user) => {
+        if (user?.avatar) setAvatar(user.avatar);
+      })
+      .catch(() => {});
+  }, []);
+
   const [addresses, setAddresses] = useState(INITIAL_ADDRESSES);
   const [selectedAddress, setSelectedAddress] = useState(
     INITIAL_ADDRESSES.find((a) => a.isDefault)?.id ?? INITIAL_ADDRESSES[0]?.id
@@ -262,9 +275,14 @@ export default function Checkout() {
             </Link>
             <Link
               to="/profile"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+              title="โปรไฟล์"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 overflow-hidden"
             >
-              <UserCircle2 className="w-6 h-6" />
+              {avatar ? (
+                <img src={avatar} alt="โปรไฟล์" className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle2 className="w-6 h-6" />
+              )}
             </Link>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api } from "./data/apiClient";
+import { fetchCurrentUser, getCachedUser } from "./data/authStore";
 import {
   Sprout,
   Search,
@@ -130,6 +131,18 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
+  const [avatar, setAvatar] = useState(null);
+  useEffect(() => {
+    const cached = getCachedUser();
+    if (cached?.avatar) setAvatar(cached.avatar);
+    fetchCurrentUser()
+      .then((user) => {
+        if (user?.avatar) setAvatar(user.avatar);
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     async function loadOrders() {
       try {
@@ -215,9 +228,14 @@ export default function Orders() {
             </Link>
             <Link
               to="/profile"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+              title="โปรไฟล์"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 overflow-hidden"
             >
-              <UserCircle2 className="w-6 h-6" />
+              {avatar ? (
+                <img src={avatar} alt="โปรไฟล์" className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle2 className="w-6 h-6" />
+              )}
             </Link>
           </div>
         </div>

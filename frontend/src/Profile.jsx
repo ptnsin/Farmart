@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import {
   Sprout,
   Search,
@@ -18,10 +18,13 @@ import {
   Eye,
   EyeOff,
   X,
+  LogOut,
+  Loader2,
 } from "lucide-react";
 import { useCart } from "./CartContext";
 import Footer from "./Footer";
-import { fetchCurrentUser, getCachedUser, updateMe } from "./data/authStore";
+import { fetchCurrentUser, getCachedUser, updateMe, logout } from "./data/authStore";
+import { getMyOrders } from "./data/orderStore";
 import { api } from "./data/apiClient";
 
 const sidebarItems = [
@@ -31,55 +34,34 @@ const sidebarItems = [
   { key: "settings", label: "ตั้งค่าบัญชี", icon: Settings },
 ];
 
-const initialOrders = [
-  {
-    id: "#AH-89421",
-    date: "12 มี.ค. 2567",
-    status: "สำเร็จแล้ว",
-    statusColor: "bg-green-100 text-green-700",
-    dotColor: "bg-green-600",
-    total: "฿1,450.00",
-    items: [
-      { name: "เมล็ดพันธุ์ผสม", qty: 2, price: "฿170.00" },
-      { name: "ปุ๋ยอินทรีย์ (5 กก.)", qty: 1, price: "฿1,250.00" },
-    ],
-  },
-  {
-    id: "#AH-89304",
-    date: "05 มี.ค. 2567",
-    status: "กำลังจัดส่ง",
-    statusColor: "bg-amber-100 text-amber-700",
-    dotColor: "bg-amber-500",
-    total: "฿890.00",
-    items: [
-      { name: "ชุดปลูกกล้าไม้ระดับมืออาชีพ", qty: 1, price: "฿150.00" },
-      { name: "ผักสดจากไร่ ชุดที่ 2", qty: 2, price: "฿130.00" },
-      { name: "ค่าจัดส่ง", qty: 1, price: "฿480.00" },
-    ],
-  },
-  {
-    id: "#AH-88912",
-    date: "20 ก.พ. 2567",
-    status: "ได้รับของแล้ว",
-    statusColor: "bg-gray-100 text-gray-600",
-    dotColor: "bg-gray-400",
-    total: "฿2,300.00",
-    items: [
-      { name: "ปุ๋ยอินทรีย์ (5 กก.)", qty: 1, price: "฿1,250.00" },
-      { name: "เมล็ดพันธุ์ผสม", qty: 3, price: "฿255.00" },
-      { name: "อุปกรณ์รดน้ำอัตโนมัติ", qty: 1, price: "฿795.00" },
-    ],
-  },
-  {
-    id: "#AH-88650",
-    date: "02 ก.พ. 2567",
-    status: "ได้รับของแล้ว",
-    statusColor: "bg-gray-100 text-gray-600",
-    dotColor: "bg-gray-400",
-    total: "฿540.00",
-    items: [{ name: "ผักสดจากไร่ ชุดที่ 2", qty: 4, price: "฿260.00" }],
-  },
-];
+// Same delivery-step color scheme used on the /orders page, keyed by
+// order.statusStep (0-4) coming from the real backend.
+const STEP_BADGE = {
+  0: { color: "bg-gray-100 text-gray-600", dot: "bg-gray-400" },
+  1: { color: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+  2: { color: "bg-blue-100 text-blue-700", dot: "bg-blue-500" },
+  3: { color: "bg-blue-100 text-blue-700", dot: "bg-blue-500" },
+  4: { color: "bg-green-100 text-green-700", dot: "bg-green-600" },
+};
+
+// Reshapes a real order from the backend (getMyOrders) into the display
+// shape OrdersTable expects (pre-formatted price strings, Thai date, etc).
+function toProfileOrder(order) {
+  const badge = STEP_BADGE[order.statusStep] || STEP_BADGE[0];
+  return {
+    id: order.id,
+    date: order.date ? new Date(order.date).toLocaleDateString("th-TH") : "-",
+    status: order.statusLabel || "ยืนยันคำสั่งซื้อ",
+    statusColor: badge.color,
+    dotColor: badge.dot,
+    total: `฿${Number(order.total || 0).toLocaleString()}`,
+    items: (order.items || []).map((item) => ({
+      name: item.name,
+      qty: item.quantity,
+      price: `฿${Number(item.price || 0).toLocaleString()}`,
+    })),
+  };
+}
 
 const initialAddresses = [
   {
@@ -155,6 +137,7 @@ function CenterAlert({ message, onClose }) {
 
 export default function Profile() {
   const { itemCount } = useCart();
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -281,10 +264,32 @@ export default function Profile() {
   const isDirty = JSON.stringify(form) !== JSON.stringify(savedForm);
 
   // ----- Orders -----
-  const [orders] = useState(initialOrders);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const visibleOrders = showAllOrders ? orders : orders.slice(0, 3);
+
+  useEffect(() => {
+    let cancelled = false;
+    setOrdersLoading(true);
+    getMyOrders()
+      .then((data) => {
+        if (cancelled) return;
+        setOrders((data || []).map(toProfileOrder));
+        setOrdersError("");
+      })
+      .catch((err) => {
+        if (!cancelled) setOrdersError(err?.message || "โหลดคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      })
+      .finally(() => {
+        if (!cancelled) setOrdersLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toggleOrder = (id) => {
     setExpandedOrder((cur) => (cur === id ? null : id));
@@ -359,6 +364,21 @@ export default function Profile() {
   const [pwdVisible, setPwdVisible] = useState(false);
   const [pwdError, setPwdError] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // ----- Logout -----
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setLoggingOut(false);
+      setShowLogoutConfirm(false);
+      navigate("/"); // "/" คือหน้า FarmartLogin (ดู App.jsx)
+    }
+  };
 
   const toggleNotif = (key) => {
     setNotif((n) => ({ ...n, [key]: !n[key] }));
@@ -478,6 +498,17 @@ export default function Profile() {
                 );
               })}
             </nav>
+
+            {/* ออกจากระบบ — แยกจากเมนูหลักด้วยเส้นคั่น กดแล้วเด้ง confirm ก่อนเสมอ */}
+            <div className="mt-2 pt-2 border-t border-gray-100">
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                ออกจากระบบ
+              </button>
+            </div>
           </aside>
 
           {/* Main content */}
@@ -628,20 +659,36 @@ export default function Profile() {
                     </p>
                   </div>
                 </div>
-                <OrdersTable
-                  orders={visibleOrders}
-                  expandedOrder={expandedOrder}
-                  toggleOrder={toggleOrder}
-                />
-                {orders.length > 3 && (
-                  <div className="text-center mt-4">
-                    <button
-                      onClick={() => setShowAllOrders((v) => !v)}
-                      className="text-sm font-semibold text-green-700 hover:underline"
-                    >
-                      {showAllOrders ? "แสดงน้อยลง" : `แสดงทั้งหมด (${orders.length})`}
-                    </button>
+                {ordersLoading ? (
+                  <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-10 text-center text-sm text-gray-400">
+                    กำลังโหลดคำสั่งซื้อ...
                   </div>
+                ) : ordersError ? (
+                  <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-10 text-center text-sm text-red-500">
+                    {ordersError}
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div className="bg-white border border-dashed border-gray-200 rounded-xl p-10 text-center text-sm text-gray-500">
+                    คุณยังไม่มีคำสั่งซื้อ
+                  </div>
+                ) : (
+                  <>
+                    <OrdersTable
+                      orders={visibleOrders}
+                      expandedOrder={expandedOrder}
+                      toggleOrder={toggleOrder}
+                    />
+                    {orders.length > 3 && (
+                      <div className="text-center mt-4">
+                        <button
+                          onClick={() => setShowAllOrders((v) => !v)}
+                          className="text-sm font-semibold text-green-700 hover:underline"
+                        >
+                          {showAllOrders ? "แสดงน้อยลง" : `แสดงทั้งหมด (${orders.length})`}
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -890,6 +937,26 @@ export default function Profile() {
                   </div>
                 </div>
 
+                {/* Session — logout */}
+                <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
+                  <h2 className="text-base font-bold text-gray-900 mb-1">เซสชันการใช้งาน</h2>
+                  <p className="text-sm text-gray-500 mb-4">
+                    ออกจากระบบเพื่อความปลอดภัย โดยเฉพาะเมื่อใช้อุปกรณ์ร่วมกับผู้อื่น
+                  </p>
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    disabled={loggingOut}
+                    className="flex items-center gap-2 text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-60 px-5 py-2.5 rounded-lg transition-colors"
+                  >
+                    {loggingOut ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <LogOut className="w-4 h-4" />
+                    )}
+                    {loggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}
+                  </button>
+                </div>
+
                 {/* Danger zone */}
                 <div className="bg-white border border-red-100 rounded-xl shadow-sm p-6">
                   <h2 className="text-base font-bold text-red-600 mb-1">ลบบัญชีผู้ใช้</h2>
@@ -942,6 +1009,38 @@ export default function Profile() {
           </div>
         </div>
       </section>
+
+      {/* Logout confirm — เรียกได้จากทั้งปุ่มใน sidebar และในแท็บตั้งค่า */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-30 bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
+              <LogOut className="w-6 h-6 text-red-600" />
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-2">ออกจากระบบ?</h3>
+            <p className="text-sm text-gray-500 mb-5">
+              คุณจะต้องเข้าสู่ระบบใหม่อีกครั้งเพื่อใช้งานบัญชีนี้
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                disabled={loggingOut}
+                className="text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 disabled:opacity-60 px-4 py-2.5 rounded-lg"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex items-center gap-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 px-4 py-2.5 rounded-lg"
+              >
+                {loggingOut && <Loader2 className="w-4 h-4 animate-spin" />}
+                ออกจากระบบ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 <Footer />
     </div>
