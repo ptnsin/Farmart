@@ -168,8 +168,8 @@ export default function Orders() {
       total,
       itemCount,
       itemsSummary,
-      date: order.createdAt
-        ? new Date(order.createdAt).toLocaleDateString("th-TH")
+      date: order.date
+        ? new Date(order.date).toLocaleDateString("th-TH")
         : "-"
     };
   })
@@ -338,7 +338,7 @@ export default function Orders() {
                                   </p>
                                 </div>
                                 <p className="text-sm font-bold text-gray-800 shrink-0">
-                                  ฿{(item.price * item.qty).toLocaleString()}
+                                  ฿{(item.price * item.quantity).toLocaleString()}
                                 </p>
                               </div>
                             ))}

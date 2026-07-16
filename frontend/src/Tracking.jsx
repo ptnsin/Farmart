@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { getOrderById, getMyOrders } from "./data/orderStore";
 import {
   Sprout,
   Search,
@@ -45,99 +46,111 @@ const STEP_LABELS = [
 ];
 
 // ---------------------------------------------------------------------------
-// MOCK ORDER DATABASE
-// Swap this whole block for a real API call — see fetchOrder() below.
-// Every field the UI reads comes from here, so wiring a backend later just
-// means replacing ORDERS[key] lookups with the response from your endpoint.
-// Exported so the Orders list page (Orders.jsx) can reuse the same data
-// instead of duplicating it.
+// REAL BACKEND INTEGRATION
+// Orders come from GET /api/orders/:id (see data/orderStore.js), which
+// returns { id: "ORD-10238", userId, customer, items, total, date, status,
+// statusStep, statusLabel, address, paymentMethod }. The backend doesn't
+// store map coordinates, so we derive a deterministic (but fake) courier /
+// destination position from the order id — that keeps the map useful
+// without needing a geocoding service, and the same order always renders
+// the same spot instead of jumping around on every refresh.
 // ---------------------------------------------------------------------------
-export const ORDERS = {
-  "AGH-20260701": {
-    statusStep: 2, // index into STEP_LABELS, 0-based
-    statusLabel: "กำลังจัดส่ง",
-    eta: "วันนี้ เวลา 14:00 - 16:00 น.",
-    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" },
-    courier: { lat: 13.748, lng: 100.507 },
-    destination: {
-      lat: 13.7563,
-      lng: 100.4913,
-      label: "บ้านเลขที่ 123/45 หมู่บ้านพฤกษาเจริญ",
-      addressLine: "เขตดุสิต กรุงเทพมหานคร 10300",
-    },
-    items: [
-      { name: "แยมเปลือกส้มเกรดเอ (4 ขวด)", qty: 2, price: 240, emoji: "🍯" },
-      { name: "ผักออร์แกนิกรวมสุดคุ้ม", qty: 1, price: 55, emoji: "🥬" },
-    ],
-  },
-  "AGH-20260630": {
-    statusStep: 1,
-    statusLabel: "เตรียมพัสดุ",
-    eta: "พรุ่งนี้ เวลา 09:00 - 12:00 น.",
-    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" },
-    courier: { lat: 13.7367, lng: 100.5231 },
-    destination: {
-      lat: 13.7245,
-      lng: 100.5352,
-      label: "คอนโด กรีนวิว สุขุมวิท 71",
-      addressLine: "เขตวัฒนา กรุงเทพมหานคร 10110",
-    },
-    items: [
-      { name: "เมล็ดพันธุ์ผสม", qty: 1, price: 85, emoji: "🌾" },
-      { name: "ปุ๋ยอินทรีย์ (5 กก.)", qty: 1, price: 1250, emoji: "🧴" },
-    ],
-  },
-  "AGH-20260625": {
-    statusStep: 4,
-    statusLabel: "จัดส่งสำเร็จ",
-    eta: "จัดส่งสำเร็จเมื่อ 25 มิ.ย. 2569 เวลา 11:20 น.",
-    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" },
-    courier: { lat: 13.7008, lng: 100.5325 },
-    destination: {
-      lat: 13.7008,
-      lng: 100.5325,
-      label: "บ้านเลขที่ 88 ซอยอ่อนนุช 30",
-      addressLine: "เขตสวนหลวง กรุงเทพมหานคร 10250",
-    },
-    items: [
-      { name: "ผักสดจากไร่ ชุดที่ 2", qty: 3, price: 65, emoji: "🫑" },
-    ],
-  },
-  "AGH-20260610": {
-    statusStep: 0,
-    statusLabel: "ยืนยันคำสั่งซื้อ",
-    eta: "กำลังเตรียมพัสดุ คาดว่าจะจัดส่งใน 1-2 วัน",
-    warehouse: { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" },
-    courier: { lat: 13.7367, lng: 100.5231 },
-    destination: {
-      lat: 13.79,
-      lng: 100.5548,
-      label: "บ้านเลขที่ 9 ถนนวิภาวดีรังสิต",
-      addressLine: "เขตจตุจักร กรุงเทพมหานคร 10900",
-    },
-    items: [
-      { name: "ชุดปลูกกล้าไม้ระดับมืออาชีพ", qty: 1, price: 150, emoji: "🌱" },
-    ],
-  },
-};
+const WAREHOUSE = { lat: 13.7367, lng: 100.5231, label: "คลังสินค้า Farmart ลาดพร้าว" };
 
-// Simulated network call — replace the body with a real `fetch()` to your
-// tracking API. Keeping the same shape (resolve order | reject Error) means
-// nothing else in this file has to change.
-function fetchOrder(rawQuery) {
+// Small deterministic string hash -> [0, 1), so the same order id always
+// maps to the same "random" offset instead of using Math.random().
+function hashToUnit(str, salt) {
+  let h = 0;
+  const s = `${salt}:${str}`;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return (h % 10000) / 10000;
+}
+
+// Spreads fake destinations across the greater Bangkok area.
+function buildDestination(order) {
+  const lat = 13.68 + hashToUnit(order.id, "lat") * 0.12;
+  const lng = 100.45 + hashToUnit(order.id, "lng") * 0.14;
+  return {
+    lat,
+    lng,
+    label: order.customer || "ที่อยู่จัดส่ง",
+    addressLine: order.address || "ไม่มีข้อมูลที่อยู่",
+  };
+}
+
+// Places the courier somewhere between the warehouse and the destination,
+// proportional to how far along the delivery steps the order is.
+function buildCourierPosition(order, destination) {
+  const fraction = Math.min(Math.max(order.statusStep ?? 0, 0), 4) / 4;
+  return {
+    lat: WAREHOUSE.lat + (destination.lat - WAREHOUSE.lat) * fraction,
+    lng: WAREHOUSE.lng + (destination.lng - WAREHOUSE.lng) * fraction,
+  };
+}
+
+function buildEta(order) {
+  const day = order.date ? new Date(order.date).toLocaleDateString("th-TH") : "";
+  switch (order.statusStep) {
+    case 0:
+      return "กำลังเตรียมพัสดุ คาดว่าจะจัดส่งใน 1-2 วัน";
+    case 1:
+      return "เตรียมพัสดุเสร็จแล้ว รอจัดส่งเร็ว ๆ นี้";
+    case 2:
+      return "อยู่ระหว่างจัดส่ง คาดว่าจะถึงภายในวันนี้";
+    case 3:
+      return "พัสดุถึงจุดหมายแล้ว รอส่งมอบให้ผู้รับ";
+    case 4:
+      return `จัดส่งสำเร็จแล้ว${day ? ` เมื่อ ${day}` : ""}`;
+    default:
+      return "";
+  }
+}
+
+const ITEM_EMOJI = [
+  { keywords: ["แยม", "jam", "marmalade"], emoji: "🍯" },
+  { keywords: ["เมล็ด", "seed"], emoji: "🌱" },
+  { keywords: ["ปุ๋ย", "fertilizer", "compost"], emoji: "🧴" },
+  { keywords: ["กล้าไม้", "seedling", "sapling"], emoji: "🌾" },
+  { keywords: ["ผัก", "veget", "organic"], emoji: "🥬" },
+];
+function emojiFor(name = "") {
+  const lower = name.toLowerCase();
+  const hit = ITEM_EMOJI.find((e) => e.keywords.some((k) => lower.includes(k)));
+  return hit ? hit.emoji : "📦";
+}
+
+// Fetches a single order from the real backend and reshapes it into what
+// the UI below expects. Throws (so the caller's .catch runs) on 404 / 403 /
+// network errors — apiClient already turns those into readable Thai
+// messages (e.g. "ไม่พบคำสั่งซื้อ", "ไม่มีสิทธิ์เข้าถึงคำสั่งซื้อนี้").
+async function fetchOrder(rawQuery) {
   const key = rawQuery.trim().toUpperCase();
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const order = ORDERS[key];
-      if (order) resolve({ id: key, ...order });
-      else reject(new Error("NOT_FOUND"));
-    }, 500); // small delay so the loading state is visible/testable
-  });
+  if (!key) throw new Error("กรุณากรอกหมายเลขคำสั่งซื้อ");
+
+  const order = await getOrderById(key);
+  const destination = buildDestination(order);
+  const courier = buildCourierPosition(order, destination);
+
+  return {
+    id: order.id,
+    statusStep: order.statusStep ?? 0,
+    statusLabel: order.statusLabel || "ยืนยันคำสั่งซื้อ",
+    eta: buildEta(order),
+    warehouse: WAREHOUSE,
+    courier,
+    destination,
+    items: (order.items || []).map((i) => ({
+      name: i.name,
+      qty: i.quantity,
+      price: i.price,
+      emoji: emojiFor(i.name),
+    })),
+  };
 }
 
 export default function Tracking() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialQuery = searchParams.get("order") || "AGH-20260701";
+  const initialQuery = searchParams.get("order") || "";
 
   const [query, setQuery] = useState(initialQuery);
   const [order, setOrder] = useState(null);
@@ -154,16 +167,46 @@ export default function Tracking() {
         setStatus("idle");
         setSearchParams({ order: result.id });
       })
-      .catch(() => {
+      .catch((err) => {
         setOrder(null);
         setStatus("error");
-        setErrorMsg("ไม่พบคำสั่งซื้อนี้ กรุณาตรวจสอบเลขพัสดุอีกครั้ง");
+        setErrorMsg(err?.message || "ไม่พบคำสั่งซื้อนี้ กรุณาตรวจสอบเลขพัสดุอีกครั้ง");
       });
   }
 
-  // Load whatever's in the URL (or the default) on first render.
+  // If a specific order id was given (typed in, or came from ?order=...),
+  // look that up. Otherwise fall back to the customer's own most recent
+  // order, so landing on /tracking with no query string still shows
+  // something useful instead of a hardcoded demo id that doesn't exist in
+  // the real database.
+  async function loadLatestOwnOrder() {
+    setStatus("loading");
+    setErrorMsg("");
+    try {
+      const orders = await getMyOrders();
+      if (!orders || orders.length === 0) {
+        setOrder(null);
+        setStatus("error");
+        setErrorMsg("คุณยังไม่มีคำสั่งซื้อ ลองกรอกหมายเลขคำสั่งซื้อด้านบนแทน");
+        return;
+      }
+      const latest = orders[0];
+      setQuery(latest.id);
+      runSearch(latest.id);
+    } catch (err) {
+      setOrder(null);
+      setStatus("error");
+      setErrorMsg(err?.message || "ไม่สามารถโหลดคำสั่งซื้อได้ กรุณาลองใหม่อีกครั้ง");
+    }
+  }
+
+  // Load whatever's in the URL (or the customer's latest order) on first render.
   useEffect(() => {
-    runSearch(initialQuery);
+    if (initialQuery) {
+      runSearch(initialQuery);
+    } else {
+      loadLatestOwnOrder();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -260,7 +303,7 @@ export default function Tracking() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               type="text"
-              placeholder="กรอกหมายเลขคำสั่งซื้อ เช่น AGH-20260701"
+              placeholder="กรอกหมายเลขคำสั่งซื้อ เช่น ORD-10238"
               className="w-full pl-9 pr-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
             />
           </div>
