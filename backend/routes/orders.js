@@ -25,4 +25,7 @@ router.patch("/:id/status", requireRole("EMPLOYEE", "ADMIN"), orderController.up
 // PATCH /api/orders/:id/advance (employee/admin) - เลื่อนสถานะการจัดส่งไปขั้นถัดไป
 router.patch("/:id/advance", requireRole("EMPLOYEE", "ADMIN"), orderController.advance);
 
+// PATCH /api/orders/:id/cancel (ลูกค้าเจ้าของออเดอร์) - ยกเลิกคำสั่งซื้อก่อนเข้าสถานะกำลังจัดส่ง
+router.patch("/:id/cancel", requireAuth, orderController.cancelOrder);
+
 module.exports = router;

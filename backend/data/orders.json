@@ -56,11 +56,12 @@
     ],
     "total": 100,
     "date": "2026-07-17",
-    "status": "pending",
+    "status": "cancelled",
     "statusStep": 0,
-    "statusLabel": "รอการตรวจสอบ",
+    "statusLabel": "ยกเลิกแล้ว",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
-    "paymentMethod": "promptpay"
+    "paymentMethod": "promptpay",
+    "cancelled": true
   },
   {
     "id": "ORD-10245",
@@ -126,11 +127,12 @@
     ],
     "total": 20,
     "date": "2026-07-16",
-    "status": "preparing",
+    "status": "cancelled",
     "statusStep": 1,
-    "statusLabel": "เตรียมพัสดุ",
+    "statusLabel": "ยกเลิกแล้ว",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
-    "paymentMethod": "promptpay"
+    "paymentMethod": "promptpay",
+    "cancelled": true
   },
   {
     "id": "ORD-10242",
