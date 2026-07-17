@@ -43,5 +43,20 @@
     "postalCode": "26110",
     "isDefault": true,
     "createdAt": "2026-07-17T10:11:47.013Z"
+  },
+  {
+    "id": "addr_mrp88fh85n8g",
+    "ownerId": 8,
+    "ownerName": "we",
+    "label": "บ้าน",
+    "recipientName": "กุเอง",
+    "phone": "0321654987",
+    "addressLine": "ซอยหมา",
+    "subdistrict": "เกาะกลาง",
+    "district": "เกาะลันตา",
+    "province": "กระบี่",
+    "postalCode": "81120",
+    "isDefault": true,
+    "createdAt": "2026-07-17T17:43:37.820Z"
   }
 ]
