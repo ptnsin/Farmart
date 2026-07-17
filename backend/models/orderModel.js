@@ -35,12 +35,15 @@ const STEP_LABELS = [
 ];
 
 // สถานะ (status) แต่ละค่า -> statusLabel/statusStep ที่ต้อง sync กันเวลาเปลี่ยนสถานะ
-// (VALID_STATUSES ฝั่ง controller: pending, approved, rejected, preparing, shipping, cancelled)
+// (VALID_STATUSES ฝั่ง controller: pending, approved, rejected, preparing, shipping, delivered, cancelled)
+// หมายเหตุ: "delivered" ถูกเพิ่มเข้ามาเพื่อให้ order มี status ที่ map ไปหา step สุดท้าย (จัดส่งสำเร็จ)
+// ให้ตรงกับตอนที่ shipmentModel.advanceShipment() เปลี่ยน shipment.status เป็น "delivered"
 const STATUS_META = {
   pending: { statusLabel: "รอการตรวจสอบ", statusStep: 0 },
   approved: { statusLabel: STEP_LABELS[0], statusStep: 0 },
   preparing: { statusLabel: STEP_LABELS[1], statusStep: 1 },
   shipping: { statusLabel: STEP_LABELS[2], statusStep: 2 },
+  delivered: { statusLabel: STEP_LABELS[4], statusStep: 4 },
   rejected: { statusLabel: "ปฏิเสธแล้ว", statusStep: 0 },
   cancelled: { statusLabel: "ยกเลิกแล้ว", statusStep: 0 },
 };
@@ -117,4 +120,5 @@ module.exports = {
   deleteOrder,
   advanceOrderStep,
   STEP_LABELS,
+  STATUS_META,
 };
