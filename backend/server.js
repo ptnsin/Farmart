@@ -18,6 +18,7 @@ const supportRoutes = require("./routes/support");
 const reportRoutes = require("./routes/reports");
 const dashboardRoutes = require("./routes/dashboard");
 const uploadRoutes = require("./routes/upload");
+const addressRoutes = require("./routes/address");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -50,6 +51,7 @@ app.use("/api/support", supportRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/addresses", addressRoutes);
 
 // 404
 app.use((req, res) => {

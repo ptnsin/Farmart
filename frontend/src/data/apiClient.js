@@ -48,7 +48,7 @@ export async function apiRequest(path, options = {}) {
 
   if (!res.ok) {
     if (res.status === 401) clearToken();
-    throw new Error(data?.error || `เกิดข้อผิดพลาด (HTTP ${res.status})`);
+    throw new Error(data?.message || data?.error || `เกิดข้อผิดพลาด (HTTP ${res.status})`);
   }
   return data;
 }
