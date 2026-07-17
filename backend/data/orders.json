@@ -15,8 +15,8 @@
     "total": 30,
     "date": "2026-07-17",
     "status": "shipping",
-    "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusStep": 2,
+    "statusLabel": "กำลังจัดส่ง",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "bank"
   },
@@ -37,7 +37,7 @@
     "date": "2026-07-17",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -58,7 +58,7 @@
     "date": "2026-07-17",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -254,7 +254,7 @@
     "date": "2026-07-16",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -274,7 +274,7 @@
     "date": "2026-07-15",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -350,7 +350,7 @@
     "date": "2026-07-15",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -378,7 +378,7 @@
     "date": "2026-07-15",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "card"
   },
@@ -413,7 +413,7 @@
     "date": "2026-07-15",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -441,7 +441,7 @@
     "date": "2026-07-15",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -504,7 +504,7 @@
     "date": "2026-07-15",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -532,7 +532,7 @@
     "date": "2026-07-15",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },
@@ -553,7 +553,7 @@
     "date": "2026-07-03",
     "status": "pending",
     "statusStep": 0,
-    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "statusLabel": "รอการตรวจสอบ",
     "address": "",
     "paymentMethod": "cod"
   },
@@ -573,8 +573,8 @@
     "total": 750,
     "date": "2026-07-03",
     "status": "pending",
-    "statusStep": 1,
-    "statusLabel": "เตรียมพัสดุ",
+    "statusStep": 0,
+    "statusLabel": "รอการตรวจสอบ",
     "address": "",
     "paymentMethod": "cod"
   },
@@ -594,8 +594,8 @@
     "total": 450,
     "date": "2026-07-02",
     "status": "approved",
-    "statusStep": 4,
-    "statusLabel": "จัดส่งสำเร็จ",
+    "statusStep": 0,
+    "statusLabel": "ยืนยันคำสั่งซื้อ",
     "address": "",
     "paymentMethod": "transfer"
   },
@@ -615,8 +615,8 @@
     "total": 315,
     "date": "2026-07-01",
     "status": "approved",
-    "statusStep": 2,
-    "statusLabel": "กำลังจัดส่ง",
+    "statusStep": 0,
+    "statusLabel": "ยืนยันคำสั่งซื้อ",
     "address": "",
     "paymentMethod": "cod"
   }

@@ -34,6 +34,17 @@ const STEP_LABELS = [
   "จัดส่งสำเร็จ",
 ];
 
+// สถานะ (status) แต่ละค่า -> statusLabel/statusStep ที่ต้อง sync กันเวลาเปลี่ยนสถานะ
+// (VALID_STATUSES ฝั่ง controller: pending, approved, rejected, preparing, shipping, cancelled)
+const STATUS_META = {
+  pending: { statusLabel: "รอการตรวจสอบ", statusStep: 0 },
+  approved: { statusLabel: STEP_LABELS[0], statusStep: 0 },
+  preparing: { statusLabel: STEP_LABELS[1], statusStep: 1 },
+  shipping: { statusLabel: STEP_LABELS[2], statusStep: 2 },
+  rejected: { statusLabel: "ปฏิเสธแล้ว", statusStep: 0 },
+  cancelled: { statusLabel: "ยกเลิกแล้ว", statusStep: 0 },
+};
+
 function createOrder({ userId, customer, items, address, paymentMethod }) {
   const orders = getOrders();
   const id = nextOrderId(orders);
@@ -56,7 +67,10 @@ function createOrder({ userId, customer, items, address, paymentMethod }) {
 }
 
 function updateOrderStatus(id, status) {
-  const orders = getOrders().map((o) => (o.id === id ? { ...o, status } : o));
+  const meta = STATUS_META[status] || {};
+  const orders = getOrders().map((o) =>
+    o.id === id ? { ...o, status, ...meta } : o
+  );
   saveOrders(orders);
   return orders.find((o) => o.id === id) || null;
 }
@@ -66,6 +80,10 @@ function updateOrder(id, patch) {
   const safePatch = { ...patch };
   delete safePatch.id;
   delete safePatch.userId;
+  // ถ้ามีการเปลี่ยน status ผ่านทางนี้ด้วย ต้อง sync statusLabel/statusStep ให้ตรงกันเหมือน updateOrderStatus
+  if (safePatch.status) {
+    Object.assign(safePatch, STATUS_META[safePatch.status] || {});
+  }
   const orders = getOrders().map((o) => (o.id === id ? { ...o, ...safePatch, id: o.id } : o));
   saveOrders(orders);
   return orders.find((o) => o.id === id) || null;
