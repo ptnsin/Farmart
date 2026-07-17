@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  MoreVertical,
 } from "lucide-react";
 import EmployeeSidebar from "./Employeesidebar";
 import { getCachedUser, fetchCurrentUser } from "../data/authStore";
@@ -54,11 +55,27 @@ export default function EmployeeOrders() {
   const [tableOrders, setTableOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [actingId, setActingId] = useState(null); // order id ที่กำลังกดอนุมัติ/ปฏิเสธ
+  const [actingId, setActingId] = useState(null); // order id ที่กำลังกดอนุมัติ/ปฏิเสธ/ยกเลิก
   // เก็บ id ที่เพิ่งกด "อนุมัติ" สำเร็จในเซสชันนี้ ใช้กับสถิติ "อนุมัติแล้ววันนี้"
   // (backend ไม่มีฟิลด์ approvedAt เก็บวันที่อนุมัติจริง มีแต่ date = วันที่สร้างออเดอร์
   //  ถ้าใช้ o.date === today แบบเดิมจะได้ตัวเลขผิด เพราะเทียบวันที่สร้าง ไม่ใช่วันที่อนุมัติ)
   const [approvedTodayIds, setApprovedTodayIds] = useState(() => new Set());
+  // ออเดอร์ที่กำลังจะยืนยันยกเลิก (เปิด modal แจ้งเตือนแทน window.confirm)
+  const [cancelTarget, setCancelTarget] = useState(null);
+  // id ของแถวที่เปิดเมนู MoreVertical อยู่ (เปลี่ยนสถานะ: เตรียมพัสดุ / จัดส่ง)
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // ปิดเมนู dropdown เมื่อคลิกนอกเมนู
+  useEffect(() => {
+    if (!openMenuId) return;
+    function handleClickOutside(e) {
+      if (!e.target.closest("[data-order-menu]")) {
+        setOpenMenuId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openMenuId]);
 
   useEffect(() => {
     fetchCurrentUser().then(setUser).catch(() => {});
@@ -125,7 +142,7 @@ export default function EmployeeOrders() {
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const pagedOrders = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // ถ้าหน้าปัจจุบันเกินจำนวนหน้าที่มีจริงแล้ว (เช่น อนุมัติ/ปฏิเสธรายการสุดท้ายของหน้าสุดท้ายไป)
+  // ถ้าหน้าปัจจุบันเกินจำนวนหน้าที่มีจริงแล้ว (เช่น อนุมัติ/ปฏิเสธ/ยกเลิกรายการสุดท้ายของหน้าสุดท้ายไป)
   // ให้ดึงกลับมาหน้าสุดท้ายที่ยังมีข้อมูลอยู่ ไม่ปล่อยให้ค้างเป็นหน้าว่าง
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -176,6 +193,13 @@ export default function EmployeeOrders() {
     } finally {
       setActingId(null);
     }
+  }
+
+  async function confirmCancelOrder() {
+    if (!cancelTarget) return;
+    const id = cancelTarget.id;
+    setCancelTarget(null);
+    await handleStatusChange(id, "cancelled");
   }
 
   return (
@@ -332,37 +356,103 @@ export default function EmployeeOrders() {
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
                           o.status === "approved"
                             ? "bg-emerald-50 text-emerald-600"
+                            : o.status === "preparing"
+                            ? "bg-blue-50 text-blue-600"
+                            : o.status === "shipping"
+                            ? "bg-indigo-50 text-indigo-600"
                             : o.status === "rejected"
                             ? "bg-rose-50 text-rose-500"
+                            : o.status === "cancelled"
+                            ? "bg-slate-100 text-slate-500"
                             : "bg-amber-50 text-amber-600"
                         }`}
                       >
                         {o.statusLabel ||
                           (o.status === "approved"
                             ? "อนุมัติแล้ว"
+                            : o.status === "preparing"
+                            ? "เตรียมพัสดุ"
+                            : o.status === "shipping"
+                            ? "จัดส่งแล้ว"
                             : o.status === "rejected"
                             ? "ปฏิเสธแล้ว"
+                            : o.status === "cancelled"
+                            ? "ยกเลิกแล้ว"
                             : "รอการตรวจสอบ")}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
+                      <div
+                        className="relative flex items-center justify-end gap-2"
+                        data-order-menu
+                      >
+                        {o.status === "pending" && (
+                          <>
+                            <button
+                              type="button"
+                              disabled={actingId === o.id}
+                              onClick={() => handleStatusChange(o.id, "approved")}
+                              className="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              {actingId === o.id ? "..." : "อนุมัติ"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={actingId === o.id}
+                              onClick={() => handleStatusChange(o.id, "rejected")}
+                              className="rounded-lg border border-rose-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              ปฏิเสธ
+                            </button>
+                          </>
+                        )}
+                        {o.status === "approved" && (
+                          <button
+                            type="button"
+                            disabled={actingId === o.id}
+                            onClick={() => setCancelTarget(o)}
+                            className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {actingId === o.id ? "..." : "ยกเลิกคำสั่งซื้อ"}
+                          </button>
+                        )}
                         <button
                           type="button"
-                          disabled={o.status !== "pending" || actingId === o.id}
-                          onClick={() => handleStatusChange(o.id, "approved")}
-                          className="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                          aria-label="ตัวเลือกเพิ่มเติม"
+                          onClick={() =>
+                            setOpenMenuId((prev) => (prev === o.id ? null : o.id))
+                          }
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-50"
                         >
-                          {actingId === o.id ? "..." : "อนุมัติ"}
+                          <MoreVertical size={16} />
                         </button>
-                        <button
-                          type="button"
-                          disabled={o.status !== "pending" || actingId === o.id}
-                          onClick={() => handleStatusChange(o.id, "rejected")}
-                          className="rounded-lg border border-rose-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          ปฏิเสธ
-                        </button>
+
+                        {openMenuId === o.id && (
+                          <div className="absolute right-0 top-9 z-10 w-40 overflow-hidden rounded-lg border border-slate-100 bg-white py-1 shadow-lg">
+                            <button
+                              type="button"
+                              disabled={o.status !== "approved" || actingId === o.id}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleStatusChange(o.id, "preparing");
+                              }}
+                              className="flex w-full items-center px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                            >
+                              เตรียมพัสดุ
+                            </button>
+                            <button
+                              type="button"
+                              disabled={o.status !== "preparing" || actingId === o.id}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleStatusChange(o.id, "shipping");
+                              }}
+                              className="flex w-full items-center px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                            >
+                              กำลังจัดส่ง
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -411,6 +501,43 @@ export default function EmployeeOrders() {
           </div>
         </div>
       </main>
+
+      {/* Modal ยืนยันยกเลิกคำสั่งซื้อ */}
+      {cancelTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-slate-800">
+              ยืนยันยกเลิกคำสั่งซื้อ
+            </h2>
+            <p className="mt-2 text-sm text-slate-500">
+              คุณต้องการยกเลิกคำสั่งซื้อ{" "}
+              <span className="font-medium text-slate-700">{cancelTarget.id}</span>{" "}
+              ของ{" "}
+              <span className="font-medium text-slate-700">
+                {cancelTarget.customer || `User #${cancelTarget.userId}`}
+              </span>{" "}
+              ใช่หรือไม่? การกระทำนี้ย้อนกลับยาก
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCancelTarget(null)}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                ไม่ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancelOrder}
+                disabled={actingId === cancelTarget.id}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {actingId === cancelTarget.id ? "กำลังยกเลิก..." : "ยืนยันยกเลิก"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
