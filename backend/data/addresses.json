@@ -1,0 +1,32 @@
+[
+  {
+    "id": "addr_001",
+    "ownerId": "user_001",
+    "ownerName": "สมชาย รักษาดี",
+    "label": "บ้าน",
+    "recipientName": "สมชาย รักษาดี",
+    "phone": "081-234-5678",
+    "addressLine": "123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์",
+    "subdistrict": "ลาดพร้าว",
+    "district": "ลาดพร้าว",
+    "province": "กรุงเทพมหานคร",
+    "postalCode": "10230",
+    "isDefault": true,
+    "createdAt": "2026-05-10T09:15:00.000Z"
+  },
+  {
+    "id": "addr_002",
+    "ownerId": "user_001",
+    "ownerName": "สมชาย รักษาดี",
+    "label": "ที่ทำงาน",
+    "recipientName": "สมชาย รักษาดี",
+    "phone": "02-123-4567",
+    "addressLine": "อาคารเกษตรทาวเวอร์ ชั้น 12 เลขที่ 1205 ถนนวิภาวดีรังสิต",
+    "subdistrict": "จตุจักร",
+    "district": "จตุจักร",
+    "province": "กรุงเทพมหานคร",
+    "postalCode": "10900",
+    "isDefault": false,
+    "createdAt": "2026-05-10T09:20:00.000Z"
+  }
+]
