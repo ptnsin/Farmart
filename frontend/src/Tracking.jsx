@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -152,6 +152,7 @@ async function fetchOrder(rawQuery) {
 
 export default function Tracking() {
   const { itemCount } = useCart();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("order") || "";
 
@@ -467,7 +468,10 @@ export default function Tracking() {
                 <p className="text-xs text-white/60 mb-4 leading-relaxed">
                   หากคุณไม่ได้รับสินค้าตามเวลาที่คาดไว้ ทีมดูแลลูกค้าของเราพร้อมช่วยเหลือ
                 </p>
-                <button className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors">
+                <button
+                  onClick={() => navigate("/help-center")}
+                  className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+                >
                   <MessageCircle className="w-4 h-4" />
                   ติดต่อฝ่ายบริการลูกค้า
                 </button>
