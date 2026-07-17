@@ -22,6 +22,7 @@ import {
 import { useCart } from "./CartContext";
 import { createOrder, toOrderItems } from "./data/orderStore";
 import { fetchCurrentUser, getCachedUser } from "./data/authStore";
+import { THAI_ADDRESS } from "./data/thaiGeography";
 
 const SHIPPING_METHODS = [
   {
@@ -68,17 +69,107 @@ const INITIAL_ADDRESSES = [
   },
 ];
 
+// รายชื่อจังหวัดทั้งหมด (ไม่ซ้ำ) เรียงตามลำดับตัวอักษรไทย
+const PROVINCES = [...new Set(THAI_ADDRESS.map((r) => r.province))].sort((a, b) =>
+  a.localeCompare(b, "th")
+);
+
+// รายชื่ออำเภอ/เขตในจังหวัดที่เลือก
+function getDistricts(province) {
+  if (!province) return [];
+  return [...new Set(THAI_ADDRESS.filter((r) => r.province === province).map((r) => r.district))].sort(
+    (a, b) => a.localeCompare(b, "th")
+  );
+}
+
+// รายชื่อตำบล/แขวงในอำเภอที่เลือก
+function getSubdistricts(province, district) {
+  if (!province || !district) return [];
+  return THAI_ADDRESS.filter((r) => r.province === province && r.district === district).sort((a, b) =>
+    a.subdistrict.localeCompare(b.subdistrict, "th")
+  );
+}
+
+// จำกัดให้พิมพ์เบอร์โทรได้เฉพาะตัวเลขกับขีด (กันพิมพ์มั่ว)
+function sanitizePhoneInput(raw) {
+  return raw.replace(/[^\d-]/g, "").slice(0, 12);
+}
+
+// เบอร์มือถือไทย 10 หลัก (0XX-XXX-XXXX) หรือเบอร์บ้าน 9 หลัก (0X-XXX-XXXX)
+function isValidThaiPhone(value) {
+  const digits = value.replace(/-/g, "");
+  return /^0\d{8,9}$/.test(digits);
+}
+
 function NewAddressForm({ onCancel, onSave }) {
   const [form, setForm] = useState({
     label: "",
     name: "",
     phone: "",
     detail: "",
-    sub: "",
+    province: "",
+    district: "",
+    subdistrict: "",
+    postalCode: "",
   });
+  const [touched, setTouched] = useState({});
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
-  const canSave = form.name && form.phone && form.detail;
+
+  const handlePhoneChange = (e) => {
+    setForm((f) => ({ ...f, phone: sanitizePhoneInput(e.target.value) }));
+  };
+
+  // เลือกจังหวัด -> ล้างอำเภอ/ตำบล/รหัสไปรษณีย์ที่เคยเลือกไว้ เพราะไม่ตรงกับจังหวัดใหม่แล้ว
+  const handleProvinceChange = (e) => {
+    setForm((f) => ({
+      ...f,
+      province: e.target.value,
+      district: "",
+      subdistrict: "",
+      postalCode: "",
+    }));
+  };
+
+  // เลือกอำเภอ -> ล้างตำบล/รหัสไปรษณีย์
+  const handleDistrictChange = (e) => {
+    setForm((f) => ({ ...f, district: e.target.value, subdistrict: "", postalCode: "" }));
+  };
+
+  // เลือกตำบล -> เติมรหัสไปรษณีย์ให้อัตโนมัติ
+  const handleSubdistrictChange = (e) => {
+    const subdistrict = e.target.value;
+    const match = THAI_ADDRESS.find(
+      (r) => r.province === form.province && r.district === form.district && r.subdistrict === subdistrict
+    );
+    setForm((f) => ({ ...f, subdistrict, postalCode: match?.postalCode || "" }));
+  };
+
+  const districts = getDistricts(form.province);
+  const subdistricts = getSubdistricts(form.province, form.district);
+
+  const phoneValid = isValidThaiPhone(form.phone);
+  const canSave =
+    form.name.trim() &&
+    phoneValid &&
+    form.detail.trim() &&
+    form.province &&
+    form.district &&
+    form.subdistrict &&
+    form.postalCode;
+
+  const handleSave = () => {
+    const isBangkok = form.province === "กรุงเทพมหานคร";
+    const sub = `${isBangkok ? "แขวง" : "ตำบล"}${form.subdistrict} ${
+      isBangkok ? "เขต" : "อำเภอ"
+    }${form.district} ${form.province} ${form.postalCode}`;
+    onSave({ ...form, sub });
+  };
+
+  const selectClass =
+    "text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 bg-white disabled:bg-gray-50 disabled:text-gray-400";
+  const inputClass =
+    "text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700";
 
   return (
     <div className="border border-green-200 bg-green-50/50 rounded-xl p-4 space-y-3">
@@ -93,31 +184,80 @@ function NewAddressForm({ onCancel, onSave }) {
           placeholder="ชื่อป้ายกำกับ (เช่น บ้าน, ที่ทำงาน)"
           value={form.label}
           onChange={update("label")}
-          className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700"
+          className={inputClass}
         />
         <input
           placeholder="ชื่อผู้รับ"
           value={form.name}
           onChange={update("name")}
-          className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700"
+          className={inputClass}
         />
-        <input
-          placeholder="เบอร์โทรศัพท์"
-          value={form.phone}
-          onChange={update("phone")}
-          className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 sm:col-span-2"
-        />
+
+        <div className="sm:col-span-2">
+          <input
+            placeholder="เบอร์โทรศัพท์ (เช่น 081-234-5678)"
+            inputMode="numeric"
+            value={form.phone}
+            onChange={handlePhoneChange}
+            onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
+            className={`w-full ${inputClass} ${
+              touched.phone && !phoneValid && form.phone ? "border-red-300 focus:ring-red-400" : ""
+            }`}
+          />
+          {touched.phone && form.phone && !phoneValid && (
+            <p className="text-xs text-red-500 mt-1">กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง (ตัวเลข 9-10 หลัก ขึ้นต้นด้วย 0)</p>
+          )}
+        </div>
+
         <input
           placeholder="ที่อยู่ (บ้านเลขที่ ถนน ซอย)"
           value={form.detail}
           onChange={update("detail")}
-          className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 sm:col-span-2"
+          className={`${inputClass} sm:col-span-2`}
         />
+
+        <select value={form.province} onChange={handleProvinceChange} className={selectClass}>
+          <option value="">เลือกจังหวัด</option>
+          {PROVINCES.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={form.district}
+          onChange={handleDistrictChange}
+          disabled={!form.province}
+          className={selectClass}
+        >
+          <option value="">{form.province ? "เลือกเขต/อำเภอ" : "เลือกจังหวัดก่อน"}</option>
+          {districts.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={form.subdistrict}
+          onChange={handleSubdistrictChange}
+          disabled={!form.district}
+          className={selectClass}
+        >
+          <option value="">{form.district ? "เลือกตำบล/แขวง" : "เลือกเขต/อำเภอก่อน"}</option>
+          {subdistricts.map((s) => (
+            <option key={s.subdistrict} value={s.subdistrict}>
+              {s.subdistrict}
+            </option>
+          ))}
+        </select>
+
         <input
-          placeholder="แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"
-          value={form.sub}
-          onChange={update("sub")}
-          className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 sm:col-span-2"
+          placeholder="รหัสไปรษณีย์"
+          value={form.postalCode}
+          readOnly
+          className={`${selectClass} bg-gray-50 text-gray-600`}
         />
       </div>
       <div className="flex justify-end gap-2 pt-1">
@@ -129,7 +269,7 @@ function NewAddressForm({ onCancel, onSave }) {
         </button>
         <button
           disabled={!canSave}
-          onClick={() => onSave(form)}
+          onClick={handleSave}
           className="text-sm font-semibold text-white bg-green-800 hover:bg-green-900 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg"
         >
           บันทึกที่อยู่
