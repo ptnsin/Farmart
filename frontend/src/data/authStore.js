@@ -10,6 +10,12 @@ const CURRENT_USER_KEY = "farmart_current_user";
 function cacheUser(user) {
   if (user) localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
   else localStorage.removeItem(CURRENT_USER_KEY);
+
+  // แจ้งส่วนอื่นของแอป (เช่น CartContext) ว่า user ปัจจุบันเปลี่ยนแล้ว
+  // (login / register / logout) เพื่อให้โหลดข้อมูลที่ผูกกับ user ใหม่ให้ถูกต้อง
+  // ไม่ทำแบบนี้แล้วตะกร้าจะค้างเป็นของ user/guest คนก่อนหน้า เพราะ CartProvider
+  // mount แค่ครั้งเดียวที่ root และ navigate() แบบ SPA ไม่ทำให้มัน re-mount
+  window.dispatchEvent(new Event("userChanged"));
 }
 
 /** เข้าสู่ระบบ คืนค่า user ถ้าสำเร็จ, throw Error พร้อมข้อความถ้าไม่สำเร็จ */
