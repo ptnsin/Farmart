@@ -63,6 +63,7 @@ export default function Products() {
   const [maxPrice, setMaxPrice] = useState(10000);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
 
   useEffect(() => {
     let cancelled = false;
@@ -136,7 +137,7 @@ export default function Products() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return products.filter((p) => {
+    const result = products.filter((p) => {
       const matchCategory =
         selectedCategories.length === 0 || selectedCategories.includes(p.category);
       const matchOrigin =
@@ -145,7 +146,22 @@ export default function Products() {
       const matchSearch = !q || p.name.toLowerCase().includes(q);
       return matchCategory && matchOrigin && matchPrice && matchSearch;
     });
-  }, [products, selectedCategories, selectedOrigins, maxPrice, search]);
+
+    // เรียงลำดับตามตัวเลือกใน dropdown "เรียงตาม"
+    // ทำ copy ก่อน sort เสมอ ([...result]) เพราะ .sort() แก้ array เดิม (mutate)
+    // ถ้า sort ทับ `result`/`products` ตรงๆ จะกระทบ reference ที่ useMemo อื่นถืออยู่ด้วย
+    switch (sortBy) {
+      case "price-asc":
+        return [...result].sort((a, b) => a.price - b.price);
+      case "price-desc":
+        return [...result].sort((a, b) => b.price - a.price);
+      case "popular":
+        return [...result].sort((a, b) => (b.ratingCount || 0) - (a.ratingCount || 0));
+      case "featured":
+      default:
+        return result;
+    }
+  }, [products, selectedCategories, selectedOrigins, maxPrice, search, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -291,11 +307,18 @@ export default function Products() {
         <section className="flex-1">
           <div className="flex items-center justify-between mb-5">
             <h1 className="text-lg font-bold text-gray-900">รายการสินค้าทั้งหมด</h1>
-            <select className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-700">
-              <option>เรียงตาม: แนะนำ</option>
-              <option>ราคา: ต่ำ - สูง</option>
-              <option>ราคา: สูง - ต่ำ</option>
-              <option>ยอดนิยม</option>
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setPage(1);
+              }}
+              className="text-sm text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-700"
+            >
+              <option value="featured">เรียงตาม: แนะนำ</option>
+              <option value="price-asc">ราคา: ต่ำ - สูง</option>
+              <option value="price-desc">ราคา: สูง - ต่ำ</option>
+              <option value="popular">ยอดนิยม</option>
             </select>
           </div>
 
