@@ -19,4 +19,8 @@ router.get("/me", requireAuth, authController.me);
 // PUT /api/auth/me - แก้ไขโปรไฟล์ของตัวเอง (ทุก role ทำได้ แก้ได้แค่ของตัวเอง)
 router.put("/me", requireAuth, authController.updateMe);
 
+// routes/auth.js
+router.post("/forgot-password", authController.forgotPassword);
+router.post("/reset-password", authController.resetPassword);
+
 module.exports = router;
