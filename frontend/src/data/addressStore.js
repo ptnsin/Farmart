@@ -9,6 +9,20 @@
 
 import { api } from "./apiClient";
 
+// แปลงที่อยู่จาก backend (schema ตาม addresses.json: recipientName, addressLine,
+// subdistrict, district, province, postalCode) ให้เป็นบรรทัดแสดงผลอ่านง่าย
+// ใช้ร่วมกันทั้ง Checkout.jsx และ Profile.jsx เพื่อให้หน้าตาที่อยู่ตรงกันทุกที่
+export function formatAddressSub(addr) {
+  const isBangkok = addr.province === "กรุงเทพมหานคร";
+  return `${isBangkok ? "แขวง" : "ตำบล"}${addr.subdistrict} ${
+    isBangkok ? "เขต" : "อำเภอ"
+  }${addr.district} ${addr.province} ${addr.postalCode}`;
+}
+
+export function formatAddressFull(addr) {
+  return `${addr.addressLine} ${formatAddressSub(addr)}`.trim();
+}
+
 // เก็บ cache ไว้ในหน่วยความจำระหว่าง session เดียวกัน (คล้าย getCachedUser)
 let cachedAddresses = null;
 
@@ -28,6 +42,16 @@ export async function fetchAddresses() {
 export async function createAddress(payload) {
   const saved = await api.post("/api/addresses", payload);
   if (cachedAddresses) cachedAddresses = [...cachedAddresses, saved];
+  return saved;
+}
+
+// แก้ไขที่อยู่เดิม (PUT /api/addresses/:id) แล้วอัปเดต cache
+// payload: { label, recipientName, phone, addressLine, subdistrict, district, province, postalCode }
+export async function updateAddress(id, payload) {
+  const saved = await api.put(`/api/addresses/${encodeURIComponent(id)}`, payload);
+  if (cachedAddresses) {
+    cachedAddresses = cachedAddresses.map((a) => (a.id === id ? saved : a));
+  }
   return saved;
 }
 

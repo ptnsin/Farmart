@@ -75,6 +75,33 @@ router.post("/", requireAuth, (req, res) => {
   res.status(201).json(newAddress);
 });
 
+// ---------- PUT /api/addresses/:id ----------
+// แก้ไขข้อมูลที่อยู่ที่มีอยู่แล้ว (label, recipientName, phone, addressLine,
+// subdistrict, district, province, postalCode) — ไม่แตะ isDefault ตรงนี้
+// (ใช้ PATCH /:id/default แยกต่างหากสำหรับตั้งค่าเริ่มต้น)
+router.put("/:id", requireAuth, (req, res) => {
+  const ownerId = req.user?.id;
+  if (!ownerId) return res.status(401).json({ message: "กรุณาเข้าสู่ระบบก่อน" });
+
+  const { label, recipientName, phone, addressLine, subdistrict, district, province, postalCode } = req.body;
+
+  if (!recipientName || !phone || !addressLine || !subdistrict || !district || !province || !postalCode) {
+    return res.status(400).json({ message: "กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน" });
+  }
+
+  const addresses = readAll();
+  const target = addresses.find((a) => a.id === req.params.id && a.ownerId === ownerId);
+  if (!target) return res.status(404).json({ message: "ไม่พบที่อยู่นี้" });
+
+  const updated = addresses.map((a) =>
+    a.id === req.params.id
+      ? { ...a, label, recipientName, phone, addressLine, subdistrict, district, province, postalCode }
+      : a
+  );
+  writeAll(updated);
+  res.json(updated.find((a) => a.id === req.params.id));
+});
+
 // ---------- DELETE /api/addresses/:id ----------
 router.delete("/:id", requireAuth, (req, res) => {
   const ownerId = req.user?.id;

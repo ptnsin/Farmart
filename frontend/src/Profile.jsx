@@ -26,6 +26,16 @@ import Footer from "./Footer";
 import { fetchCurrentUser, getCachedUser, updateMe, logout } from "./data/authStore";
 import { getMyOrders } from "./data/orderStore";
 import { api } from "./data/apiClient";
+import AddressBookForm from "./AddressBookForm";
+import {
+  fetchAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+  getCachedAddresses,
+  formatAddressSub,
+} from "./data/addressStore";
 
 const sidebarItems = [
   { key: "info", label: "ข้อมูลส่วนตัว", icon: UserCircle2 },
@@ -62,25 +72,6 @@ function toProfileOrder(order) {
     })),
   };
 }
-
-const initialAddresses = [
-  {
-    id: 1,
-    label: "บ้าน",
-    name: "สมชาย รักเกษตร",
-    phone: "081-234-5678",
-    detail: "88/12 หมู่ 4 ต.บางพลี อ.บางพลี จ.สมุทรปราการ 10540",
-    isDefault: true,
-  },
-  {
-    id: 2,
-    label: "ที่ทำงาน",
-    name: "สมชาย รักเกษตร",
-    phone: "081-234-5678",
-    detail: "199 อาคารกรีนทาวเวอร์ ชั้น 8 ถ.สุขุมวิท กรุงเทพฯ 10110",
-    isDefault: false,
-  },
-];
 
 function Toast({ message }) {
   if (!message) return null;
@@ -296,62 +287,97 @@ export default function Profile() {
   };
 
   // ----- Addresses -----
-  const [addresses, setAddresses] = useState(initialAddresses);
+  // สมุดที่อยู่: โหลดจริงจาก backend ชุดเดียวกับที่หน้า Checkout ใช้ (addressStore.js
+  // -> /api/addresses) เพื่อให้ที่อยู่ที่กรอกในหน้า Checkout กับหน้า Profile
+  // เป็นข้อมูลชุดเดียวกันเสมอ ไม่ใช่ mock คนละชุดเหมือนก่อนหน้านี้
+  const [addresses, setAddresses] = useState(() => getCachedAddresses() ?? []);
+  const [addressLoading, setAddressLoading] = useState(true);
+  const [addressListError, setAddressListError] = useState("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
-  const [addressForm, setAddressForm] = useState({
-    label: "",
-    name: "",
-    phone: "",
-    detail: "",
-  });
+  const [addAddressError, setAddAddressError] = useState("");
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [deletingAddressId, setDeletingAddressId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAddressLoading(true);
+    setAddressListError("");
+    fetchAddresses()
+      .then((list) => {
+        if (!cancelled) setAddresses(list);
+      })
+      .catch((err) => {
+        if (!cancelled) setAddressListError(err.message || "โหลดที่อยู่ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      })
+      .finally(() => {
+        if (!cancelled) setAddressLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const openNewAddressForm = () => {
     setEditingAddressId(null);
-    setAddressForm({ label: "", name: "", phone: "", detail: "" });
+    setAddAddressError("");
     setShowAddressForm(true);
   };
 
   const openEditAddressForm = (addr) => {
     setEditingAddressId(addr.id);
-    setAddressForm({
-      label: addr.label,
-      name: addr.name,
-      phone: addr.phone,
-      detail: addr.detail,
-    });
+    setAddAddressError("");
     setShowAddressForm(true);
   };
 
-  const handleSaveAddress = () => {
-    if (!addressForm.label.trim() || !addressForm.detail.trim()) return;
-    if (editingAddressId) {
-      setAddresses((list) =>
-        list.map((a) =>
-          a.id === editingAddressId ? { ...a, ...addressForm } : a
-        )
-      );
-      showCenterAlert("แก้ไขที่อยู่เรียบร้อยแล้ว");
-    } else {
-      setAddresses((list) => [
-        ...list,
-        { id: Date.now(), isDefault: list.length === 0, ...addressForm },
-      ]);
-      showCenterAlert("เพิ่มที่อยู่ใหม่เรียบร้อยแล้ว");
+  const editingAddress = addresses.find((a) => a.id === editingAddressId) || null;
+
+  const handleSaveAddress = async (payload) => {
+    setSavingAddress(true);
+    setAddAddressError("");
+    try {
+      if (editingAddressId) {
+        const saved = await updateAddress(editingAddressId, payload);
+        setAddresses((list) => list.map((a) => (a.id === editingAddressId ? saved : a)));
+        showCenterAlert("แก้ไขที่อยู่เรียบร้อยแล้ว");
+      } else {
+        // backend คำนวณ isDefault เอง (true ถ้าเป็นที่อยู่แรกของ owner) ไม่ต้องส่งจาก client
+        const saved = await createAddress({
+          ...payload,
+          label: payload.label || "ที่อยู่ใหม่",
+        });
+        setAddresses((list) => [...list, saved]);
+        showCenterAlert("เพิ่มที่อยู่ใหม่เรียบร้อยแล้ว");
+      }
+      setShowAddressForm(false);
+    } catch (err) {
+      setAddAddressError(err.message || "บันทึกที่อยู่ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSavingAddress(false);
     }
-    setShowAddressForm(false);
   };
 
-  const handleDeleteAddress = (id) => {
-    setAddresses((list) => list.filter((a) => a.id !== id));
-    showCenterAlert("ลบที่อยู่แล้ว");
+  const handleDeleteAddress = async (id) => {
+    setDeletingAddressId(id);
+    try {
+      await deleteAddress(id);
+      setAddresses((list) => list.filter((a) => a.id !== id));
+      showCenterAlert("ลบที่อยู่แล้ว");
+    } catch (err) {
+      showCenterAlert(err.message || "ลบที่อยู่ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setDeletingAddressId(null);
+    }
   };
 
-  const handleSetDefaultAddress = (id) => {
-    setAddresses((list) =>
-      list.map((a) => ({ ...a, isDefault: a.id === id }))
-    );
-    showCenterAlert("ตั้งเป็นที่อยู่หลักแล้ว");
+  const handleSetDefaultAddress = async (id) => {
+    try {
+      await setDefaultAddress(id);
+      setAddresses((list) => list.map((a) => ({ ...a, isDefault: a.id === id })));
+      showCenterAlert("ตั้งเป็นที่อยู่หลักแล้ว");
+    } catch (err) {
+      showCenterAlert(err.message || "ตั้งค่าเริ่มต้นไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    }
   };
 
   // ----- Settings -----
@@ -710,7 +736,18 @@ export default function Profile() {
                   </button>
                 </div>
 
-                {addresses.length === 0 ? (
+                {addressListError && (
+                  <div className="mb-4 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                    {addressListError}
+                  </div>
+                )}
+
+                {addressLoading ? (
+                  <div className="bg-white border border-dashed border-gray-200 rounded-xl p-10 text-center text-sm text-gray-500 flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    กำลังโหลดที่อยู่...
+                  </div>
+                ) : addresses.length === 0 ? (
                   <div className="bg-white border border-dashed border-gray-200 rounded-xl p-10 text-center text-sm text-gray-500">
                     ยังไม่มีที่อยู่จัดส่ง กดปุ่ม "เพิ่มที่อยู่" เพื่อเริ่มต้น
                   </div>
@@ -731,9 +768,11 @@ export default function Profile() {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-800">{addr.name}</p>
+                        <p className="text-sm text-gray-800">{addr.recipientName}</p>
                         <p className="text-sm text-gray-500">{addr.phone}</p>
-                        <p className="text-sm text-gray-500 mt-1 leading-relaxed">{addr.detail}</p>
+                        <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                          {addr.addressLine} {formatAddressSub(addr)}
+                        </p>
 
                         <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50">
                           <button
@@ -752,10 +791,11 @@ export default function Profile() {
                           )}
                           <button
                             onClick={() => handleDeleteAddress(addr.id)}
-                            className="text-xs font-semibold text-red-500 hover:text-red-600 ml-auto flex items-center gap-1"
+                            disabled={deletingAddressId === addr.id}
+                            className="text-xs font-semibold text-red-500 hover:text-red-600 ml-auto flex items-center gap-1 disabled:opacity-40"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                            ลบ
+                            {deletingAddressId === addr.id ? "กำลังลบ..." : "ลบ"}
                           </button>
                         </div>
                       </div>
@@ -763,87 +803,21 @@ export default function Profile() {
                   </div>
                 )}
 
-                {/* Add / Edit address modal */}
+                {/* Add / Edit address modal — ใช้ฟอร์มชุดเดียวกับหน้า Checkout
+                    เพื่อให้ข้อมูลที่กรอกถูกบันทึกลง backend ชุดเดียวกันเสมอ */}
                 {showAddressForm && (
                   <div className="fixed inset-0 z-30 bg-black/40 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
-                      <button
-                        onClick={() => setShowAddressForm(false)}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                      <h3 className="text-base font-bold text-gray-900 mb-4">
-                        {editingAddressId ? "แก้ไขที่อยู่" : "เพิ่มที่อยู่ใหม่"}
-                      </h3>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                            ชื่อที่อยู่ (เช่น บ้าน, ที่ทำงาน)
-                          </label>
-                          <input
-                            type="text"
-                            value={addressForm.label}
-                            onChange={(e) =>
-                              setAddressForm((f) => ({ ...f, label: e.target.value }))
-                            }
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                            ชื่อผู้รับ
-                          </label>
-                          <input
-                            type="text"
-                            value={addressForm.name}
-                            onChange={(e) =>
-                              setAddressForm((f) => ({ ...f, name: e.target.value }))
-                            }
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                            เบอร์โทรศัพท์
-                          </label>
-                          <input
-                            type="tel"
-                            value={addressForm.phone}
-                            onChange={(e) =>
-                              setAddressForm((f) => ({ ...f, phone: e.target.value }))
-                            }
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 mb-1.5">
-                            ที่อยู่แบบเต็ม
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={addressForm.detail}
-                            onChange={(e) =>
-                              setAddressForm((f) => ({ ...f, detail: e.target.value }))
-                            }
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-700 resize-none"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 mt-5">
-                        <button
-                          onClick={handleSaveAddress}
-                          className="bg-green-900 hover:bg-green-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
-                        >
-                          บันทึกที่อยู่
-                        </button>
-                        <button
-                          onClick={() => setShowAddressForm(false)}
-                          className="text-sm font-semibold text-gray-500 hover:text-gray-700 px-3 py-2.5"
-                        >
-                          ยกเลิก
-                        </button>
-                      </div>
+                    <div className="w-full max-w-md">
+                      <AddressBookForm
+                        initialValues={editingAddress}
+                        onCancel={() => {
+                          setShowAddressForm(false);
+                          setAddAddressError("");
+                        }}
+                        onSave={handleSaveAddress}
+                        saving={savingAddress}
+                        error={addAddressError}
+                      />
                     </div>
                   </div>
                 )}
