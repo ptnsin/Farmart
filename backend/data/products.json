@@ -1,32 +1,5 @@
 [
   {
-    "id": 62,
-    "sku": "SL015",
-    "name": "หมาขุดดิน",
-    "category": "อุปกรณ์จัดการดิน",
-    "unit": "ตัว",
-    "price": 450,
-    "cost": 45,
-    "stockUnits": 100,
-    "stockPercent": 0,
-    "stockLevel": "healthy",
-    "farmer": "หมาป่าจ่าฝูง",
-    "location": "เวิร์คพอย",
-    "description": "หมาขี้วีน",
-    "image": "http://localhost:4000/uploads/products/1784089876288-426981523.jpg",
-    "images": [
-      "http://localhost:4000/uploads/products/1784089876288-426981523.jpg"
-    ],
-    "reviews": [],
-    "approvalStatus": "pending",
-    "submittedBy": {
-      "id": 10,
-      "name": "โทม่าฟ้อก"
-    },
-    "submittedAt": "2026-07-15T02:47:25.092Z",
-    "lotCode": "LOT-20260715-062"
-  },
-  {
     "id": 1,
     "sku": "SD001",
     "name": "เมล็ดพันธุ์ข้าวโพดหวาน",

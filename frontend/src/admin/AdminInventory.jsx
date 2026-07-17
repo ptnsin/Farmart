@@ -11,12 +11,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Eye,
   Pencil,
-  MoreVertical,
+  Trash2,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { getProducts } from "../data/productStore";
+import AlertModal from "./AlertModal";
+import { getProducts, deleteProduct } from "../data/productStore";
 import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -58,6 +58,12 @@ export default function AdminInventory() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [pageSizeMenuOpen, setPageSizeMenuOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterCategories, setFilterCategories] = useState([]); // string[]
+  const [filterStockLevel, setFilterStockLevel] = useState(""); // "" | "healthy" | "low"
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, name } | null
+  const [deleting, setDeleting] = useState(false);
+  const [resultAlert, setResultAlert] = useState(null); // { type, message } | null
 
   useEffect(() => {
     let cancelled = false;
@@ -93,22 +99,56 @@ export default function AdminInventory() {
   useEffect(() => {
     function handleClickOutside(e) {
       if (!e.target.closest("[data-page-size-menu]")) setPageSizeMenuOpen(false);
+      if (!e.target.closest("[data-filter-menu]")) setFilterOpen(false);
     }
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  const categoryOptions = useMemo(
+    () => Array.from(new Set(products.map((p) => p.category))).sort((a, b) => a.localeCompare(b, "th")),
+    [products]
+  );
+
   const filteredProducts = useMemo(() => {
-    if (!query.trim()) return products;
-    const q = query.trim().toLowerCase();
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        p.farmer.toLowerCase().includes(q)
+    let result = products;
+
+    if (query.trim()) {
+      const q = query.trim().toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.farmer.toLowerCase().includes(q)
+      );
+    }
+
+    if (filterCategories.length > 0) {
+      result = result.filter((p) => filterCategories.includes(p.category));
+    }
+
+    if (filterStockLevel) {
+      result = result.filter((p) => p.stockLevel === filterStockLevel);
+    }
+
+    return result;
+  }, [products, query, filterCategories, filterStockLevel]);
+
+  const activeFilterCount = filterCategories.length + (filterStockLevel ? 1 : 0);
+
+  const toggleCategoryFilter = (category) => {
+    setPage(1);
+    setFilterCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     );
-  }, [products, query]);
+  };
+
+  const clearFilters = () => {
+    setPage(1);
+    setFilterCategories([]);
+    setFilterStockLevel("");
+  };
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -182,6 +222,32 @@ export default function AdminInventory() {
 
   const goToProduct = (id) => navigate(`/admin/inventory/${id}`);
 
+  const handleDeleteProduct = (id, name) => {
+    setDeleteTarget({ id, name });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id, name } = deleteTarget;
+    setDeleting(true);
+    try {
+      const remaining = await deleteProduct(id);
+      setProducts(remaining);
+      setSelected((prev) => prev.filter((x) => x !== id));
+      setDeleteTarget(null);
+      setResultAlert({ type: "success", message: `ลบสินค้า "${name}" เรียบร้อยแล้ว` });
+    } catch (err) {
+      if (err.message.includes("เข้าสู่ระบบ")) {
+        navigate("/");
+        return;
+      }
+      setDeleteTarget(null);
+      setResultAlert({ type: "error", message: err.message || "ลบสินค้าไม่สำเร็จ กรุณาลองใหม่" });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleRowClick = (e, id) => {
     if (e.target.closest("input, button, a")) return;
     goToProduct(id);
@@ -202,6 +268,7 @@ export default function AdminInventory() {
             {loadError}
           </div>
         )}
+
         {/* Top bar */}
         <div className="mb-6 flex items-center gap-4">
           <div className="relative flex-1">
@@ -270,13 +337,89 @@ export default function AdminInventory() {
             >
               จัดการพร้อมกัน{selected.length > 0 ? ` (${selected.length})` : ""}
             </button>
-            <button
-              type="button"
-              aria-label="กรอง"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-            >
-              <Filter size={14} />
-            </button>
+            <div className="relative" data-filter-menu>
+              <button
+                type="button"
+                onClick={() => setFilterOpen((v) => !v)}
+                aria-label="กรอง"
+                className={`relative flex h-8 w-8 items-center justify-center rounded-lg border text-slate-500 hover:bg-slate-50 ${
+                  activeFilterCount > 0
+                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                    : "border-slate-200 bg-white"
+                }`}
+              >
+                <Filter size={14} />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-medium text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              {filterOpen && (
+                <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-xl border border-slate-100 bg-white p-4 shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-700">ตัวกรอง</p>
+                    {activeFilterCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="text-xs font-medium text-emerald-700 hover:text-emerald-800"
+                      >
+                        ล้างตัวกรอง
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-3">
+                    <p className="text-xs font-medium text-slate-400">ระดับสต็อก</p>
+                    <div className="mt-1.5 flex gap-1.5">
+                      {[
+                        { value: "", label: "ทั้งหมด" },
+                        { value: "healthy", label: "ปกติ" },
+                        { value: "low", label: "ใกล้หมด" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setPage(1);
+                            setFilterStockLevel(opt.value);
+                          }}
+                          className={`rounded-lg px-2.5 py-1 text-xs font-medium ${
+                            filterStockLevel === opt.value
+                              ? "bg-emerald-700 text-white"
+                              : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="text-xs font-medium text-slate-400">หมวดหมู่</p>
+                    <div className="mt-1.5 max-h-40 space-y-1 overflow-y-auto pr-1">
+                      {categoryOptions.map((category) => (
+                        <label
+                          key={category}
+                          className="flex items-center gap-2 rounded-lg px-1.5 py-1 text-sm text-slate-600 hover:bg-slate-50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={filterCategories.includes(category)}
+                            onChange={() => toggleCategoryFilter(category)}
+                            className="h-3.5 w-3.5 rounded border-slate-300 accent-emerald-600"
+                          />
+                          {category}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <p className="text-sm text-slate-400">
             {filteredProducts.length === 0
@@ -370,16 +513,19 @@ export default function AdminInventory() {
                       <button
                         type="button"
                         onClick={() => goToProduct(product.id)}
-                        aria-label="ดูข้อมูล"
+                        aria-label="แก้ไข"
                         className="hover:text-slate-600"
                       >
-                        <Eye size={16} />
-                      </button>
-                      <button type="button" aria-label="แก้ไข" className="hover:text-slate-600">
                         <Pencil size={16} />
                       </button>
-                      <button type="button" aria-label="เพิ่มเติม" className="hover:text-slate-600">
-                        <MoreVertical size={16} />
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProduct(product.id, product.name)}
+                        disabled={deleting && deleteTarget?.id === product.id}
+                        aria-label="ลบสินค้า"
+                        className="hover:text-rose-600 disabled:opacity-40"
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -388,7 +534,7 @@ export default function AdminInventory() {
               {paginatedProducts.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
-                    ไม่พบสินค้าที่ตรงกับคำค้นหา
+                    ไม่พบสินค้าที่ตรงกับเงื่อนไขที่เลือก
                   </td>
                 </tr>
               )}
@@ -467,6 +613,23 @@ export default function AdminInventory() {
           </div>
         </div>
       </main>
+
+      <AlertModal
+        open={!!deleteTarget}
+        type="warning"
+        message={`ยืนยันการลบสินค้า "${deleteTarget?.name}" ใช่หรือไม่?`}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        buttonText="ลบสินค้า"
+        loading={deleting}
+      />
+
+      <AlertModal
+        open={!!resultAlert}
+        type={resultAlert?.type}
+        message={resultAlert?.message}
+        onClose={() => setResultAlert(null)}
+      />
     </div>
   );
 }
