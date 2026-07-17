@@ -1,5 +1,71 @@
 [
   {
+    "id": "ORD-10251",
+    "userId": 14,
+    "customer": "toon",
+    "items": [
+      {
+        "productId": 1,
+        "name": "เมล็ดพันธุ์ข้าวโพดหวาน",
+        "price": 20,
+        "quantity": 2,
+        "image": "http://localhost:4000/uploads/products/SD001.svg"
+      }
+    ],
+    "total": 40,
+    "date": "2026-07-17",
+    "status": "cancelled",
+    "statusStep": 0,
+    "statusLabel": "ยกเลิกแล้ว",
+    "address": "wadawdwa (0612345678) 333 ตำบลเขาเพิ่ม อำเภอบ้านนา นครนายก 26110",
+    "paymentMethod": "promptpay",
+    "cancelled": true
+  },
+  {
+    "id": "ORD-10250",
+    "userId": 14,
+    "customer": "toon",
+    "items": [
+      {
+        "productId": 1,
+        "name": "เมล็ดพันธุ์ข้าวโพดหวาน",
+        "price": 20,
+        "quantity": 2,
+        "image": "http://localhost:4000/uploads/products/SD001.svg"
+      }
+    ],
+    "total": 40,
+    "date": "2026-07-17",
+    "status": "cancelled",
+    "statusStep": 0,
+    "statusLabel": "ยกเลิกแล้ว",
+    "address": "wadawdwa (0612345678) 333 ตำบลเขาเพิ่ม อำเภอบ้านนา นครนายก 26110",
+    "paymentMethod": "promptpay",
+    "cancelled": true
+  },
+  {
+    "id": "ORD-10249",
+    "userId": 14,
+    "customer": "toon",
+    "items": [
+      {
+        "productId": 1,
+        "name": "เมล็ดพันธุ์ข้าวโพดหวาน",
+        "price": 20,
+        "quantity": 3,
+        "image": "http://localhost:4000/uploads/products/SD001.svg"
+      }
+    ],
+    "total": 60,
+    "date": "2026-07-17",
+    "status": "cancelled",
+    "statusStep": 0,
+    "statusLabel": "ยกเลิกแล้ว",
+    "address": "wadawdwa (0612345678) 333 ตำบลเขาเพิ่ม อำเภอบ้านนา นครนายก 26110",
+    "paymentMethod": "promptpay",
+    "cancelled": true
+  },
+  {
     "id": "ORD-10248",
     "userId": 8,
     "customer": "we",
@@ -35,9 +101,9 @@
     ],
     "total": 20,
     "date": "2026-07-17",
-    "status": "pending",
+    "status": "approved",
     "statusStep": 0,
-    "statusLabel": "รอการตรวจสอบ",
+    "statusLabel": "ยืนยันคำสั่งซื้อ",
     "address": "สมชาย รักษาดี (081-234-5678) 123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
     "paymentMethod": "promptpay"
   },

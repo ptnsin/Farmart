@@ -483,12 +483,14 @@ export default function Orders() {
                               <span className="font-bold text-green-800">฿{order.total.toLocaleString()}</span>
                             </div>
 
-                            <Link
-                              to={`/tracking?order=${order.id}`}
-                              className="mt-1 w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-green-800 hover:bg-green-900 rounded-lg py-2.5 transition-colors"
-                            >
-                              ติดตามพัสดุ <ChevronRight className="w-4 h-4" />
-                            </Link>
+                            {!order.isCancelled && (
+                              <Link
+                                to={`/tracking?order=${order.id}`}
+                                className="mt-1 w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-green-800 hover:bg-green-900 rounded-lg py-2.5 transition-colors"
+                              >
+                                ติดตามพัสดุ <ChevronRight className="w-4 h-4" />
+                              </Link>
+                            )}
 
                             {/* --- Cancel order --- */}
                             {order.isCancelled ? (
