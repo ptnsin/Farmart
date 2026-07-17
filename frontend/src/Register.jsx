@@ -109,7 +109,7 @@ export default function AgriHarvestRegister() {
         </div>
 
         <div className="relative z-10 mt-auto p-8 text-white">
-          <h1 className="text-4xl font-bold leading-tight mb-4">AgriHarvest</h1>
+          <h1 className="text-4xl font-bold leading-tight mb-4">Welcome to Farmart !</h1>
           <p className="text-white/85 text-sm leading-relaxed max-w-sm mb-6">
             ร่วมเป็นส่วนหนึ่งของเครือข่ายเกษตรกรรมยุคใหม่ เชื่อมต่อผลผลิตของคุณ
             กับผู้ซื้อทั่วประเทศได้ในไม่กี่คลิก
@@ -130,7 +130,7 @@ export default function AgriHarvestRegister() {
             <div className="w-8 h-8 rounded-lg bg-green-800 flex items-center justify-center">
               <Sprout className="w-5 h-5 text-white" strokeWidth={2} />
             </div>
-            <span className="text-lg font-bold text-gray-900">AgriHarvest</span>
+            <span className="text-lg font-bold text-gray-900">Farmart</span>
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-1">สร้างบัญชีผู้ใช้งาน</h2>
