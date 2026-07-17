@@ -26,6 +26,7 @@ export async function login(email, password, keepSignedIn = false) {
   return data.user;
 }
 
+
 /**
  * สมัครสมาชิกใหม่ (role CUSTOMER เท่านั้น ตาม authController.register)
  * สมัครสำเร็จแล้ว backend จะออก token ให้เลย เก็บไว้เหมือน login สำเร็จ
@@ -38,6 +39,29 @@ export async function register(data) {
   setToken(res.token);
   cacheUser(res.user);
   return res.user;
+}
+
+/**
+ * ขอลิงก์รีเซ็ตรหัสผ่าน (ไม่ต้อง login)
+ * Backend จะไม่บอกว่าอีเมลนี้มีอยู่จริงหรือไม่ (กันสุ่มเช็คอีเมล)
+ * ตอนนี้ backend แค่ console.log ลิงก์ไว้ดู ยังไม่ได้ส่งอีเมลจริง
+ * @param {string} email
+ * @returns {object} { success, message }
+ */
+export async function requestPasswordReset(email) {
+  return api.post("/api/auth/forgot-password", { email });
+}
+
+/**
+ * ตั้งรหัสผ่านใหม่ด้วย token ที่ได้จากลิงก์ (ไม่ต้อง login)
+ * @param {string} token
+ * @param {string} password
+ * @param {string} [confirmPassword]
+ * @returns {object} { success, message }
+ * @throws {Error} เช่น "ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุแล้ว"
+ */
+export async function resetPassword(token, password, confirmPassword) {
+  return api.post("/api/auth/reset-password", { token, password, confirmPassword });
 }
 
 /** ออกจากระบบ (แจ้ง backend ให้ลบ session ด้วย) */
@@ -84,3 +108,4 @@ export function getCachedUser() {
 export function isAuthenticated() {
   return Boolean(getToken());
 }
+

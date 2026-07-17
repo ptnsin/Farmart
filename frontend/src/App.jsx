@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 
 // Customer
 import FarmartLogin from "./FarmartLogin";  //หน้า Login
+import FarmartForgotPassword from "./FarmartForgotPassword";  //หน้าลืมรหัสผ่าน
+import FarmartResetPassword from "./FarmartResetPassword";  //หน้าตั้งรหัสผ่านใหม่
 import Register from "./Register";  //หน้าสมัครสมาชิก
 import Home from "./Home";  //หน้า Home
 import Dashboard from "./Dashboard";  //หน้าเหี้ยไร
@@ -13,6 +15,7 @@ import Cart from "./Cart";   //หน้าตะกร้า
 import Order from "./Order";   //หน้าสั่งซื้อ
 import Checkout from "./Checkout";   //หน้าชำระเงิน
 import HelpCenter from "./HelpCenter";   //หน้าศูนย์ช่วยเหลือ
+
 
 // Employee
 import EmployeeOrders from "./employee/EmployeeOrders";
@@ -40,6 +43,8 @@ function App() {
     <Routes>
       {/* Customer Routes */}
       <Route path="/" element={<FarmartLogin />} />
+      <Route path="/forgot-password" element={<FarmartForgotPassword />} />
+      <Route path="/reset-password" element={<FarmartResetPassword />} />
       <Route path="/register" element={<Register />} />
       <Route path="/home" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
