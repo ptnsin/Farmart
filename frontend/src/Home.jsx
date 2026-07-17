@@ -345,23 +345,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Newsletter */}
-      <section className="bg-green-50">
-        <div className="max-w-2xl mx-auto px-6 py-14 text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            ร่วมเป็นส่วนหนึ่งของชุมชน Farmart
+{/* Promotion banner */}
+<section className="max-w-6xl mx-auto px-6 py-14">
+  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-900 to-green-700">
+    <img
+      src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=1200&auto=format&fit=crop"
+      alt="โปรโมชั่นผลผลิตสด"
+      className="absolute inset-0 w-full h-full object-cover opacity-25"
+    />
+    <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 px-8 py-10">
+      <div className="flex items-center gap-5">
+        <img
+          src="https://images.unsplash.com/photo-1567306301408-9b74779a11af?q=80&w=300&auto=format&fit=crop"
+          alt="ผักผลไม้สด"
+          className="hidden sm:block w-20 h-20 rounded-xl object-cover border-2 border-white/30 shrink-0"
+        />
+        <div>
+          <span className="inline-block text-xs font-semibold tracking-widest text-green-200 bg-white/10 px-3 py-1 rounded-full mb-3">
+            โปรโมชั่นประจำเดือน
+          </span>
+          <h2 className="text-2xl font-bold text-white mb-2">
+            ลดสูงสุด 30% สำหรับผลผลิตคัดพิเศษ
           </h2>
-          <p className="text-sm text-gray-600 mb-6">
-            รับข่าวสารผลผลิตใหม่และโปรโมชั่นพิเศษก่อนใครทางอีเมล
+          <p className="text-white/70 text-sm max-w-md">
+            เลือกซื้อผัก ผลไม้ และเมล็ดพันธุ์คุณภาพจากเกษตรกรทั่วประเทศ
+            ในราคาสุดคุ้ม วันนี้ถึงสิ้นเดือนนี้เท่านั้น
           </p>
-          <Link
-            to="/profile"
-            className="inline-block bg-green-900 hover:bg-green-800 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
-          >
-            สมัครสมาชิก
-          </Link>
         </div>
-      </section>
+      </div>
+      <Link
+        to="/products"
+        className="shrink-0 bg-white text-green-900 hover:bg-green-50 text-sm font-semibold px-6 py-3 rounded-lg transition-colors"
+      >
+        ช้อปโปรโมชั่นนี้
+      </Link>
+    </div>
+  </div>
+</section>
 
 <Footer />
     </div>

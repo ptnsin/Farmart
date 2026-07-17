@@ -15,6 +15,7 @@ import Cart from "./Cart";   //หน้าตะกร้า
 import Order from "./Order";   //หน้าสั่งซื้อ
 import Checkout from "./Checkout";   //หน้าชำระเงิน
 import HelpCenter from "./HelpCenter";   //หน้าศูนย์ช่วยเหลือ
+import NoRegister from "./NoRegister";
 
 
 // Employee
@@ -56,7 +57,7 @@ function App() {
       <Route path="/orders" element={<Order />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/help-center" element={<HelpCenter />} />
-
+      <Route path="/no-register" element={<NoRegister />} />
       {/* Employee Routes */}
       <Route path="/employee/orders" element={<EmployeeOrders />} />
       <Route path="/employee/warehouse" element={<EmployeeWarehouse />} />
