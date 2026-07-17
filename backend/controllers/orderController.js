@@ -1,6 +1,10 @@
 // controllers/orderController.js
 const orderModel = require("../models/orderModel");
 
+// สถานะทั้งหมดที่ frontend (EmployeeOrders.jsx) ใช้จริง:
+// pending -> approved/rejected -> preparing -> shipping, หรือ approved -> cancelled
+const VALID_STATUSES = ["pending", "approved", "rejected", "preparing", "shipping", "cancelled"];
+
 function isStaff(user) {
   return user.role === "EMPLOYEE" || user.role === "ADMIN";
 }
@@ -57,7 +61,7 @@ function updateOrder(req, res) {
   if (!existing) return res.status(404).json({ error: "ไม่พบคำสั่งซื้อ" });
 
   const patch = { ...req.body };
-  if (patch.status && !["pending", "approved", "rejected"].includes(patch.status)) {
+  if (patch.status && !VALID_STATUSES.includes(patch.status)) {
     return res.status(400).json({ error: "status ไม่ถูกต้อง" });
   }
 
@@ -74,10 +78,10 @@ function deleteOrder(req, res) {
   res.json({ orders, message: "ลบคำสั่งซื้อเรียบร้อยแล้ว" });
 }
 
-/** PATCH /api/orders/:id/status (employee/admin) - pending/approved/rejected */
+/** PATCH /api/orders/:id/status (employee/admin) - pending/approved/rejected/preparing/shipping/cancelled */
 function updateStatus(req, res) {
   const { status } = req.body || {};
-  if (!["pending", "approved", "rejected"].includes(status)) {
+  if (!VALID_STATUSES.includes(status)) {
     return res.status(400).json({ error: "status ไม่ถูกต้อง" });
   }
   const order = orderModel.updateOrderStatus(req.params.id, status);

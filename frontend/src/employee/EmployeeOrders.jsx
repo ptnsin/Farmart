@@ -49,10 +49,7 @@ export default function EmployeeOrders() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
-  // orders = "ชุดข้อมูลเต็ม" ใช้คำนวณสถิติ (การ์ดด้านบน) เท่านั้น ไม่ผูกกับ tab
   const [orders, setOrders] = useState([]);
-  // tableOrders = ข้อมูลที่ backend filter ตามสถานะมาให้แล้ว (?status=pending เป็นต้น) ใช้แสดงในตาราง
-  const [tableOrders, setTableOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actingId, setActingId] = useState(null); // order id ที่กำลังกดอนุมัติ/ปฏิเสธ/ยกเลิก
@@ -81,25 +78,13 @@ export default function EmployeeOrders() {
     fetchCurrentUser().then(setUser).catch(() => {});
   }, []);
 
-  // ดึงชุดข้อมูลเต็ม (ไม่ filter) ไว้คำนวณสถิติการ์ดด้านบนเสมอ ไม่ขึ้นกับ tab ที่เลือก
-  const loadStatsOrders = useCallback(async () => {
-    try {
-      const data = await api.get("/api/orders");
-      setOrders(Array.isArray(data) ? data : data.orders || []);
-    } catch {
-      // เงียบไว้ก็พอ ตารางหลักจะโชว์ error เองอยู่แล้ว ไม่ต้องซ้ำ
-    }
-  }, []);
-
-  // ดึงข้อมูลตาราง โดยส่ง ?status= ไปให้ backend filter ให้เลย (ลดข้อมูลที่โหลดเวลาออเดอร์เยอะ)
-  // ยกเว้น tab "ทั้งหมด" ที่ไม่ส่ง status เลย เพราะต้องการทุกสถานะอยู่แล้ว
-  const loadTableOrders = useCallback(async (statusTab) => {
+  // ดึงคำสั่งซื้อทั้งหมดครั้งเดียว ใช้คำนวณทั้งสถิติการ์ดด้านบนและตาราง (กรองตามแท็บฝั่ง client)
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const qs = statusTab && statusTab !== "all" ? `?status=${statusTab}` : "";
-      const data = await api.get(`/api/orders${qs}`);
-      setTableOrders(Array.isArray(data) ? data : data.orders || []);
+      const data = await api.get("/api/orders");
+      setOrders(Array.isArray(data) ? data : data.orders || []);
     } catch (err) {
       setError(err.message || "โหลดคำสั่งซื้อไม่สำเร็จ");
     } finally {
@@ -107,28 +92,24 @@ export default function EmployeeOrders() {
     }
   }, []);
 
-  const loadOrders = useCallback(() => {
-    loadStatsOrders();
-    loadTableOrders(tab);
-  }, [loadStatsOrders, loadTableOrders, tab]);
-
-  // โหลดใหม่ทุกครั้งที่เปลี่ยน tab (เปลี่ยน status ที่ขอจาก backend)
   useEffect(() => {
-    loadTableOrders(tab);
-  }, [tab, loadTableOrders]);
+    loadOrders();
+  }, [loadOrders]);
 
-  // โหลดสถิติแค่ครั้งแรกที่เข้าหน้า (ไม่ต้องผูกกับ tab)
-  useEffect(() => {
-    loadStatsOrders();
-  }, [loadStatsOrders]);
+  // แท็บ "อนุมัติแล้ว" ต้องรวมออเดอร์ที่กำลัง "เตรียมพัสดุ" ด้วย (จะหายไปจากแท็บนี้ก็ต่อเมื่อกด "จัดส่ง" แล้วเท่านั้น)
+  const tableOrders = useMemo(() => {
+    if (tab === "pending") return orders.filter((o) => o.status === "pending");
+    if (tab === "approved")
+      return orders.filter((o) => o.status === "approved" || o.status === "preparing");
+    return orders;
+  }, [orders, tab]);
 
   // กลับไปหน้า 1 ทุกครั้งที่เปลี่ยน tab หรือค้นหาใหม่
   useEffect(() => {
     setPage(1);
   }, [tab, query]);
 
-  // ค้นหาด้วยข้อความยัง filter ที่ client เหมือนเดิม เพราะ backend ไม่มี text-search endpoint
-  // ส่วน filter สถานะ backend กรองมาให้แล้วจาก loadTableOrders จึงไม่ต้องกรองซ้ำที่นี่
+  // ค้นหาด้วยข้อความ filter ที่ client บน tableOrders (ที่กรองตามแท็บมาแล้วจาก useMemo ด้านบน)
   const filteredOrders = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return tableOrders;
@@ -172,17 +153,9 @@ export default function EmployeeOrders() {
       const data = await api.patch(`/api/orders/${orderId}/status`, { status });
       const updated = data?.order || data;
 
-      // อัปเดตชุดข้อมูลเต็ม (ใช้คำนวณสถิติ)
+      // อัปเดตชุดข้อมูลเต็ม — tableOrders derive มาจาก orders อัตโนมัติผ่าน useMemo อยู่แล้ว
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, ...updated, status } : o))
-      );
-
-      // อัปเดตตาราง: ถ้าอยู่ที่ tab เจาะจงสถานะ (pending/approved) และสถานะใหม่ไม่ตรง tab แล้ว
-      // ให้เอาออกจากตารางเลย เพราะถ้าไปยิง GET /api/orders?status=xxx ใหม่ backend ก็จะไม่คืนแถวนี้มาอยู่ดี
-      setTableOrders((prev) =>
-        tab !== "all" && status !== tab
-          ? prev.filter((o) => o.id !== orderId)
-          : prev.map((o) => (o.id === orderId ? { ...o, ...updated, status } : o))
       );
 
       if (status === "approved") {
@@ -367,18 +340,17 @@ export default function EmployeeOrders() {
                             : "bg-amber-50 text-amber-600"
                         }`}
                       >
-                        {o.statusLabel ||
-                          (o.status === "approved"
-                            ? "อนุมัติแล้ว"
-                            : o.status === "preparing"
-                            ? "เตรียมพัสดุ"
-                            : o.status === "shipping"
-                            ? "จัดส่งแล้ว"
-                            : o.status === "rejected"
-                            ? "ปฏิเสธแล้ว"
-                            : o.status === "cancelled"
-                            ? "ยกเลิกแล้ว"
-                            : "รอการตรวจสอบ")}
+                        {o.status === "approved"
+                          ? "ยืนยันคำสั่งซื้อ"
+                          : o.status === "preparing"
+                          ? "เตรียมพัสดุ"
+                          : o.status === "shipping"
+                          ? "จัดส่งแล้ว"
+                          : o.status === "rejected"
+                          ? "ปฏิเสธแล้ว"
+                          : o.status === "cancelled"
+                          ? "ยกเลิกแล้ว"
+                          : "รอการตรวจสอบ"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -416,16 +388,18 @@ export default function EmployeeOrders() {
                             {actingId === o.id ? "..." : "ยกเลิกคำสั่งซื้อ"}
                           </button>
                         )}
-                        <button
-                          type="button"
-                          aria-label="ตัวเลือกเพิ่มเติม"
-                          onClick={() =>
-                            setOpenMenuId((prev) => (prev === o.id ? null : o.id))
-                          }
-                          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-50"
-                        >
-                          <MoreVertical size={16} />
-                        </button>
+                        {o.status !== "pending" && (
+                          <button
+                            type="button"
+                            aria-label="ตัวเลือกเพิ่มเติม"
+                            onClick={() =>
+                              setOpenMenuId((prev) => (prev === o.id ? null : o.id))
+                            }
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-50"
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                        )}
 
                         {openMenuId === o.id && (
                           <div className="absolute right-0 top-9 z-10 w-40 overflow-hidden rounded-lg border border-slate-100 bg-white py-1 shadow-lg">
