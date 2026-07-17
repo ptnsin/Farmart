@@ -18,11 +18,19 @@ import {
   ShieldCheck,
   Check,
   X,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { useCart } from "./CartContext";
 import { createOrder, toOrderItems } from "./data/orderStore";
 import { fetchCurrentUser, getCachedUser } from "./data/authStore";
 import { THAI_ADDRESS } from "./data/thaiGeography";
+import {
+  fetchAddresses,
+  createAddress,
+  deleteAddress,
+  getCachedAddresses,
+} from "./data/addressStore";
 
 const SHIPPING_METHODS = [
   {
@@ -48,26 +56,14 @@ const PAYMENT_METHODS = [
   { key: "cod", label: "เก็บเงินปลายทาง", icon: PackageCheck },
 ];
 
-const INITIAL_ADDRESSES = [
-  {
-    id: 1,
-    label: "บ้าน",
-    isDefault: true,
-    name: "สมชาย รักษาดี",
-    detail: "123/45 หมู่บ้านสีเขียว ซอย 12 ถนนเกษตร-นวมินทร์",
-    sub: "แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230",
-    phone: "081-234-5678",
-  },
-  {
-    id: 2,
-    label: "ที่ทำงาน",
-    isDefault: false,
-    name: "สมชาย รักษาดี",
-    detail: "อาคารเกษตรทาวเวอร์ ชั้น 12 เลขที่ 1205",
-    sub: "ถนนวิภาวดีรังสิต เขตจตุจักร กรุงเทพฯ 10900",
-    phone: "02-123-4567",
-  },
-];
+// แปลงที่อยู่จาก backend (schema ตาม addresses.json: recipientName, addressLine,
+// subdistrict, district, province, postalCode) ให้เป็นบรรทัดแสดงผลอ่านง่าย
+function formatAddressSub(addr) {
+  const isBangkok = addr.province === "กรุงเทพมหานคร";
+  return `${isBangkok ? "แขวง" : "ตำบล"}${addr.subdistrict} ${
+    isBangkok ? "เขต" : "อำเภอ"
+  }${addr.district} ${addr.province} ${addr.postalCode}`;
+}
 
 // รายชื่อจังหวัดทั้งหมด (ไม่ซ้ำ) เรียงตามลำดับตัวอักษรไทย
 const PROVINCES = [...new Set(THAI_ADDRESS.map((r) => r.province))].sort((a, b) =>
@@ -101,7 +97,7 @@ function isValidThaiPhone(value) {
   return /^0\d{8,9}$/.test(digits);
 }
 
-function NewAddressForm({ onCancel, onSave }) {
+function NewAddressForm({ onCancel, onSave, saving, error }) {
   const [form, setForm] = useState({
     label: "",
     name: "",
@@ -159,11 +155,17 @@ function NewAddressForm({ onCancel, onSave }) {
     form.postalCode;
 
   const handleSave = () => {
-    const isBangkok = form.province === "กรุงเทพมหานคร";
-    const sub = `${isBangkok ? "แขวง" : "ตำบล"}${form.subdistrict} ${
-      isBangkok ? "เขต" : "อำเภอ"
-    }${form.district} ${form.province} ${form.postalCode}`;
-    onSave({ ...form, sub });
+    // ส่งข้อมูลให้ตรงกับ schema ของ backend (ดู routes/address.js): recipientName, addressLine ฯลฯ
+    onSave({
+      label: form.label,
+      recipientName: form.name,
+      phone: form.phone,
+      addressLine: form.detail,
+      subdistrict: form.subdistrict,
+      district: form.district,
+      province: form.province,
+      postalCode: form.postalCode,
+    });
   };
 
   const selectClass =
@@ -260,19 +262,21 @@ function NewAddressForm({ onCancel, onSave }) {
           className={`${selectClass} bg-gray-50 text-gray-600`}
         />
       </div>
+      {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex justify-end gap-2 pt-1">
         <button
           onClick={onCancel}
-          className="text-sm font-medium text-gray-500 px-4 py-2 rounded-lg hover:bg-white"
+          disabled={saving}
+          className="text-sm font-medium text-gray-500 px-4 py-2 rounded-lg hover:bg-white disabled:opacity-40"
         >
           ยกเลิก
         </button>
         <button
-          disabled={!canSave}
+          disabled={!canSave || saving}
           onClick={handleSave}
           className="text-sm font-semibold text-white bg-green-800 hover:bg-green-900 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-lg"
         >
-          บันทึกที่อยู่
+          {saving ? "กำลังบันทึก..." : "บันทึกที่อยู่"}
         </button>
       </div>
     </div>
@@ -284,21 +288,50 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const [avatar, setAvatar] = useState(null);
+  const [user, setUser] = useState(getCachedUser());
   useEffect(() => {
     const cached = getCachedUser();
     if (cached?.avatar) setAvatar(cached.avatar);
     fetchCurrentUser()
-      .then((user) => {
-        if (user?.avatar) setAvatar(user.avatar);
+      .then((u) => {
+        if (u?.avatar) setAvatar(u.avatar);
+        if (u) setUser(u);
       })
       .catch(() => {});
   }, []);
 
-  const [addresses, setAddresses] = useState(INITIAL_ADDRESSES);
-  const [selectedAddress, setSelectedAddress] = useState(
-    INITIAL_ADDRESSES.find((a) => a.isDefault)?.id ?? INITIAL_ADDRESSES[0]?.id
-  );
+  // สมุดที่อยู่: โหลดจริงจาก backend (แทนของ mock เดิมที่หายเมื่อรีเฟรช)
+  // backend กรองด้วย token ให้อัตโนมัติ ไม่ต้องรอ user.id ก่อนค่อยเรียก
+  const [addresses, setAddresses] = useState(() => getCachedAddresses() ?? []);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const [addingAddress, setAddingAddress] = useState(false);
+  const [addressLoading, setAddressLoading] = useState(true);
+  const [addressListError, setAddressListError] = useState("");
+  const [deletingAddressId, setDeletingAddressId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAddressLoading(true);
+    setAddressListError("");
+    fetchAddresses()
+      .then((list) => {
+        if (cancelled) return;
+        setAddresses(list);
+        setSelectedAddress((prev) => {
+          if (prev && list.some((a) => a.id === prev)) return prev;
+          return list.find((a) => a.isDefault)?.id ?? list[0]?.id ?? null;
+        });
+      })
+      .catch((err) => {
+        if (!cancelled) setAddressListError(err.message || "โหลดที่อยู่ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      })
+      .finally(() => {
+        if (!cancelled) setAddressLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [paymentMethod, setPaymentMethod] = useState("promptpay");
@@ -316,19 +349,50 @@ export default function Checkout() {
     [subtotal, shippingFee, discount]
   );
 
-  const handleAddAddress = (form) => {
-    const newAddr = {
-      id: Date.now(),
-      label: form.label || "ที่อยู่ใหม่",
-      isDefault: false,
-      name: form.name,
-      detail: form.detail,
-      sub: form.sub,
-      phone: form.phone,
-    };
-    setAddresses((prev) => [...prev, newAddr]);
-    setSelectedAddress(newAddr.id);
-    setAddingAddress(false);
+  const [addAddressError, setAddAddressError] = useState("");
+  const [savingAddress, setSavingAddress] = useState(false);
+
+  const handleAddAddress = async (form) => {
+    setSavingAddress(true);
+    setAddAddressError("");
+    try {
+      // backend (routes/address.js) ดึง ownerId/ownerName จาก token เอง และคำนวณ
+      // isDefault เองด้วย (true ถ้าเป็นที่อยู่แรกของ owner) — ไม่ต้องส่งจาก client
+      const saved = await createAddress({
+        ...form,
+        label: form.label || "ที่อยู่ใหม่",
+      });
+      setAddresses((prev) => [...prev, saved]);
+      setSelectedAddress(saved.id);
+      setAddingAddress(false);
+    } catch (err) {
+      setAddAddressError(err.message || "บันทึกที่อยู่ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addr, e) => {
+    e.stopPropagation(); // กันไม่ให้ trigger การเลือกที่อยู่ตอนกดปุ่มลบ
+    if (!window.confirm(`ต้องการลบที่อยู่ "${addr.label}" ใช่หรือไม่?`)) return;
+    setDeletingAddressId(addr.id);
+    try {
+      await deleteAddress(addr.id);
+      setAddresses((prev) => {
+        const next = prev.filter((a) => a.id !== addr.id);
+        // ถ้าลบอันที่กำลังเลือกอยู่ ให้เลือกอันอื่นแทนโดยอัตโนมัติ (default ก่อน ไม่งั้นอันแรก)
+        setSelectedAddress((prevSelected) =>
+          prevSelected === addr.id
+            ? next.find((a) => a.isDefault)?.id ?? next[0]?.id ?? null
+            : prevSelected
+        );
+        return next;
+      });
+    } catch (err) {
+      setAddressListError(err.message || "ลบที่อยู่ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setDeletingAddressId(null);
+    }
   };
 
   const needsScanAfterOrder = paymentMethod === "promptpay" || paymentMethod === "bank";
@@ -339,9 +403,14 @@ export default function Checkout() {
     setOrderError("");
 
     const addr = addresses.find((a) => a.id === selectedAddress);
-    const addressText = addr
-      ? `${addr.name} (${addr.phone}) ${addr.detail} ${addr.sub}`.trim()
-      : "";
+    if (!addr) {
+      // กันเคสที่อยู่ที่เลือกไว้ถูกลบไปแล้ว หรือยังไม่ได้เลือกที่อยู่เลย
+      // จะได้ไม่ส่ง address ว่างเปล่าไปสร้างออเดอร์
+      setOrderError("กรุณาเลือกที่อยู่จัดส่งก่อนสั่งซื้อ");
+      setPlacing(false);
+      return;
+    }
+    const addressText = `${addr.recipientName} (${addr.phone}) ${addr.addressLine} ${formatAddressSub(addr)}`.trim();
 
     try {
       const order = await createOrder({
@@ -484,54 +553,91 @@ export default function Checkout() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {addresses.map((addr) => {
-                  const active = selectedAddress === addr.id;
-                  return (
-                    <button
-                      key={addr.id}
-                      onClick={() => setSelectedAddress(addr.id)}
-                      className={`text-left border rounded-xl p-4 transition-colors relative ${
-                        active
-                          ? "border-green-600 bg-green-50/60"
-                          : "border-gray-200 hover:border-green-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                            active
-                              ? "bg-green-700 text-white"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {addr.label}
-                        </span>
-                        {active && (
-                          <span className="w-5 h-5 rounded-full bg-green-700 flex items-center justify-center">
-                            <Check className="w-3 h-3 text-white" />
+              {addressListError && (
+                <p className="text-xs text-red-500 mb-3">{addressListError}</p>
+              )}
+
+              {addressLoading ? (
+                <div className="flex items-center gap-2 text-xs text-gray-400 py-6 justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  กำลังโหลดที่อยู่...
+                </div>
+              ) : addresses.length === 0 ? (
+                <p className="text-xs text-gray-400 py-4">
+                  ยังไม่มีที่อยู่จัดส่ง กด "เพิ่มที่อยู่ใหม่" เพื่อเริ่มต้น
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {addresses.map((addr) => {
+                    const active = selectedAddress === addr.id;
+                    const deleting = deletingAddressId === addr.id;
+                    return (
+                      <button
+                        key={addr.id}
+                        onClick={() => setSelectedAddress(addr.id)}
+                        disabled={deleting}
+                        className={`text-left border rounded-xl p-4 transition-colors relative disabled:opacity-50 ${
+                          active
+                            ? "border-green-600 bg-green-50/60"
+                            : "border-gray-200 hover:border-green-200"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                              active
+                                ? "bg-green-700 text-white"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {addr.label}
                           </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {addr.name}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                        {addr.detail}
-                        <br />
-                        {addr.sub}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1.5">{addr.phone}</p>
-                    </button>
-                  );
-                })}
-              </div>
+                          <div className="flex items-center gap-2">
+                            {active && (
+                              <span className="w-5 h-5 rounded-full bg-green-700 flex items-center justify-center">
+                                <Check className="w-3 h-3 text-white" />
+                              </span>
+                            )}
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              onClick={(e) => handleDeleteAddress(addr, e)}
+                              title="ลบที่อยู่นี้"
+                              className="text-gray-300 hover:text-red-500 p-1 -m-1 rounded"
+                            >
+                              {deleting ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {addr.recipientName}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                          {addr.addressLine}
+                          <br />
+                          {formatAddressSub(addr)}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1.5">{addr.phone}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {addingAddress && (
                 <div className="mt-4">
                   <NewAddressForm
-                    onCancel={() => setAddingAddress(false)}
+                    onCancel={() => {
+                      setAddingAddress(false);
+                      setAddAddressError("");
+                    }}
                     onSave={handleAddAddress}
+                    saving={savingAddress}
+                    error={addAddressError}
                   />
                 </div>
               )}
@@ -705,7 +811,7 @@ export default function Checkout() {
               )}
 
               <button
-                disabled={items.length === 0 || placing}
+                disabled={items.length === 0 || placing || !selectedAddress}
                 onClick={handlePlaceOrder}
                 className="w-full flex items-center justify-center gap-2 bg-green-800 hover:bg-green-900 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold py-3 rounded-lg transition-colors"
               >

@@ -7,7 +7,9 @@ const fs = require("fs");
 const path = require("path");
 const router = express.Router();
 
-const auth = require("../middleware/auth"); // ตรวจ token แล้วแนบ req.user = { id, name } ให้
+// middleware/auth.js export เป็น object ที่มีหลายฟังก์ชัน (requireAuth, requireRole, optionalAuth, ...)
+// ต้อง destructure เอา requireAuth ออกมา จะได้ req.user = { id, name, ... } (ไม่มี password) ให้ใช้
+const { requireAuth } = require("../middleware/auth");
 
 const DATA_PATH = path.join(__dirname, "..", "data", "addresses.json");
 
@@ -28,7 +30,7 @@ function generateId() {
 
 // ---------- GET /api/addresses ----------
 // ดึงที่อยู่ทั้งหมดของผู้ใช้ที่ login อยู่
-router.get("/", auth, (req, res) => {
+router.get("/", requireAuth, (req, res) => {
   const ownerId = req.user?.id;
   if (!ownerId) return res.status(401).json({ message: "กรุณาเข้าสู่ระบบก่อน" });
 
@@ -38,7 +40,7 @@ router.get("/", auth, (req, res) => {
 
 // ---------- POST /api/addresses ----------
 // เพิ่มที่อยู่ใหม่ (ownerId/ownerName มาจาก token เท่านั้น ไม่รับจาก client)
-router.post("/", auth, (req, res) => {
+router.post("/", requireAuth, (req, res) => {
   const ownerId = req.user?.id;
   const ownerName = req.user?.name;
   if (!ownerId) return res.status(401).json({ message: "กรุณาเข้าสู่ระบบก่อน" });
@@ -74,7 +76,7 @@ router.post("/", auth, (req, res) => {
 });
 
 // ---------- DELETE /api/addresses/:id ----------
-router.delete("/:id", auth, (req, res) => {
+router.delete("/:id", requireAuth, (req, res) => {
   const ownerId = req.user?.id;
   if (!ownerId) return res.status(401).json({ message: "กรุณาเข้าสู่ระบบก่อน" });
 
@@ -88,7 +90,7 @@ router.delete("/:id", auth, (req, res) => {
 
 // ---------- PATCH /api/addresses/:id/default ----------
 // ตั้งที่อยู่หนึ่งรายการให้เป็นค่าเริ่มต้น (มีได้ทีละ 1 รายการต่อ owner)
-router.patch("/:id/default", auth, (req, res) => {
+router.patch("/:id/default", requireAuth, (req, res) => {
   const ownerId = req.user?.id;
   if (!ownerId) return res.status(401).json({ message: "กรุณาเข้าสู่ระบบก่อน" });
 
