@@ -4,7 +4,6 @@ import {
   Sprout,
   Search,
   ShoppingCart,
-  Bell,
   UserCircle2,
   Truck,
   ShieldCheck,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { useCart } from "./CartContext";
 import { fetchCurrentUser, getCachedUser } from "./data/authStore";
+import NotificationBell from "./NotificationBell";
 import Footer from "./Footer";
 
 const categories = [
@@ -163,9 +163,7 @@ export default function HelpCenter() {
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <Bell className="w-5 h-5" />
-            </button>
+            <NotificationBell />
             <Link
               to="/cart"
               title="รถเข็นของคุณ"

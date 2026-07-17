@@ -3,9 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Sprout,
   Search,
-  Heart,
   ShoppingCart,
-  Bell,
   UserCircle2,
   Star,
   Minus,
@@ -17,6 +15,7 @@ import {
   BadgeCheck,
   Loader2,
 } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 import { getProductById, getProducts, toDisplayProduct, addReview } from "./data/productStore";
 import { fetchCurrentUser, getCachedUser, isAuthenticated } from "./data/authStore";
 import { getMyOrders } from "./data/orderStore";
@@ -320,7 +319,6 @@ export default function ProductDetail() {
             <Link to="/products" className="hover:text-green-800">สินค้า</Link>
             <Link to="/tracking" className="hover:text-green-800">ติดตามพัสดุ</Link>
             <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
-            <Link to="/help-center" className="hover:text-green-800">ศูนย์ช่วยเหลือ</Link>
           </nav>
 
           <form
@@ -338,16 +336,7 @@ export default function ProductDetail() {
           </form>
 
           <div className="flex items-center gap-1">
-            <Link
-              to="/tracking"
-              title="ติดตามพัสดุ"
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
-            >
-              <Truck className="w-5 h-5" />
-            </Link>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <Bell className="w-5 h-5" />
-            </button>
+            <NotificationBell />
             <Link
               to="/cart"
               title="รถเข็นของคุณ"
@@ -491,16 +480,13 @@ export default function ProductDetail() {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3 mb-5">
+            <div className="mb-5">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 flex items-center justify-center gap-2 bg-green-900 hover:bg-green-800 text-white font-semibold py-3 rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-green-900 hover:bg-green-800 text-white font-semibold py-3 rounded-lg transition-colors"
               >
                 <ShoppingCart className="w-4 h-4" />
                 {added ? "เพิ่มลงตะกร้าแล้ว ✓" : "เพิ่มลงตะกร้า"}
-              </button>
-              <button className="w-12 h-12 shrink-0 flex items-center justify-center border border-gray-200 rounded-lg text-gray-500 hover:text-red-500 hover:border-red-200">
-                <Heart className="w-5 h-5" />
               </button>
             </div>
 

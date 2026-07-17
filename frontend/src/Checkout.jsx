@@ -2,10 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Sprout,
-  Heart,
+  Home,
   ShoppingCart,
   UserCircle2,
-  LayoutGrid,
   MapPin,
   Plus,
   Truck,
@@ -25,6 +24,7 @@ import { useCart } from "./CartContext";
 import { createOrder, toOrderItems } from "./data/orderStore";
 import { fetchCurrentUser, getCachedUser } from "./data/authStore";
 import AddressBookForm from "./AddressBookForm";
+import NotificationBell from "./NotificationBell";
 import {
   fetchAddresses,
   createAddress,
@@ -271,12 +271,14 @@ export default function Checkout() {
           <div className="flex-1 ml-auto" />
 
           <div className="flex items-center gap-1">
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <LayoutGrid className="w-5 h-5" />
-            </button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <Heart className="w-5 h-5" />
-            </button>
+            <Link
+              to="/home"
+              title="หน้าแรก"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
+              <Home className="w-5 h-5" />
+            </Link>
+            <NotificationBell />
             <Link
               to="/cart"
               className="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"

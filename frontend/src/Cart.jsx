@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Sprout,
   Search,
+  Home,
   ShoppingCart,
-  Bell,
   UserCircle2,
   Minus,
   Plus,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useCart } from "./CartContext";
 import { fetchCurrentUser, getCachedUser } from "./data/authStore";
+import NotificationBell from "./NotificationBell";
 import Footer from "./Footer";
 
 const SHIPPING_FEE = 150;
@@ -73,9 +74,14 @@ export default function Cart() {
           </form>
 
           <div className="flex items-center gap-1">
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <Bell className="w-5 h-5" />
-            </button>
+            <Link
+              to="/home"
+              title="หน้าแรก"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
+              <Home className="w-5 h-5" />
+            </Link>
+            <NotificationBell />
             <Link
               to="/cart"
               title="รถเข็นของคุณ"

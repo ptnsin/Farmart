@@ -10,8 +10,8 @@ import {
   Sprout,
   Search,
   ShoppingCart,
-  Bell,
   UserCircle2,
+  Home,
   MapPin,
   Clock,
   PackageCheck,
@@ -20,6 +20,7 @@ import {
   Loader2,
   ListOrdered,
 } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 
 // --- Leaflet default marker icons don't ship correctly with bundlers, so we
 // build small custom pin icons instead of touching L.Icon.Default.
@@ -280,9 +281,14 @@ export default function Tracking() {
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
-              <Bell className="w-5 h-5" />
-            </button>
+            <Link
+              to="/home"
+              title="หน้าแรก"
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50"
+            >
+              <Home className="w-5 h-5" />
+            </Link>
+            <NotificationBell />
             <Link
               to="/cart"
               title="รถเข็นของคุณ"
