@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Sprout,
-  Search,
   Heart,
   ShoppingCart,
   UserCircle2,
@@ -15,7 +14,6 @@ import {
   CreditCard,
   Landmark,
   PackageCheck,
-  UploadCloud,
   ArrowRight,
   ShieldCheck,
   Check,
@@ -80,7 +78,6 @@ function NewAddressForm({ onCancel, onSave }) {
   });
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
-
   const canSave = form.name && form.phone && form.detail;
 
   return (
@@ -166,11 +163,10 @@ export default function Checkout() {
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [paymentMethod, setPaymentMethod] = useState("promptpay");
 
-  const [slipFile, setSlipFile] = useState(null);
-  const fileInputRef = useRef(null);
-
   const [placing, setPlacing] = useState(false);
   const [orderError, setOrderError] = useState("");
+  // เก็บออเดอร์ที่สั่งสำเร็จแล้วไว้ที่นี่ เพื่อสลับไปโชว์หน้าสแกน/โอนเงิน (เฉพาะ promptpay/bank)
+  const [placedOrder, setPlacedOrder] = useState(null);
 
   const shippingFee =
     SHIPPING_METHODS.find((m) => m.key === shippingMethod)?.fee ?? 0;
@@ -195,12 +191,7 @@ export default function Checkout() {
     setAddingAddress(false);
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) setSlipFile(file);
-  };
-
-  const needsSlip = paymentMethod === "bank" || paymentMethod === "promptpay";
+  const needsScanAfterOrder = paymentMethod === "promptpay" || paymentMethod === "bank";
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) return;
@@ -213,19 +204,68 @@ export default function Checkout() {
       : "";
 
     try {
-      await createOrder({
+      const order = await createOrder({
         items: toOrderItems(items),
         address: addressText,
         paymentMethod,
       });
       clearCart();
-      navigate("/orders");
+
+      if (needsScanAfterOrder) {
+        // โชว์ QR / ข้อมูลโอนเงิน หลังสั่งซื้อสำเร็จ แทนที่จะโชว์ตอนเลือกวิธีชำระ
+        setPlacedOrder(order);
+      } else {
+        navigate("/orders");
+      }
     } catch (err) {
       setOrderError(err.message || "สั่งซื้อไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setPlacing(false);
     }
   };
+
+  // ---- หน้าสแกนจ่ายเงิน / โอนเงิน แสดงหลังกด "สั่งซื้อสินค้า" สำเร็จ ----
+  if (placedOrder) {
+    return (
+      <div className="min-h-screen w-full bg-gray-50 text-gray-900 flex items-center justify-center px-6">
+        <div className="max-w-md w-full bg-white border border-gray-100 rounded-xl p-6 text-center space-y-4">
+          <p className="text-sm font-semibold text-gray-900">
+            สั่งซื้อสำเร็จ! กรุณาชำระเงินเพื่อยืนยันคำสั่งซื้อ
+          </p>
+
+          {paymentMethod === "promptpay" && (
+            <>
+              <div className="w-40 h-40 mx-auto bg-white border border-gray-200 rounded-lg flex items-center justify-center">
+                <QrCode className="w-24 h-24 text-gray-700" />
+              </div>
+              <p className="text-xs text-gray-500">
+                สแกน QR Code เพื่อชำระเงินผ่านแอปธนาคารของคุณ หรือแอปพร้อมเพย์
+              </p>
+            </>
+          )}
+
+          {paymentMethod === "bank" && (
+            <div className="flex flex-col items-center gap-2 text-xs text-gray-500">
+              <Landmark className="w-10 h-10 text-gray-500" />
+              <p>โอนเงินเข้าบัญชีธนาคารตามรายละเอียดที่จะส่งให้ทางอีเมล/แจ้งเตือน</p>
+            </div>
+          )}
+
+          <p className="text-lg font-bold text-green-800">
+            ยอดชำระ ฿{total.toLocaleString()}
+          </p>
+
+          <button
+            onClick={() => navigate("/orders")}
+            className="w-full flex items-center justify-center gap-2 bg-green-800 hover:bg-green-900 text-white text-sm font-semibold py-3 rounded-lg transition-colors"
+          >
+            เสร็จสิ้น ไปที่คำสั่งซื้อของฉัน
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-gray-50 text-gray-900">
@@ -245,9 +285,7 @@ export default function Checkout() {
             <Link to="/orders" className="hover:text-green-800">คำสั่งซื้อ</Link>
           </nav>
 
-          <div className="flex-1 max-w-xs ml-auto relative hidden sm:block">
-            
-          </div>
+          <div className="flex-1 ml-auto" />
 
           <div className="flex items-center gap-1">
             <button className="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50">
@@ -404,7 +442,7 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* Payment method */}
+            {/* Payment method — ไม่มี QR โชว์ตรงนี้แล้ว จะไปโชว์หลังกดสั่งซื้อแทน */}
             <div className="bg-white border border-gray-100 rounded-xl p-5">
               <h2 className="flex items-center gap-2 text-sm font-bold text-gray-900 mb-4">
                 <CreditCard className="w-4 h-4 text-green-700" />
@@ -415,54 +453,41 @@ export default function Checkout() {
                   const Icon = m.icon;
                   const active = paymentMethod === m.key;
                   return (
-                    <div key={m.key}>
-                      <button
-                        onClick={() => setPaymentMethod(m.key)}
-                        className={`w-full flex items-center gap-3 border rounded-xl p-4 text-left transition-colors ${
-                          active
-                            ? "border-green-600 bg-green-50/60"
-                            : "border-gray-200 hover:border-green-200"
+                    <button
+                      key={m.key}
+                      onClick={() => setPaymentMethod(m.key)}
+                      className={`w-full flex items-center gap-3 border rounded-xl p-4 text-left transition-colors ${
+                        active
+                          ? "border-green-600 bg-green-50/60"
+                          : "border-gray-200 hover:border-green-200"
+                      }`}
+                    >
+                      <span
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          active ? "border-green-700" : "border-gray-300"
                         }`}
                       >
-                        <span
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                            active ? "border-green-700" : "border-gray-300"
-                          }`}
-                        >
-                          {active && (
-                            <span className="w-2.5 h-2.5 rounded-full bg-green-700" />
-                          )}
-                        </span>
-                        <Icon className="w-4 h-4 text-gray-500 shrink-0" />
-                        <p className="text-sm font-semibold text-gray-800 flex-1">
-                          {m.label}
-                        </p>
-                      </button>
-
-                      {active && m.key === "promptpay" && (
-                        <div className="mt-2 ml-8 border border-dashed border-green-200 rounded-xl p-4 flex items-center gap-4 bg-green-50/40">
-                          <div className="w-20 h-20 bg-white border border-gray-200 rounded-lg flex items-center justify-center shrink-0">
-                            <QrCode className="w-12 h-12 text-gray-700" />
-                          </div>
-                          <div className="text-xs text-gray-600 leading-relaxed">
-                            <p>
-                              สแกน QR Code เพื่อชำระเงินผ่านแอปธนาคารของคุณ
-                              หรือแอปพร้อมเพย์
-                            </p>
-                            <p className="mt-1.5 font-bold text-gray-900 text-sm">
-                              ยอดชำระ: ฿{total.toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                        {active && (
+                          <span className="w-2.5 h-2.5 rounded-full bg-green-700" />
+                        )}
+                      </span>
+                      <Icon className="w-4 h-4 text-gray-500 shrink-0" />
+                      <p className="text-sm font-semibold text-gray-800 flex-1">
+                        {m.label}
+                      </p>
+                    </button>
                   );
                 })}
               </div>
+              {needsScanAfterOrder && (
+                <p className="text-xs text-gray-400 mt-3">
+                  * จะแสดง QR Code / ข้อมูลบัญชีให้สแกนหรือโอนหลังจากกด "สั่งซื้อสินค้า"
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Right column: order summary + Slip Upload (Sticky Together) */}
+          {/* Right column: order summary (ตัดกล่องอัปโหลดสลิปออกแล้ว) */}
           <div className="lg:col-span-1">
             <div className="bg-white border border-gray-100 rounded-xl p-5 sticky top-20 max-h-[calc(100vh-120px)] overflow-y-auto space-y-4">
               <h2 className="text-sm font-bold text-gray-900 mb-2">สรุปคำสั่งซื้อ</h2>
@@ -531,43 +556,6 @@ export default function Checkout() {
                   ฿{total.toLocaleString()}
                 </span>
               </div>
-
-              {/* Slip upload section moved inside the sticky box */}
-              {needsSlip && (
-                <div className="pt-4 border-t border-gray-100 space-y-2">
-                  <p className="text-sm font-bold text-gray-900">
-                    สลิปหลักฐานการโอนเงิน (Slip)
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB
-                  </p>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png, image/jpeg"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full border-2 border-dashed border-gray-200 hover:border-green-300 rounded-xl py-4 flex flex-col items-center gap-1 text-gray-400 transition-colors"
-                  >
-                    <UploadCloud className="w-5 h-5 text-gray-400" />
-                    <span className="text-xs">
-                      {slipFile ? "เปลี่ยนไฟล์" : "คลิกเพื่อเลือกไฟล์หลักฐาน"}
-                    </span>
-                  </button>
-
-                  {slipFile && (
-                    <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-1.5">
-                      <Check className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate">{slipFile.name}</span>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {orderError && (
                 <div className="flex items-start gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">

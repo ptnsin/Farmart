@@ -38,6 +38,15 @@ const STATUS_DOT = {
   4: "bg-green-600",
 };
 
+// สถานะการชำระเงิน แยกต่างหากจากสถานะการจัดส่ง (statusStep ด้านบน)
+// ออเดอร์เก็บเงินปลายทางที่ยังไม่ได้ชำระ จะโชว์ป้าย "ยังไม่ชำระ" สีแดง/ส้ม
+// เพิ่มเงื่อนไขในนี้ได้เลยถ้า backend ส่ง field paymentStatus มาโดยตรง
+function isUnpaidOrder(order) {
+  if (order.paymentStatus) return order.paymentStatus === "unpaid";
+  // fallback: ยังไม่มี paymentStatus จาก backend -> เดาจากช่องทางชำระเงิน
+  return order.paymentMethod === "cod";
+}
+
 // Real product photos, keyed by keyword (Thai + English) so an item is
 // matched to a proper photo just from its name — e.g. "มะม่วงน้ำดอกไม้"
 // or "Fresh Mango" both hit the mango photo below. `ORDERS` doesn't carry
@@ -355,12 +364,20 @@ export default function Orders() {
                       </p>
 
                       {/* Status */}
-                      <span
-                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full w-fit ${STATUS_STYLES[order.statusStep]}`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[order.statusStep]}`} />
-                        {order.statusLabel}
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full w-fit ${STATUS_STYLES[order.statusStep]}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[order.statusStep]}`} />
+                          {order.statusLabel}
+                        </span>
+                        {isUnpaidOrder(order) && (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full w-fit bg-red-100 text-red-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            ยังไม่ชำระ
+                          </span>
+                        )}
+                      </div>
 
                       {/* Total */}
                       <div className="text-left md:text-right">
@@ -418,6 +435,12 @@ export default function Orders() {
                               <span className="font-semibold text-gray-700">ยอดชำระทั้งหมด</span>
                               <span className="font-bold text-green-800">฿{order.total.toLocaleString()}</span>
                             </div>
+                            {isUnpaidOrder(order) && (
+                              <div className="flex items-center justify-between text-sm bg-red-50 rounded-lg px-3 py-2">
+                                <span className="text-red-700 font-semibold">สถานะการชำระเงิน</span>
+                                <span className="text-red-700 font-bold">ยังไม่ชำระ</span>
+                              </div>
+                            )}
 
                             <Link
                               to={`/tracking?order=${order.id}`}
