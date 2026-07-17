@@ -1,6 +1,17 @@
 // controllers/productController.js
 const productModel = require("../models/productModel");
 const categoryModel = require("../models/categoryModel");
+const orderModel = require("../models/orderModel");
+
+/** เช็คว่า user คนนี้เคยสั่งซื้อสินค้า productId ชิ้นนี้จริง (คำสั่งซื้อที่ไม่ถูกปฏิเสธ) หรือยัง */
+function hasPurchasedProduct(userId, productId) {
+  const orders = orderModel.getOrdersByUser(userId);
+  return orders.some(
+    (o) =>
+      o.status !== "rejected" &&
+      (o.items || []).some((it) => String(it.productId) === String(productId))
+  );
+}
 
 /** GET /api/products - รายการสินค้าทั้งหมด (public) รองรับ query: category, search, stockLevel */
 function getProducts(req, res) {
@@ -92,13 +103,31 @@ function updateApproval(req, res) {
   res.json({ product });
 }
 
-/** POST /api/products/:id/reviews (ลูกค้าที่ login แล้ว) - เพิ่มรีวิวสินค้า */
+/** POST /api/products/:id/reviews (ลูกค้าที่ login แล้ว และเคยสั่งซื้อสินค้านี้แล้วเท่านั้น) - เพิ่มรีวิวสินค้า */
 function addReview(req, res) {
   const { rating, comment } = req.body || {};
   if (!rating || Number(rating) < 1 || Number(rating) > 5) {
     return res.status(400).json({ error: "กรุณาให้คะแนน 1-5 ดาว" });
   }
+
+  const existing = productModel.getProductById(req.params.id);
+  if (!existing) return res.status(404).json({ error: "ไม่พบสินค้า" });
+
+  if (!hasPurchasedProduct(req.user.id, req.params.id)) {
+    return res.status(403).json({
+      error: "คุณต้องสั่งซื้อสินค้านี้ก่อนถึงจะเขียนรีวิวได้",
+    });
+  }
+
+  const alreadyReviewed = (existing.reviews || []).some(
+    (r) => Number(r.userId) === Number(req.user.id)
+  );
+  if (alreadyReviewed) {
+    return res.status(409).json({ error: "คุณได้รีวิวสินค้านี้ไปแล้ว" });
+  }
+
   const product = productModel.addReview(req.params.id, {
+    userId: req.user.id,
     customer: req.user.name,
     rating,
     comment,
