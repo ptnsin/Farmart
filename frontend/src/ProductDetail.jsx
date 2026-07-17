@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { getProductById, getProducts, toDisplayProduct, addReview } from "./data/productStore";
 import { fetchCurrentUser, getCachedUser, isAuthenticated } from "./data/authStore";
+import { getMyOrders } from "./data/orderStore";
 import { useCart } from "./CartContext";
 
 function Stars({ rating, size = "w-3.5 h-3.5" }) {
@@ -127,6 +128,43 @@ export default function ProductDetail() {
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
   const loggedIn = isAuthenticated();
+  const currentUserId = getCachedUser()?.id;
+
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [checkingPurchase, setCheckingPurchase] = useState(false);
+
+  // เช็คว่าผู้ใช้ปัจจุบันเคยสั่งซื้อสินค้าชิ้นนี้แล้วหรือยัง (เขียนรีวิวได้เฉพาะคนที่ซื้อแล้วเท่านั้น)
+  useEffect(() => {
+    if (!product || !loggedIn) {
+      setHasPurchased(false);
+      return;
+    }
+    let cancelled = false;
+    setCheckingPurchase(true);
+    getMyOrders()
+      .then((orders) => {
+        if (cancelled) return;
+        const purchased = orders.some(
+          (o) =>
+            o.status !== "rejected" &&
+            (o.items || []).some((it) => String(it.productId) === String(product.id))
+        );
+        setHasPurchased(purchased);
+      })
+      .catch(() => {
+        if (!cancelled) setHasPurchased(false);
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingPurchase(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [product?.id, loggedIn]);
+
+  const alreadyReviewed =
+    loggedIn &&
+    (product?.reviews || []).some((r) => Number(r.userId) === Number(currentUserId));
 
   function handleToggleReviewForm() {
     setReviewError("");
@@ -611,13 +649,20 @@ export default function ProductDetail() {
                   );
                 })}
               </div>
-              <button
-                onClick={handleToggleReviewForm}
-                className="w-full mt-5 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-semibold text-sm py-2.5 rounded-lg hover:border-green-300 hover:text-green-700 transition-colors"
-              >
-                <MessageSquare className="w-4 h-4" />
-                {showReviewForm ? "ยกเลิก" : "เขียนรีวิว"}
-              </button>
+              {alreadyReviewed ? (
+                <p className="mt-5 text-xs text-center text-green-700 bg-green-50 border border-green-100 rounded-lg py-2.5 px-3">
+                  ✓ คุณได้รีวิวสินค้านี้แล้ว ขอบคุณสำหรับความคิดเห็น
+                </p>
+              ) : (
+                <button
+                  onClick={handleToggleReviewForm}
+                  disabled={checkingPurchase}
+                  className="w-full mt-5 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-semibold text-sm py-2.5 rounded-lg hover:border-green-300 hover:text-green-700 transition-colors disabled:opacity-60"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  {showReviewForm ? "ยกเลิก" : "เขียนรีวิว"}
+                </button>
+              )}
 
               {reviewSuccess && (
                 <p className="mt-3 text-xs text-center text-green-700 bg-green-50 border border-green-100 rounded-lg py-2">
@@ -625,7 +670,7 @@ export default function ProductDetail() {
                 </p>
               )}
 
-              {showReviewForm && (
+              {showReviewForm && !alreadyReviewed && (
                 <div className="mt-4 bg-gray-50 border border-gray-100 rounded-xl p-4">
                   {!loggedIn ? (
                     <div className="text-center py-2">
@@ -639,6 +684,26 @@ export default function ProductDetail() {
                         ไปหน้าเข้าสู่ระบบ
                         <ChevronRight className="w-4 h-4" />
                       </Link>
+                    </div>
+                  ) : !hasPurchased ? (
+                    <div className="text-center py-2">
+                      <p className="text-sm text-gray-600 mb-1">
+                        คุณต้องสั่งซื้อสินค้านี้ก่อนถึงจะเขียนรีวิวได้
+                      </p>
+                      <p className="text-xs text-gray-400 mb-3">
+                        รีวิวได้หลังจากสั่งซื้อสินค้าชิ้นนี้เรียบร้อยแล้ว
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowReviewForm(false);
+                          handleAddToCart();
+                        }}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-700 hover:underline"
+                      >
+                        เพิ่มลงตะกร้าเลย
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   ) : (
                     <form onSubmit={handleSubmitReview} className="space-y-3">
