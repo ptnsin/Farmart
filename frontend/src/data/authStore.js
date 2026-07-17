@@ -10,6 +10,12 @@ const CURRENT_USER_KEY = "farmart_current_user";
 function cacheUser(user) {
   if (user) localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
   else localStorage.removeItem(CURRENT_USER_KEY);
+
+  // แจ้งส่วนอื่นของแอป (เช่น CartContext) ว่า user ปัจจุบันเปลี่ยนแล้ว
+  // (login / register / logout) เพื่อให้โหลดข้อมูลที่ผูกกับ user ใหม่ให้ถูกต้อง
+  // ไม่ทำแบบนี้แล้วตะกร้าจะค้างเป็นของ user/guest คนก่อนหน้า เพราะ CartProvider
+  // mount แค่ครั้งเดียวที่ root และ navigate() แบบ SPA ไม่ทำให้มัน re-mount
+  window.dispatchEvent(new Event("userChanged"));
 }
 
 /** เข้าสู่ระบบ คืนค่า user ถ้าสำเร็จ, throw Error พร้อมข้อความถ้าไม่สำเร็จ */
@@ -19,6 +25,7 @@ export async function login(email, password, keepSignedIn = false) {
   cacheUser(data.user);
   return data.user;
 }
+
 
 /**
  * สมัครสมาชิกใหม่ (role CUSTOMER เท่านั้น ตาม authController.register)
@@ -32,6 +39,29 @@ export async function register(data) {
   setToken(res.token);
   cacheUser(res.user);
   return res.user;
+}
+
+/**
+ * ขอลิงก์รีเซ็ตรหัสผ่าน (ไม่ต้อง login)
+ * Backend จะไม่บอกว่าอีเมลนี้มีอยู่จริงหรือไม่ (กันสุ่มเช็คอีเมล)
+ * ตอนนี้ backend แค่ console.log ลิงก์ไว้ดู ยังไม่ได้ส่งอีเมลจริง
+ * @param {string} email
+ * @returns {object} { success, message }
+ */
+export async function requestPasswordReset(email) {
+  return api.post("/api/auth/forgot-password", { email });
+}
+
+/**
+ * ตั้งรหัสผ่านใหม่ด้วย token ที่ได้จากลิงก์ (ไม่ต้อง login)
+ * @param {string} token
+ * @param {string} password
+ * @param {string} [confirmPassword]
+ * @returns {object} { success, message }
+ * @throws {Error} เช่น "ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุแล้ว"
+ */
+export async function resetPassword(token, password, confirmPassword) {
+  return api.post("/api/auth/reset-password", { token, password, confirmPassword });
 }
 
 /** ออกจากระบบ (แจ้ง backend ให้ลบ session ด้วย) */
@@ -78,3 +108,4 @@ export function getCachedUser() {
 export function isAuthenticated() {
   return Boolean(getToken());
 }
+

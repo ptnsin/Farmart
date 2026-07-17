@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, Bell, Camera, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, Bell, Camera, Loader2, LogOut } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
-import { getCachedUser, fetchCurrentUser, updateMe } from "../data/authStore";
+import { getCachedUser, fetchCurrentUser, updateMe, logout } from "../data/authStore";
 import { api } from "../data/apiClient";
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB ต้องตรงกับ limit ฝั่ง backend (routes/upload.js: avatar = 2MB)
 
 export default function EmployeeSettings() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(getCachedUser());
   const fileInputRef = useRef(null);
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -26,6 +28,7 @@ export default function EmployeeSettings() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     fetchCurrentUser().then(setUser).catch(() => {});
@@ -125,6 +128,17 @@ export default function EmployeeSettings() {
     }
   };
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      // เคลียร์ token/cache เสร็จแล้วเสมอไม่ว่าคำขอไป backend จะสำเร็จหรือไม่
+      // (logout() ในตัว authStore ดักไว้แล้ว) เด้งกลับหน้า login ทันที
+      navigate("/", { replace: true });
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       <EmployeeSidebar />
@@ -157,6 +171,15 @@ export default function EmployeeSettings() {
               <p className="text-xs text-slate-400">Warehouse Staff</p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60 shrink-0"
+          >
+            {loggingOut ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
+            {loggingOut ? "กำลังออก..." : "ออกจากระบบ"}
+          </button>
         </div>
 
         <div>

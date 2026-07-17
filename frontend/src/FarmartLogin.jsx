@@ -118,9 +118,12 @@ export default function FarmartLogin() {
                 <label className="block text-sm font-semibold text-gray-800">
                   Password
                 </label>
-                <a href="#" className="text-xs font-medium text-green-700 hover:underline">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-medium text-green-700 hover:underline"
+                >
                   Forgot?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
