@@ -26,7 +26,10 @@ function syncShipmentForOrder(order, status) {
   }
 
   // ยังไม่มี shipment ผูกกับ order นี้เลย -> สร้างใหม่ (createShipment ตั้งสถานะเริ่มต้นเป็น "preparing" เสมอ)
-  const created = shipmentModel.createShipment({ order: order.id });
+  // ใส่ eta default ให้ด้วย (ไม่งั้น createShipment จะปล่อยเป็นค่าว่าง "" ทำให้ EmployeeShipping.jsx
+  // formatEta() คืนค่า null แล้วซ่อนแถว "กำหนดส่ง" ไปทั้งบรรทัด)
+  const defaultEta = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+  const created = shipmentModel.createShipment({ order: order.id, eta: defaultEta });
   if (shipmentStatus !== "preparing") {
     shipmentModel.updateShipment(created.id, { status: shipmentStatus });
   }
