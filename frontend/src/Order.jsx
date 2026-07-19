@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api, API_URL } from "./data/apiClient";
 import { fetchCurrentUser, getCachedUser } from "./data/authStore";
+import { addNotification } from "./data/notificationStore";
 import { useCart } from "./CartContext";
 import {
   Sprout,
@@ -213,6 +214,20 @@ export default function Orders() {
       await api.patch(`/api/orders/${orderId}/cancel`);
       setCancelledIds((prev) => new Set(prev).add(orderId));
       setConfirmCancelId(null);
+
+      // แจ้งเตือนว่ายกเลิกคำสั่งซื้อสำเร็จ -> NotificationBell subscribe
+      // อยู่แล้วผ่าน subscribeNotifications จึงอัปเดตวงกลมแดง (unread)
+      // ให้ทันทีโดยไม่ต้อง refresh หน้า
+      try {
+        await addNotification({
+          type: "order",
+          title: `ยกเลิกคำสั่งซื้อ #${orderId} สำเร็จ`,
+          message: "คำสั่งซื้อของคุณถูกยกเลิกเรียบร้อยแล้ว",
+        });
+      } catch (notifyErr) {
+        // ไม่ให้ error ตรงนี้ไปทำให้ flow การยกเลิกดูเหมือนล้มเหลว
+        console.error("แจ้งเตือนไม่สำเร็จ:", notifyErr);
+      }
     } catch (err) {
       console.error(err);
       setCancelError("ยกเลิกคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
