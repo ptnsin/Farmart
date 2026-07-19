@@ -22,10 +22,96 @@ function calculateBestSellers(products, orders, limit = 5) {
       return {
         productId,
         name: product?.name || "ไม่ทราบชื่อสินค้า",
+        category: product?.category || "",
         quantitySold: qty,
         revenue: product ? Number(product.price) * qty : 0,
       };
     });
+}
+
+const THAI_MONTH_LABELS = [
+  "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+  "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
+];
+
+/** คืน key เดือนแบบ "YYYY-MM" จาก Date object */
+function monthKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** คำนวณ % การเปลี่ยนแปลงจากเดือนก่อนหน้า ปัดเป็นทศนิยม 1 ตำแหน่ง */
+function pctChange(current, previous) {
+  if (!previous) return current > 0 ? 100 : 0;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
+}
+
+/**
+ * GET /api/reports/dashboard-summary (employee/admin)
+ * สรุปข้อมูลสำหรับหน้า dashboard: stat cards, ยอดขายรายเดือน (7 เดือนล่าสุด), สินค้าขายดี
+ * หมายเหตุ: ไม่มี "อัตราการสั่งซื้อสำเร็จ" เพราะระบบยังไม่เก็บข้อมูลความพยายามสั่งซื้อที่ไม่สำเร็จ (เช่น cart ที่ถูกทิ้ง)
+ */
+function getDashboardSummary(req, res) {
+  const orders = orderModel.getOrders();
+  const users = userModel.getUsers();
+  const products = productModel.getProducts();
+
+  const now = new Date();
+  const thisMonthKey = monthKey(now);
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthKey = monthKey(lastMonthDate);
+
+  const ordersThisMonth = orders.filter((o) => o.date?.startsWith(thisMonthKey));
+  const ordersLastMonth = orders.filter((o) => o.date?.startsWith(lastMonthKey));
+
+  const revenueThisMonth = ordersThisMonth
+    .filter((o) => o.status === "approved")
+    .reduce((sum, o) => sum + Number(o.total || 0), 0);
+  const revenueLastMonth = ordersLastMonth
+    .filter((o) => o.status === "approved")
+    .reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+  const customers = users.filter((u) => u.role === "CUSTOMER");
+  const newCustomersThisMonth = customers.filter((u) =>
+    (u.createdAt || "").startsWith(thisMonthKey)
+  ).length;
+  const newCustomersLastMonth = customers.filter((u) =>
+    (u.createdAt || "").startsWith(lastMonthKey)
+  ).length;
+
+  // ยอดขายรวม 7 เดือนล่าสุด (นับจากเดือนปัจจุบันย้อนหลัง)
+  const monthlySales = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = monthKey(d);
+    const total = orders
+      .filter((o) => o.status === "approved" && o.date?.startsWith(key))
+      .reduce((sum, o) => sum + Number(o.total || 0), 0);
+    monthlySales.push({ month: key, label: THAI_MONTH_LABELS[d.getMonth()], value: total });
+  }
+
+  const topProducts = calculateBestSellers(products, orders, 5);
+
+  res.json({
+    stats: {
+      revenue: { value: revenueThisMonth, changePct: pctChange(revenueThisMonth, revenueLastMonth) },
+      orders: {
+        value: ordersThisMonth.length,
+        changePct: pctChange(ordersThisMonth.length, ordersLastMonth.length),
+      },
+      newCustomers: {
+        value: newCustomersThisMonth,
+        changePct: pctChange(newCustomersThisMonth, newCustomersLastMonth),
+      },
+    },
+    monthlySales,
+    topProducts: topProducts.map((p) => ({
+      id: p.productId,
+      name: p.name,
+      category: p.category,
+      sold: p.quantitySold,
+      revenue: p.revenue,
+    })),
+  });
 }
 
 /** GET /api/reports/dashboard (employee/admin) - ภาพรวมระบบทั้งหมด */
@@ -131,4 +217,9 @@ function getInventoryReport(req, res) {
   });
 }
 
-module.exports = { getDashboardReport, getSalesReport, getInventoryReport };
+module.exports = {
+  getDashboardReport,
+  getSalesReport,
+  getInventoryReport,
+  getDashboardSummary,
+};

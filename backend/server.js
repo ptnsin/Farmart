@@ -23,7 +23,18 @@ const addressRoutes = require("./routes/address");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+// origin ของ frontend ที่อนุญาตให้เรียก API พร้อม cookie/session (credentials)
+// หมายเหตุ: ต้องระบุ origin แบบเจาะจง ใช้ wildcard '*' ร่วมกับ credentials:true ไม่ได้ตาม CORS spec
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173", // Vite dev server (frontend)
+];
+
+app.use(
+  cors({
+    origin: ALLOWED_ORIGINS,
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // เปิดให้เข้าถึงไฟล์ที่อัปโหลดแล้วผ่าน URL เช่น

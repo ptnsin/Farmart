@@ -2,15 +2,24 @@
 const db = require("../utils/db");
 const SEED = require("../data/support.json");
 
+// ประเภทปัญหา/ความสำคัญเริ่มต้น สำหรับตั๋วเก่าที่ยังไม่มี field เหล่านี้ในไฟล์ข้อมูล
+const DEFAULT_TYPE = "system";
+const DEFAULT_PRIORITY = "medium";
+
 function getTickets() {
-  return db.read("support", SEED);
+  return db.read("support", SEED).map((t) => ({
+    type: DEFAULT_TYPE,
+    priority: DEFAULT_PRIORITY,
+    relatedRef: "",
+    ...t,
+  }));
 }
 
 function saveTickets(tickets) {
   return db.write("support", tickets);
 }
 
-function createTicket({ userId, role, subject, message }) {
+function createTicket({ userId, role, subject, message, type, priority, relatedRef }) {
   const tickets = getTickets();
   const nums = tickets.map((t) => Number(String(t.id).replace(/\D/g, ""))).filter((n) => !Number.isNaN(n));
   const nextNum = (nums.length ? Math.max(...nums) : 1040) + 1;
@@ -20,6 +29,9 @@ function createTicket({ userId, role, subject, message }) {
     role: role || "CUSTOMER",
     subject: subject || "",
     message: message || "",
+    type: type || DEFAULT_TYPE, // "delivery" | "stock" | "system"
+    priority: priority || DEFAULT_PRIORITY, // "high" | "medium" | "low"
+    relatedRef: relatedRef || "", // เช่น เลขออเดอร์ #ORD-2023-001 หรือ SKU
     status: "open",
     date: new Date().toISOString().slice(0, 10),
   };
