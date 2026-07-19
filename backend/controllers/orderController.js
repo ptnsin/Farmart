@@ -1,5 +1,36 @@
 // controllers/orderController.js
 const orderModel = require("../models/orderModel");
+const shipmentModel = require("../models/shipmentModel");
+
+// order.status -> shipment.status ที่ต้อง sync ไปด้วยทุกครั้งที่ order เปลี่ยนสถานะผ่าน endpoint นี้
+// (shipmentModel.js sync กลับมาหา order ทางเดียวอยู่แล้วผ่าน syncOrderStatus แต่ order -> shipment
+//  ไม่มีใครทำ ทำให้ก่อนหน้านี้พนักงานกด "เตรียมพัสดุ"/"กำลังจัดส่ง" จากหน้าคำสั่งซื้อแล้ว order.status
+//  เปลี่ยนจริง แต่ไม่มี shipment ถูกสร้าง/อัปเดตให้ หน้าการขนส่งเลยไม่เห็นออเดอร์นั้นเลย)
+const ORDER_TO_SHIPMENT_STATUS = {
+  preparing: "preparing",
+  shipping: "in_transit",
+  delivered: "delivered",
+};
+
+/** สร้าง/อัปเดต shipment ของ order ให้ตรงกับสถานะล่าสุด ถ้า status ที่เปลี่ยนไปไม่เกี่ยวกับการขนส่ง (เช่น rejected/cancelled) จะไม่ทำอะไร */
+function syncShipmentForOrder(order, status) {
+  const shipmentStatus = ORDER_TO_SHIPMENT_STATUS[status];
+  if (!shipmentStatus || !order) return;
+
+  const existing = shipmentModel.getShipments().find((s) => s.order === order.id);
+  if (existing) {
+    if (existing.status !== shipmentStatus) {
+      shipmentModel.updateShipment(existing.id, { status: shipmentStatus });
+    }
+    return;
+  }
+
+  // ยังไม่มี shipment ผูกกับ order นี้เลย -> สร้างใหม่ (createShipment ตั้งสถานะเริ่มต้นเป็น "preparing" เสมอ)
+  const created = shipmentModel.createShipment({ order: order.id });
+  if (shipmentStatus !== "preparing") {
+    shipmentModel.updateShipment(created.id, { status: shipmentStatus });
+  }
+}
 
 function isStaff(user) {
   return user.role === "EMPLOYEE" || user.role === "ADMIN";
@@ -57,11 +88,12 @@ function updateOrder(req, res) {
   if (!existing) return res.status(404).json({ error: "ไม่พบคำสั่งซื้อ" });
 
   const patch = { ...req.body };
-  if (patch.status && !["pending", "approved", "rejected"].includes(patch.status)) {
+  if (patch.status && !Object.keys(orderModel.STATUS_META).includes(patch.status)) {
     return res.status(400).json({ error: "status ไม่ถูกต้อง" });
   }
 
   const order = orderModel.updateOrder(req.params.id, patch);
+  if (patch.status) syncShipmentForOrder(order, patch.status);
   res.json({ order });
 }
 
@@ -74,14 +106,17 @@ function deleteOrder(req, res) {
   res.json({ orders, message: "ลบคำสั่งซื้อเรียบร้อยแล้ว" });
 }
 
-/** PATCH /api/orders/:id/status (employee/admin) - pending/approved/rejected */
+/** PATCH /api/orders/:id/status (employee/admin) - pending/approved/preparing/shipping/delivered/rejected/cancelled */
 function updateStatus(req, res) {
   const { status } = req.body || {};
-  if (!["pending", "approved", "rejected"].includes(status)) {
+  if (!Object.keys(orderModel.STATUS_META).includes(status)) {
     return res.status(400).json({ error: "status ไม่ถูกต้อง" });
   }
   const order = orderModel.updateOrderStatus(req.params.id, status);
   if (!order) return res.status(404).json({ error: "ไม่พบคำสั่งซื้อ" });
+
+  syncShipmentForOrder(order, status);
+
   res.json({ order });
 }
 

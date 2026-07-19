@@ -1,5 +1,33 @@
 [
   {
+    "id": "ORD-10253",
+    "userId": 15,
+    "customer": "ภัทรนันท์ สิงห์เชิดชู",
+    "items": [
+      {
+        "productId": 14,
+        "name": "ปุ๋ยสูตรเสมอ 15-15-15",
+        "price": 485,
+        "quantity": 1,
+        "image": "http://localhost:4000/uploads/products/FT002.svg"
+      },
+      {
+        "productId": 15,
+        "name": "ปุ๋ยสูตร 16-16-16",
+        "price": 800,
+        "quantity": 1,
+        "image": "http://localhost:4000/uploads/products/FT003.svg"
+      }
+    ],
+    "total": 1285,
+    "date": "2026-07-19",
+    "status": "shipping",
+    "statusStep": 2,
+    "statusLabel": "กำลังจัดส่ง",
+    "address": "ภัทรนันท์ สิงห์เชิดชู (0841611737) 53/99 รามคำแหง176 แขวงมีนบุรี เขตมีนบุรี กรุงเทพมหานคร 10510",
+    "paymentMethod": "cod"
+  },
+  {
     "id": "ORD-10252",
     "userId": 14,
     "customer": "toon",
