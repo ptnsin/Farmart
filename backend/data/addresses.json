@@ -73,5 +73,20 @@
     "postalCode": "10510",
     "isDefault": true,
     "createdAt": "2026-07-19T03:16:02.878Z"
+  },
+  {
+    "id": "addr_mrr9y77ihu6u",
+    "ownerId": 15,
+    "ownerName": "ภัทรนันท์ สิงห์เชิดชู",
+    "label": "หอ",
+    "recipientName": "โกโจซาโตรุ",
+    "phone": "0984465331",
+    "addressLine": "78/110",
+    "subdistrict": "หอมเกร็ด",
+    "district": "สามพราน",
+    "province": "นครปฐม",
+    "postalCode": "73110",
+    "isDefault": false,
+    "createdAt": "2026-07-19T04:07:12.126Z"
   }
 ]

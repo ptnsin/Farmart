@@ -1,5 +1,41 @@
 [
   {
+    "id": "ORD-10254",
+    "userId": 15,
+    "customer": "ภัทรนันท์ สิงห์เชิดชู",
+    "items": [
+      {
+        "productId": 42,
+        "name": "มะนาวแป้น",
+        "price": 90,
+        "quantity": 1,
+        "image": "http://localhost:4000/uploads/products/FR017.svg"
+      },
+      {
+        "productId": 38,
+        "name": "ทุเรียนหมอนทอง",
+        "price": 465,
+        "quantity": 1,
+        "image": "http://localhost:4000/uploads/products/FR004.svg"
+      },
+      {
+        "productId": 40,
+        "name": "ลำไย",
+        "price": 265,
+        "quantity": 1,
+        "image": "http://localhost:4000/uploads/products/FR007.svg"
+      }
+    ],
+    "total": 820,
+    "date": "2026-07-19",
+    "status": "shipping",
+    "statusStep": 2,
+    "statusLabel": "กำลังจัดส่ง",
+    "address": "โกโจซาโตรุ (0984465331) 78/110 ตำบลหอมเกร็ด อำเภอสามพราน นครปฐม 73110",
+    "paymentMethod": "promptpay",
+    "deliveryMethod": "standard"
+  },
+  {
     "id": "ORD-10253",
     "userId": 15,
     "customer": "ภัทรนันท์ สิงห์เชิดชู",
