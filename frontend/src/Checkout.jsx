@@ -191,6 +191,7 @@ export default function Checkout() {
         items: toOrderItems(items),
         address: addressText,
         paymentMethod,
+        deliveryMethod: shippingMethod,
       });
       clearCart();
 

@@ -48,7 +48,7 @@ const STATUS_META = {
   cancelled: { statusLabel: "ยกเลิกแล้ว", statusStep: 0 },
 };
 
-function createOrder({ userId, customer, items, address, paymentMethod }) {
+function createOrder({ userId, customer, items, address, paymentMethod, deliveryMethod }) {
   const orders = getOrders();
   const id = nextOrderId(orders);
   const total = items.reduce((sum, i) => sum + Number(i.price) * Number(i.quantity), 0);
@@ -64,6 +64,8 @@ function createOrder({ userId, customer, items, address, paymentMethod }) {
     statusLabel: STEP_LABELS[0],
     address: address || "",
     paymentMethod: paymentMethod || "cod",
+    // ใช้กำหนด ETA ของ shipment ตอน sync (ดู DELIVERY_ETA_DAYS ใน orderController.js)
+    deliveryMethod: deliveryMethod === "express" ? "express" : "standard",
   };
   saveOrders([order, ...orders]);
   return order;

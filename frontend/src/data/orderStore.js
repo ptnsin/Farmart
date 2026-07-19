@@ -36,11 +36,12 @@ export async function getOrderById(id) {
 
 /**
  * สร้างคำสั่งซื้อใหม่ (ยืนยันการสั่งซื้อตอนกด Checkout)
- * @param {{items:Array<{productId, name, price, quantity, image}>, address?:string, paymentMethod?:string}} payload
+ * @param {{items:Array<{productId, name, price, quantity, image}>, address?:string, paymentMethod?:string, deliveryMethod?:"standard"|"express"}} payload
  *   items ต้องมี productId, quantity (>0) และ price ของทุกชิ้น ไม่งั้น backend จะตอบ error กลับมา
+ *   deliveryMethod ใช้กำหนด ETA ของ shipment ฝั่ง backend (standard/express) ถ้าไม่ส่งมา backend จะ default เป็น standard
  */
-export async function createOrder({ items, address, paymentMethod }) {
-  const data = await api.post("/api/orders", { items, address, paymentMethod });
+export async function createOrder({ items, address, paymentMethod, deliveryMethod }) {
+  const data = await api.post("/api/orders", { items, address, paymentMethod, deliveryMethod });
   return data.order;
 }
 

@@ -12,6 +12,11 @@ const ORDER_TO_SHIPMENT_STATUS = {
   delivered: "delivered",
 };
 
+// จำนวนวันที่ใช้คำนวณ ETA เริ่มต้นของ shipment ตอน auto-create ให้ตรงกับตัวเลือกวิธีจัดส่งที่ลูกค้า
+// เลือกไว้ตอน Checkout (ดู SHIPPING_METHODS ใน Checkout.jsx: standard "3-5 วันทำการ", express "1-2 วันทำการ")
+// ใช้ค่าสูงสุดของแต่ละช่วงเพื่อไม่ให้ ETA ที่แสดงดูเร็วเกินจริง
+const DELIVERY_ETA_DAYS = { standard: 5, express: 2 };
+
 /** สร้าง/อัปเดต shipment ของ order ให้ตรงกับสถานะล่าสุด ถ้า status ที่เปลี่ยนไปไม่เกี่ยวกับการขนส่ง (เช่น rejected/cancelled) จะไม่ทำอะไร */
 function syncShipmentForOrder(order, status) {
   const shipmentStatus = ORDER_TO_SHIPMENT_STATUS[status];
@@ -27,8 +32,9 @@ function syncShipmentForOrder(order, status) {
 
   // ยังไม่มี shipment ผูกกับ order นี้เลย -> สร้างใหม่ (createShipment ตั้งสถานะเริ่มต้นเป็น "preparing" เสมอ)
   // ใส่ eta default ให้ด้วย (ไม่งั้น createShipment จะปล่อยเป็นค่าว่าง "" ทำให้ EmployeeShipping.jsx
-  // formatEta() คืนค่า null แล้วซ่อนแถว "กำหนดส่ง" ไปทั้งบรรทัด)
-  const defaultEta = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+  // formatEta() คืนค่า null แล้วซ่อนแถว "กำหนดส่ง" ไปทั้งบรรทัด) — คำนวณตาม deliveryMethod ของ order
+  const etaDays = DELIVERY_ETA_DAYS[order.deliveryMethod] ?? DELIVERY_ETA_DAYS.standard;
+  const defaultEta = new Date(Date.now() + etaDays * 24 * 60 * 60 * 1000).toISOString();
   const created = shipmentModel.createShipment({ order: order.id, eta: defaultEta });
   if (shipmentStatus !== "preparing") {
     shipmentModel.updateShipment(created.id, { status: shipmentStatus });
@@ -64,7 +70,7 @@ function getOrderById(req, res) {
 
 /** POST /api/orders - สร้างคำสั่งซื้อใหม่ (checkout) เฉพาะ CUSTOMER ที่ login แล้ว */
 function createOrder(req, res) {
-  const { items, address, paymentMethod } = req.body || {};
+  const { items, address, paymentMethod, deliveryMethod } = req.body || {};
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "ตะกร้าสินค้าว่างเปล่า" });
@@ -81,6 +87,7 @@ function createOrder(req, res) {
     items,
     address,
     paymentMethod,
+    deliveryMethod,
   });
   res.status(201).json({ order });
 }
