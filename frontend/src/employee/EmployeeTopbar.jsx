@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Search, Bell } from "lucide-react";
+import { Search } from "lucide-react";
 import { getCachedUser, fetchCurrentUser } from "../data/authStore";
+import EmployeeNotificationBell from "./EmployeeNotificationBell";
 
 /**
  * แถบด้านบนของทุกหน้า employee (search + notification + avatar)
@@ -39,13 +40,7 @@ export default function EmployeeTopBar({
           className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
         />
       </div>
-      <button
-        type="button"
-        aria-label="แจ้งเตือน"
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
-      >
-        <Bell size={18} />
-      </button>
+      <EmployeeNotificationBell />
       <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
         <img
           src={user?.avatar || "https://i.pravatar.cc/64?img=5"}

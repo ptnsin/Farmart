@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, Pencil, Trash2, Plus, Package, AlertTriangle, ChevronDown } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
-import EmployeeTopBar from "./EmployeeTopBar";
+import EmployeeTopBar from "./EmployeeTopbar";
 import { getProducts, deleteProduct } from "../data/productStore";
 
 const STATUS_STYLES = {
