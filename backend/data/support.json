@@ -1,5 +1,17 @@
 [
   {
+    "id": "SP-1043",
+    "userId": 14,
+    "role": "CUSTOMER",
+    "subject": "การจัดส่ง",
+    "message": "ทำไมไม่ส่งให้",
+    "type": "system",
+    "priority": "medium",
+    "relatedRef": "ORD-10255",
+    "status": "open",
+    "date": "2026-07-20"
+  },
+  {
     "type": "system",
     "priority": "medium",
     "relatedRef": "",

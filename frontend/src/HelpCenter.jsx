@@ -17,9 +17,13 @@ import {
   Phone,
   Mail,
   Clock,
+  Send,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { useCart } from "./CartContext";
-import { fetchCurrentUser, getCachedUser } from "./data/authStore";
+import { fetchCurrentUser, getCachedUser, isAuthenticated } from "./data/authStore";
+import { submitSupportTicket } from "./data/reportsStore";
 import NotificationBell from "./NotificationBell";
 import Footer from "./Footer";
 
@@ -134,6 +138,41 @@ export default function HelpCenter() {
       f.a.toLowerCase().includes(query.toLowerCase())
   );
 
+  // ฟอร์มแจ้งปัญหา/ติดต่อทีมงาน
+  const [form, setForm] = useState({ subject: "", message: "", relatedRef: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+  const loggedIn = isAuthenticated();
+
+  function handleCategoryClick(title) {
+    setForm((f) => ({ ...f, subject: title }));
+    document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function handleSubmitTicket(e) {
+    e.preventDefault();
+    if (!form.subject.trim() || !form.message.trim()) {
+      setSubmitError("กรุณากรอกหัวข้อและรายละเอียดปัญหา");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await submitSupportTicket({
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+        relatedRef: form.relatedRef.trim(),
+      });
+      setSubmitted(true);
+      setForm({ subject: "", message: "", relatedRef: "" });
+    } catch (err) {
+      setSubmitError(err.message || "ส่งข้อความไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen w-full bg-white text-gray-900">
       {/* Top nav (shared with Home) */}
@@ -236,6 +275,7 @@ export default function HelpCenter() {
             return (
               <button
                 key={c.title}
+                onClick={() => handleCategoryClick(c.title)}
                 className="text-left border border-gray-100 rounded-xl p-4 hover:shadow-md hover:border-green-100 transition-all bg-white"
               >
                 <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center mb-3">
@@ -326,6 +366,94 @@ export default function HelpCenter() {
           >
             ดูคำสั่งซื้อของฉัน
           </Link>
+        </div>
+
+        {/* Report an issue form — เชื่อมกับ POST /api/support จริง */}
+        <div id="contact-form" className="mt-8 border border-gray-100 rounded-xl p-6 bg-white scroll-mt-24">
+          <h2 className="text-lg font-bold text-gray-900 mb-1">แจ้งปัญหา / ส่งข้อความถึงทีมงาน</h2>
+          <p className="text-sm text-gray-500 mb-5">
+            ทีมงานจะเห็นข้อความของคุณทันทีในระบบหลังบ้าน และจะติดต่อกลับโดยเร็วที่สุด
+          </p>
+
+          {!loggedIn ? (
+            <div className="text-center py-8 border border-dashed border-gray-200 rounded-xl bg-gray-50">
+              <p className="text-sm text-gray-600 mb-3">กรุณาเข้าสู่ระบบก่อนส่งข้อความถึงทีมงาน</p>
+              <Link
+                to="/"
+                className="inline-block bg-green-800 hover:bg-green-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+              >
+                เข้าสู่ระบบ
+              </Link>
+            </div>
+          ) : submitted ? (
+            <div className="text-center py-8 border border-dashed border-green-200 rounded-xl bg-green-50">
+              <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-gray-900">ส่งข้อความเรียบร้อยแล้ว</p>
+              <p className="text-xs text-gray-500 mt-1">ทีมงานจะติดต่อกลับโดยเร็วที่สุด</p>
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="mt-4 text-xs font-semibold text-green-700 hover:underline"
+              >
+                ส่งข้อความอีกครั้ง
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmitTicket} className="space-y-4">
+              {submitError && (
+                <div className="rounded-lg bg-rose-50 border border-rose-100 text-rose-600 text-sm px-4 py-2.5">
+                  {submitError}
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">หัวข้อ</label>
+                <input
+                  type="text"
+                  value={form.subject}
+                  onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+                  placeholder="เช่น การจัดส่ง, การคืนสินค้า"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  เลขคำสั่งซื้อที่เกี่ยวข้อง (ถ้ามี)
+                </label>
+                <input
+                  type="text"
+                  value={form.relatedRef}
+                  onChange={(e) => setForm((f) => ({ ...f, relatedRef: e.target.value }))}
+                  placeholder="เช่น ORD-10231"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">รายละเอียด</label>
+                <textarea
+                  value={form.message}
+                  onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+                  rows={4}
+                  placeholder="อธิบายปัญหาหรือคำถามของคุณ"
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600 resize-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center gap-2 bg-green-800 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> กำลังส่ง...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" /> ส่งข้อความ
+                  </>
+                )}
+              </button>
+            </form>
+          )}
         </div>
       </section>
 

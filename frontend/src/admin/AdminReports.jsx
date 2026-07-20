@@ -8,14 +8,24 @@ import {
   Users,
   ShoppingBag,
   AlertTriangle,
+  MessageCircleQuestion,
   Truck,
   PackageX,
   ServerCrash,
   User,
+  X,
+  Mail,
+  Phone,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
 import { getCachedUser, fetchCurrentUser } from "../data/authStore";
-import { fetchReportsOverview, fetchEmployeeIssues } from "../data/reportsStore";
+import {
+  fetchReportsOverview,
+  fetchEmployeeIssues,
+  fetchCustomerIssues,
+  fetchOrderById,
+  fetchUserById,
+} from "../data/reportsStore";
 
 // ไอคอน/สีของแต่ละ stat card ผูกกับ key ที่ backend ส่งกลับมา (revenue, orders, newCustomers)
 const STAT_META = {
@@ -65,6 +75,230 @@ const STATUS_STYLES = {
   resolved: { label: "แก้ไขแล้ว", dot: "bg-emerald-500", text: "text-emerald-600" },
 };
 
+const PAYMENT_LABELS = {
+  cod: "เก็บเงินปลายทาง",
+  promptpay: "PromptPay",
+  bank_transfer: "โอนผ่านธนาคาร",
+  credit_card: "บัตรเครดิต/เดบิต",
+};
+
+const DELIVERY_LABELS = {
+  standard: "จัดส่งมาตรฐาน (3-5 วันทำการ)",
+  express: "จัดส่งด่วน (1-2 วันทำการ)",
+};
+
+function ModalShell({ title, subtitle, onClose, children }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+          <div>
+            <h3 className="text-base font-semibold text-slate-800">{title}</h3>
+            {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto px-6 py-4">{children}</div>
+        <div className="flex justify-end border-t border-slate-100 px-6 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          >
+            ปิด
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderDetailModal({ orderId, onClose }) {
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchOrderById(orderId)
+      .then((data) => {
+        if (!cancelled) setOrder(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || "โหลดข้อมูลออเดอร์ไม่สำเร็จ");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
+
+  return (
+    <ModalShell
+      title={order ? `#${order.id}` : "รายละเอียดออเดอร์"}
+      subtitle={order ? `${order.customer} · ${order.date}` : undefined}
+      onClose={onClose}
+    >
+      {loading && <p className="py-8 text-center text-sm text-slate-400">กำลังโหลดข้อมูล...</p>}
+      {!loading && error && <p className="py-8 text-center text-sm text-rose-500">{error}</p>}
+      {!loading && !error && order && (
+        <div className="space-y-4 text-sm">
+          <div>
+            <p className="mb-2 text-xs font-medium text-slate-400">รายการสินค้า</p>
+            <div className="space-y-2">
+              {(order.items || []).map((item, i) => (
+                <div key={item.productId || i} className="flex items-center gap-3">
+                  <img
+                    src={item.image || "https://placehold.co/48x48/E2E8F0/475569?text=IMG"}
+                    alt=""
+                    className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <p className="text-slate-700">{item.name || `สินค้า #${item.productId}`}</p>
+                    <p className="text-xs text-slate-400">
+                      {item.quantity} x ฿{Number(item.price).toLocaleString()}
+                    </p>
+                  </div>
+                  <p className="font-medium text-slate-700">
+                    ฿{(Number(item.price) * Number(item.quantity)).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-xl bg-slate-50 p-4">
+            {order.address && (
+              <div>
+                <p className="text-xs text-slate-400">ที่อยู่จัดส่ง</p>
+                <p className="whitespace-pre-line text-slate-700">{order.address}</p>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <p className="text-xs text-slate-400">ช่องทางชำระเงิน</p>
+              <p className="text-slate-700">
+                {PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod || "-"}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-xs text-slate-400">วิธีจัดส่ง</p>
+              <p className="text-slate-700">
+                {DELIVERY_LABELS[order.deliveryMethod] || order.deliveryMethod || "-"}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-xs text-slate-400">สถานะ</p>
+              <p className="text-slate-700">{order.statusLabel || order.status}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+            <p className="font-medium text-slate-700">ยอดรวมทั้งหมด</p>
+            <p className="text-lg font-semibold text-emerald-700">
+              ฿{Number(order.total).toLocaleString()}
+            </p>
+          </div>
+        </div>
+      )}
+    </ModalShell>
+  );
+}
+
+function CustomerDetailModal({ userId, onClose }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchUserById(userId)
+      .then((data) => {
+        if (!cancelled) setUser(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          // GET /api/users/:id เข้าได้เฉพาะ ADMIN — ถ้าเป็น EMPLOYEE จะโดน 403
+          setError(
+            err.message?.includes("สิทธิ์")
+              ? "ต้องมีสิทธิ์ผู้ดูแลระบบ (ADMIN) ถึงจะดูรายละเอียดลูกค้าได้"
+              : err.message || "โหลดข้อมูลลูกค้าไม่สำเร็จ"
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  return (
+    <ModalShell title="รายละเอียดลูกค้า" onClose={onClose}>
+      {loading && <p className="py-8 text-center text-sm text-slate-400">กำลังโหลดข้อมูล...</p>}
+      {!loading && error && <p className="py-8 text-center text-sm text-rose-500">{error}</p>}
+      {!loading && !error && user && (
+        <div className="space-y-4 text-sm">
+          <div className="flex items-center gap-3">
+            <img
+              src={user.avatar || "https://i.pravatar.cc/64?img=12"}
+              alt=""
+              className="h-14 w-14 rounded-full object-cover"
+            />
+            <div>
+              <p className="text-base font-semibold text-slate-800">{user.name}</p>
+              <span
+                className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                  user.status === "active"
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-rose-50 text-rose-600"
+                }`}
+              >
+                {user.status === "active" ? "ใช้งานอยู่" : "ถูกระงับ"}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-xl bg-slate-50 p-4">
+            <div className="flex items-center gap-2 text-slate-700">
+              <Mail size={14} className="text-slate-400" />
+              {user.email}
+            </div>
+            {user.phone && (
+              <div className="flex items-center gap-2 text-slate-700">
+                <Phone size={14} className="text-slate-400" />
+                {user.phone}
+              </div>
+            )}
+            <div className="flex justify-between pt-1">
+              <p className="text-xs text-slate-400">สมัครเมื่อ</p>
+              <p className="text-slate-700">{user.joined}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </ModalShell>
+  );
+}
+
 function StatCard({ label, value, note, icon: Icon, iconBg, iconColor }) {
   return (
     <div className="flex items-center gap-4 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -86,8 +320,11 @@ export default function AdminReports() {
 
   const [overview, setOverview] = useState(null); // { stats, monthlySales, topProducts }
   const [issues, setIssues] = useState([]);
+  const [customerIssues, setCustomerIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     fetchCurrentUser()
@@ -104,13 +341,15 @@ export default function AdminReports() {
       setLoading(true);
       setError(null);
       try {
-        const [overviewData, issuesData] = await Promise.all([
+        const [overviewData, issuesData, customerIssuesData] = await Promise.all([
           fetchReportsOverview(),
           fetchEmployeeIssues(),
+          fetchCustomerIssues(),
         ]);
         if (cancelled) return;
         setOverview(overviewData);
         setIssues(issuesData.tickets || []);
+        setCustomerIssues(customerIssuesData.tickets || []);
       } catch (err) {
         if (cancelled) return;
         if (err.message.includes("เข้าสู่ระบบ")) {
@@ -321,15 +560,22 @@ export default function AdminReports() {
                       <tr key={issue.id} className="border-b border-slate-50 last:border-0">
                         <td className="px-6 py-3.5 font-medium text-slate-800">#{issue.id}</td>
                         <td className="px-6 py-3.5">
-                          <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => issue.reportedBy?.id && setSelectedUserId(issue.reportedBy.id)}
+                            className="flex items-center gap-2 text-left hover:opacity-75 disabled:cursor-default"
+                            disabled={!issue.reportedBy?.id}
+                          >
                             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500">
                               <User size={13} />
                             </span>
                             <div>
-                              <p className="text-slate-700">{issue.reportedBy?.name || "ไม่ทราบชื่อ"}</p>
+                              <p className="text-slate-700 underline decoration-dotted underline-offset-2">
+                                {issue.reportedBy?.name || "ไม่ทราบชื่อ"}
+                              </p>
                               <p className="text-xs text-slate-400">พนักงาน</p>
                             </div>
-                          </div>
+                          </button>
                         </td>
                         <td className="px-6 py-3.5">
                           <span
@@ -339,7 +585,19 @@ export default function AdminReports() {
                             {type.label}
                           </span>
                         </td>
-                        <td className="px-6 py-3.5 text-slate-500">{issue.relatedRef || "-"}</td>
+                        <td className="px-6 py-3.5 text-slate-500">
+                          {issue.relatedRef?.startsWith("ORD-") ? (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrderId(issue.relatedRef)}
+                              className="text-emerald-700 underline decoration-dotted underline-offset-2 hover:opacity-75"
+                            >
+                              {issue.relatedRef}
+                            </button>
+                          ) : (
+                            issue.relatedRef || "-"
+                          )}
+                        </td>
                         <td className="max-w-xs px-6 py-3.5 text-slate-600">
                           <p className="font-medium text-slate-700">{issue.subject}</p>
                           <p className="text-xs text-slate-400">{issue.message}</p>
@@ -382,7 +640,112 @@ export default function AdminReports() {
             </table>
           </div>
         </div>
+
+        {/* Customer-reported issues */}
+        <div className="mt-6 rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-800">
+              <MessageCircleQuestion size={18} className="text-sky-500" />
+              ปัญหาที่ลูกค้าแจ้งเข้ามา
+            </h2>
+            <span className="text-xs text-slate-400">
+              {customerIssues.filter((i) => i.status !== "resolved").length} รายการรอดำเนินการ
+            </span>
+          </div>
+
+          <div className="mt-4 overflow-hidden rounded-lg border border-slate-100">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 text-xs text-slate-400">
+                  <th className="px-6 py-3 font-medium">รหัส</th>
+                  <th className="px-6 py-3 font-medium">ลูกค้า</th>
+                  <th className="px-6 py-3 font-medium">ที่เกี่ยวข้อง</th>
+                  <th className="px-6 py-3 font-medium">รายละเอียด</th>
+                  <th className="px-6 py-3 font-medium">วันที่แจ้ง</th>
+                  <th className="px-6 py-3 font-medium">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
+                      กำลังโหลดข้อมูล...
+                    </td>
+                  </tr>
+                )}
+                {!loading &&
+                  customerIssues.map((issue) => {
+                    const status = STATUS_STYLES[issue.status];
+                    return (
+                      <tr key={issue.id} className="border-b border-slate-50 last:border-0">
+                        <td className="px-6 py-3.5 font-medium text-slate-800">#{issue.id}</td>
+                        <td className="px-6 py-3.5">
+                          <button
+                            type="button"
+                            onClick={() => issue.reportedBy?.id && setSelectedUserId(issue.reportedBy.id)}
+                            className="flex items-center gap-2 text-left hover:opacity-75 disabled:cursor-default"
+                            disabled={!issue.reportedBy?.id}
+                          >
+                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                              <User size={13} />
+                            </span>
+                            <p className="text-slate-700 underline decoration-dotted underline-offset-2">
+                              {issue.reportedBy?.name || "ไม่ทราบชื่อ"}
+                            </p>
+                          </button>
+                        </td>
+                        <td className="px-6 py-3.5 text-slate-500">
+                          {issue.relatedRef?.startsWith("ORD-") ? (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrderId(issue.relatedRef)}
+                              className="text-emerald-700 underline decoration-dotted underline-offset-2 hover:opacity-75"
+                            >
+                              {issue.relatedRef}
+                            </button>
+                          ) : (
+                            issue.relatedRef || "-"
+                          )}
+                        </td>
+                        <td className="max-w-xs px-6 py-3.5 text-slate-600">
+                          <p className="font-medium text-slate-700">{issue.subject}</p>
+                          <p className="text-xs text-slate-400">{issue.message}</p>
+                        </td>
+                        <td className="px-6 py-3.5 text-slate-500">
+                          {new Date(`${issue.date}T00:00:00`).toLocaleDateString("th-TH", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td className="px-6 py-3.5">
+                          <span className={`flex items-center gap-1.5 whitespace-nowrap ${status.text}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                            {status.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                {!loading && customerIssues.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
+                      ยังไม่มีปัญหาที่ลูกค้าแจ้งเข้ามา
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </main>
+
+      {selectedOrderId && (
+        <OrderDetailModal orderId={selectedOrderId} onClose={() => setSelectedOrderId(null)} />
+      )}
+      {selectedUserId && (
+        <CustomerDetailModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />
+      )}
     </div>
   );
 }

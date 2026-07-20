@@ -15,14 +15,56 @@ export async function fetchReportsOverview() {
 }
 
 /**
- * ดึงรายการปัญหาที่พนักงานแจ้งเข้ามา (support tickets ที่ role === "EMPLOYEE")
- * ตรงกับ GET /api/support?role=EMPLOYEE
- * @param {{status?: "open"|"resolved", type?: "delivery"|"stock"|"system", priority?: "high"|"medium"|"low"}} params
+ * ดึงรายการตั๋ว support กรองตาม role ของผู้แจ้ง
+ * ตรงกับ GET /api/support?role=...
  */
-export async function fetchEmployeeIssues(params = {}) {
+function fetchSupportTickets(role, params = {}) {
   const query = new URLSearchParams({
-    role: "EMPLOYEE",
+    role,
     ...Object.fromEntries(Object.entries(params).filter(([, v]) => v != null && v !== "")),
   }).toString();
   return api.get(`/api/support?${query}`);
+}
+
+/**
+ * ดึงรายการปัญหาที่พนักงานแจ้งเข้ามา (support tickets ที่ role === "EMPLOYEE")
+ * @param {{status?: "open"|"resolved", type?: "delivery"|"stock"|"system", priority?: "high"|"medium"|"low"}} params
+ */
+export function fetchEmployeeIssues(params = {}) {
+  return fetchSupportTickets("EMPLOYEE", params);
+}
+
+/**
+ * ดึงรายการปัญหา/คำถามที่ลูกค้าแจ้งเข้ามา (support tickets ที่ role === "CUSTOMER")
+ * @param {{status?: "open"|"resolved"}} params
+ */
+export function fetchCustomerIssues(params = {}) {
+  return fetchSupportTickets("CUSTOMER", params);
+}
+
+/**
+ * ลูกค้า/พนักงาน ส่งคำถามหรือแจ้งปัญหาถึงทีมงาน (ต้อง login ก่อน)
+ * ตรงกับ POST /api/support
+ * @param {{subject: string, message: string, type?: string, priority?: string, relatedRef?: string}} data
+ */
+export function submitSupportTicket(data) {
+  return api.post("/api/support", data);
+}
+
+/**
+ * ดึงรายละเอียดออเดอร์เดี่ยว (สำหรับ modal ดูรายละเอียดออเดอร์)
+ * ตรงกับ GET /api/orders/:id — ต้องเป็น EMPLOYEE/ADMIN หรือเจ้าของออเดอร์เท่านั้น
+ */
+export async function fetchOrderById(id) {
+  const data = await api.get(`/api/orders/${id}`);
+  return data.order;
+}
+
+/**
+ * ดึงรายละเอียดผู้ใช้เดี่ยว (สำหรับ modal ดูรายละเอียดลูกค้า)
+ * ตรงกับ GET /api/users/:id — เข้าถึงได้เฉพาะ role ADMIN เท่านั้น (ไม่ใช่ EMPLOYEE)
+ */
+export async function fetchUserById(id) {
+  const data = await api.get(`/api/users/${id}`);
+  return data.user;
 }
