@@ -1,22 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, UploadCloud, Trash2 } from "lucide-react";
+import { ArrowLeft, ImagePlus, X, Trash2 } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
 import EmployeeTopBar from "./EmployeeTopBar";
 import { getProductById, updateProduct, deleteProduct } from "../data/productStore";
+import { api } from "../data/apiClient";
 
 const CATEGORIES = ["เมล็ดพันธุ์", "ฮอร์โมน", "ปุ๋ย", "อุปกรณ์จัดการดิน", "อุปกรณ์รดน้ำ", "กระถาง"];
 
 export default function EmployeeProductEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [form, setForm] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false); // <-- ใหม่: คุม modal
@@ -29,6 +34,7 @@ export default function EmployeeProductEdit() {
       .then((p) => {
         if (cancelled) return;
         setProduct(p);
+        setImagePreview(p.image || null);
         setForm({
           name: p.name,
           category: p.category,
@@ -54,11 +60,49 @@ export default function EmployeeProductEdit() {
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  const handleImageChange = (file) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleFileInput = (e) => {
+    handleImageChange(e.target.files?.[0]);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    handleImageChange(e.dataTransfer.files?.[0]);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(product?.image || null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaveError("");
     setSaving(true);
     try {
+      let imageUrl;
+      if (imageFile) {
+        setUploading(true);
+        try {
+          const formData = new FormData();
+          formData.append("file", imageFile);
+          const uploadResult = await api.post("/api/upload/product", formData);
+          imageUrl = uploadResult.url;
+        } catch (err) {
+          setSaveError(err.message || "อัปโหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+          setSaving(false);
+          setUploading(false);
+          return;
+        }
+        setUploading(false);
+      }
+
       await updateProduct(id, {
         name: form.name,
         category: form.category,
@@ -69,6 +113,7 @@ export default function EmployeeProductEdit() {
         farmer: form.farmer,
         location: form.location,
         description: form.description,
+        ...(imageUrl ? { image: imageUrl, images: [imageUrl] } : {}),
       });
       setSaved(true);
       setTimeout(() => navigate("/employee/warehouse"), 900);
@@ -179,12 +224,51 @@ export default function EmployeeProductEdit() {
 
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-600">รูปภาพสินค้า</label>
-                <div className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 px-4 py-6 text-center text-slate-400 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700">
-                  <UploadCloud size={22} className="mb-2" />
-                  <p className="text-sm">คลิกเพื่อเปลี่ยนรูปภาพสินค้า</p>
-                  <p className="mt-1 text-xs text-slate-400">รองรับ JPG, PNG ไม่เกิน 5MB</p>
-                </div>
-                {/* TODO: ต่อ upload จริงแบบเดียวกับ EmployeeProductAdd.jsx (api.post('/api/upload/product', formData)) */}
+                <label
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  className="group relative flex h-40 w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 text-center hover:border-emerald-300 hover:bg-emerald-50/40"
+                >
+                  {imagePreview ? (
+                    <>
+                      <img
+                        src={imagePreview}
+                        alt="พรีวิวสินค้า"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-slate-900/0 opacity-0 transition group-hover:bg-slate-900/50 group-hover:opacity-100">
+                        <ImagePlus size={20} className="text-white" />
+                        <p className="text-xs font-medium text-white">คลิกเพื่อเปลี่ยนรูปภาพ</p>
+                      </div>
+                      {imageFile && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            removeImage();
+                          }}
+                          aria-label="ยกเลิกรูปที่เลือก"
+                          className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900/60 text-white hover:bg-slate-900/80"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus size={22} className="text-slate-400" />
+                      <p className="mt-2 text-sm text-slate-600">คลิกเพื่อเลือกรูปภาพสินค้า</p>
+                      <p className="mt-1 text-xs text-slate-400">รองรับ JPG, PNG ไม่เกิน 5MB</p>
+                    </>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileInput}
+                    className="hidden"
+                  />
+                </label>
               </div>
 
               <div className="sm:col-span-2">
@@ -200,7 +284,7 @@ export default function EmployeeProductEdit() {
                 ยกเลิก
               </Link>
               <button type="submit" disabled={saving} className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50">
-                {saving ? "กำลังบันทึก..." : saved ? "บันทึกแล้ว ✓" : "บันทึกการแก้ไข"}
+                {uploading ? "กำลังอัปโหลดรูป..." : saving ? "กำลังบันทึก..." : saved ? "บันทึกแล้ว ✓" : "บันทึกการแก้ไข"}
               </button>
             </div>
           </form>
