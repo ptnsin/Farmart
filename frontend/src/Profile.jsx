@@ -575,7 +575,7 @@ export default function Profile() {
                     </div>
                     <div>
                       <p className="text-lg font-bold text-gray-900">{savedForm.name}</p>
-                      <p className="text-sm text-gray-500 mt-0.5">สมาชิกตั้งแต่ มกราคม 2024</p>
+                      <p className="text-sm text-gray-500 mt-0.5">สมาชิกตั้งแต่ มกราคม 2026</p>
                     </div>
                   </div>
 
