@@ -31,8 +31,8 @@ graph LR
     CustomerActor --> UC_Login[เข้าสู่ระบบ]
     CustomerActor --> UC_Profile[จัดการข้อมูลส่วนตัว]
     UC_Profile -.include.-> UC_EditProfile[แก้ไขข้อมูลส่วนตัว]
-    CustomerActor --> UC_Search
-    CustomerActor --> UC_Detail
+    CustomerActor --> UC_Search [ค้นหาสินค้า]
+    CustomerActor --> UC_Detail [ดูรายละเอียดสินค้า]
     CustomerActor --> UC_Cart[จัดการสินค้าในตะกร้า]
     UC_Cart -.include.-> UC_CartOps["เพิ่ม/ลบสินค้า, ดูสรุปยอดรวม"]
     CustomerActor --> UC_Order[สั่งซื้อสินค้า]
@@ -46,16 +46,16 @@ graph LR
     %% พนักงาน
     EmployeeActor --> UC_ManageProduct[จัดการสินค้า]
     UC_ManageProduct -.include.-> UC_ProductOps["เพิ่ม/ลบ/แก้ไขสินค้า"]
-    EmployeeActor --> UC_Category[จัดหมวดหมู่สินค้า]
     EmployeeActor --> UC_ManageOrder[จัดการคำสั่งซื้อ]
     UC_ManageOrder -.include.-> UC_OrderOps["ตรวจสอบ/ยืนยัน, อัปเดตสถานะ, ยกเลิกคำสั่งซื้อ"]
-    EmployeeActor --> UC_ManageShip[จัดการการจัดส่ง
+    EmployeeActor --> UC_ManageShip[จัดการการจัดส่ง]
 
     %% แอดมิน
     AdminActor --> UC_ManageCustomer[จัดการลูกค้า]
     AdminActor --> UC_ManageReview[จัดการรีวิว]
     AdminActor --> UC_Report["รายงาน/สถิติ"]
     AdminActor --> UC_Approve[อนุมัติการจัดการสินค้า]
+    AdminActor --> UC_Product[เข้าถึงสินค้า]
 ```
 
 ---
