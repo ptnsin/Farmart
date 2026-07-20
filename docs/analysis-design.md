@@ -28,6 +28,7 @@ graph LR
 
     %% ลูกค้า
     CustomerActor --> UC_Register[สมัครสมาชิก]
+    UC_Register -.include.-> UC_Verify[ยืนยันตัวตน อีเมล/มือถือ]
     CustomerActor --> UC_Login[เข้าสู่ระบบ]
     CustomerActor --> UC_Profile[จัดการข้อมูลส่วนตัว]
     UC_Profile -.include.-> UC_EditProfile[แก้ไขข้อมูลส่วนตัว]
