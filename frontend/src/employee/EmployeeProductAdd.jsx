@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, ImagePlus, X, ChevronLeft } from "lucide-react";
+import { ImagePlus, X, ChevronLeft } from "lucide-react";
 import EmployeeSidebar from "./EmployeeSidebar";
-import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 import { addProduct } from "../data/productStore";
 import { api } from "../data/apiClient";
 import EmployeeTopBar from "./EmployeeTopBar";
@@ -20,7 +19,6 @@ const CATEGORIES = [
 export default function EmployeeProductAdd() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const [user, setUser] = useState(getCachedUser());
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -38,10 +36,6 @@ export default function EmployeeProductAdd() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saveError, setSaveError] = useState("");
-
-  useEffect(() => {
-    fetchCurrentUser().then(setUser).catch(() => {});
-  }, []);
 
   const handleField = (key) => (e) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -115,7 +109,7 @@ export default function EmployeeProductAdd() {
       <EmployeeSidebar />
 
       <main className="flex-1 overflow-y-auto px-6 py-6 md:px-10">
-<EmployeeTopBar />
+        <EmployeeTopBar />
 
         {/* Heading */}
         <button

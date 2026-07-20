@@ -10,12 +10,14 @@ import EmployeeNotificationBell from "./EmployeeNotificationBell";
  * @param {string} search - ค่า search ปัจจุบัน (ไม่ส่ง = ไม่ควบคุม input จากภายนอก)
  * @param {(value:string)=>void} onSearchChange - ถ้าไม่ส่งมา ช่อง search จะเป็น placeholder เฉยๆ (เช่นหน้า Add/Edit)
  * @param {string} roleLabel - ข้อความใต้ชื่อ user เช่น "Warehouse Staff"
+ * @param {React.ReactNode} children - ปุ่ม/element เสริมต่อท้ายฝั่งขวาสุด (เช่นปุ่มออกจากระบบในหน้า Settings)
  */
 export default function EmployeeTopBar({
   search,
   onSearchChange,
   roleLabel = "Warehouse Staff",
-  searchPlaceholder = "ค้นหาสินค้าด้วยชื่อหรือรหัสสินค้า...",
+  searchPlaceholder = "ค้นหา...",
+  children,
 }) {
   const [user, setUser] = useState(getCachedUser());
 
@@ -52,6 +54,7 @@ export default function EmployeeTopBar({
           <p className="text-xs text-slate-400">{roleLabel}</p>
         </div>
       </div>
+      {children}
     </div>
   );
 }
