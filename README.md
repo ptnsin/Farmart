@@ -119,9 +119,9 @@ graph TD
 | สัปดาห์ | กิจกรรม | รายละเอียด | SDLC Phase |
 |:---:|---|---|---|
 | **1** | วิเคราะห์และออกแบบระบบ (Analysis & Design) | ออกแบบ SDLC, Use Case, Database Design, ออกแบบ UX/UI ด้วย Figma และ Stitch AI → ทำโดย ภัทรนันท์, กองทัพ | Analysis + Design |
-| **2** | พัฒนา Frontend | พัฒนา Frontend ด้วย React.js และ JavaScript ตาม Figma เชื่อมต่อ API และทำ Responsive UI → ทำโดย ปฏิภาณ, พงศกร | Development |
-| **3** | พัฒนา Backend และฐานข้อมูล | สร้าง API ประมวลผล server ด้วย Node.js และ Postman เช็คเป็นระยะ → ทำโดย ศิววงศ์ | Development |
-| **4** | ทดสอบระบบและนำเสนอ | Test ทดสอบระบบด้วย Postman, Load Testing ด้วย JMeter, ทดสอบ UAT → ทำโดย กองทัพ | Testing |
+| **2** | พัฒนา Frontend | พัฒนา Frontend ด้วย React.js และ JavaScript ตาม Figma เชื่อมต่อ API และทำ Responsive UI → ทำโดย ปฏิภาณ, พงศกร, กองทัพ | Development |
+| **3** | พัฒนา Backend และฐานข้อมูล | สร้าง API ประมวลผล server ด้วย Node.js และ Postman เช็คเป็นระยะ → ทำโดย ศิววงศ์, ปฏิภาณ, ภัทรนันท์ | Development |
+| **4** | ทดสอบระบบและนำเสนอ | Test ทดสอบระบบด้วย Postman, Load Testing ด้วย JMeter, ทดสอบ UAT → ทำโดย ภัทรนันท์ | Testing |
 
 ---
 
@@ -140,11 +140,11 @@ graph TD
 
 | ลำดับ | รหัสนักศึกษา | ชื่อ-สกุล | หน้าที่รับผิดชอบ |
 |:---:|:---:|---|---|
-| 1 | 67114610 | กองทัพ โคกอาศัย | UX/UI, Tester |
-| 2 | 67118401 | ปฏิภาณ ฉิมจีน | Frontend Dev |
-| 3 | 67122203 | ศิวงศ์ เตยโพธิ์ | Database, Backend Dev |
+| 1 | 67114610 | กองทัพ โคกอาศัย | UX/UI, Frontend Dev |
+| 2 | 67118401 | ปฏิภาณ ฉิมจีน | Frontend Dev, Backend Dev |
+| 3 | 67122203 | ศิววงศ์ เตยโพธิ์ | Database, Backend Dev |
 | 4 | 67162470 | พงศกร ศรีนวลนุ่ม | Frontend Dev |
-| 5 | 67178847 | ภัทรนันท์ สิงห์เชิดชู | PM, Full-stack |
+| 5 | 67178847 | ภัทรนันท์ สิงห์เชิดชู | PM, Full-stack, QA |
 
 ---
 
@@ -174,7 +174,7 @@ graph TD
    ```bash
    cd backend
    npm install
-   npm run dev
+   npm start
    ```
 
 4. เปิดเบราว์เซอร์ไปที่ `http://localhost:5173`
