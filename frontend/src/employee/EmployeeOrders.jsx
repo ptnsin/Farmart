@@ -33,6 +33,25 @@ const DELIVERY_LABELS = {
 
 const PAGE_SIZE = 10;
 
+// สร้าง fallback avatar ที่ "คงที่" ตาม id เดิมเสมอ (pravatar.cc มีรูป img=1 ถึง img=70 เท่านั้น)
+// ถ้าเรียก https://i.pravatar.cc/64 เฉยๆ โดยไม่ระบุ ?img= มันจะสุ่มรูปใหม่ทุกครั้งที่ยิง request
+// ทำให้รูปโปรไฟล์ "เปลี่ยนทุกครั้งที่รีเฟรช" — จึงต้อง seed ด้วย id เพื่อให้ได้รูปเดิมเสมอ
+function getFallbackAvatar(seed) {
+  const n = Number(seed);
+  const safeSeed = Number.isFinite(n) && n > 0 ? n : 1;
+  return `https://i.pravatar.cc/64?img=${(safeSeed % 70) + 1}`;
+}
+
+// ดึงรูปโปรไฟล์ลูกค้าโดย join จาก userAvatarMap (userId -> avatar)
+// ถ้าไม่พบ ให้ fallback ไปที่รูปสินค้าชิ้นแรก แล้วค่อย fallback ไปที่ placeholder ที่ seed คงที่ตาม userId/orderId
+function getCustomerAvatar(o, userAvatarMap) {
+  return (
+    userAvatarMap[o.userId] ||
+    o.items?.[0]?.image ||
+    getFallbackAvatar(o.userId ?? o.id)
+  );
+}
+
 function StatCard({ label, value, note, noteColor }) {
   return (
     <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -53,6 +72,7 @@ export default function EmployeeOrders() {
   const [page, setPage] = useState(1);
 
   const [orders, setOrders] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actingId, setActingId] = useState(null); // order id ที่กำลังกดอนุมัติ/ปฏิเสธ/ยกเลิก
@@ -76,12 +96,25 @@ export default function EmployeeOrders() {
   }, [openMenuId]);
 
   // ดึงคำสั่งซื้อทั้งหมดครั้งเดียว ใช้คำนวณทั้งสถิติการ์ดด้านบนและตาราง (กรองตามแท็บฝั่ง client)
+  // ดึง users มาพร้อมกันด้วย เพื่อ join รูปโปรไฟล์ลูกค้าผ่าน userId
   const loadOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get("/api/orders");
-      setOrders(Array.isArray(data) ? data : data.orders || []);
+      const ordersData = await api.get("/api/orders");
+      const ordersList = Array.isArray(ordersData) ? ordersData : ordersData.orders || [];
+      setOrders(ordersList);
+
+      // ดึงเฉพาะ user ที่มีอยู่ในออเดอร์จริงๆ ทีละคนผ่าน /api/users/:id (ไม่ดึง list ทั้งหมด)
+      // เพื่อเลี่ยงปัญหาสิทธิ์เข้าถึง และไม่ต้องโหลดข้อมูล user ที่ไม่เกี่ยวข้อง
+      const uniqueUserIds = [...new Set(ordersList.map((o) => o.userId).filter(Boolean))];
+      const userResults = await Promise.allSettled(
+        uniqueUserIds.map((id) => api.get(`/api/users/${id}`))
+      );
+      const fetchedUsers = userResults
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => (r.value?.user ? r.value.user : r.value));
+      setUsers(fetchedUsers);
     } catch (err) {
       setError(err.message || "โหลดคำสั่งซื้อไม่สำเร็จ");
     } finally {
@@ -92,6 +125,15 @@ export default function EmployeeOrders() {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  // lookup map จาก userId -> avatar เพื่อใช้แสดงรูปโปรไฟล์ลูกค้าในตาราง
+  const userAvatarMap = useMemo(() => {
+    const map = {};
+    for (const u of users) {
+      map[u.id] = u.avatar;
+    }
+    return map;
+  }, [users]);
 
   // แท็บ "อนุมัติแล้ว" ต้องรวมออเดอร์ที่กำลัง "เตรียมพัสดุ" ด้วย (จะหายไปจากแท็บนี้ก็ต่อเมื่อกด "จัดส่ง" แล้วเท่านั้น)
   const tableOrders = useMemo(() => {
@@ -266,8 +308,17 @@ export default function EmployeeOrders() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img
-                          src={o.items?.[0]?.image || "https://i.pravatar.cc/64"}
+                          src={getCustomerAvatar(o, userAvatarMap)}
                           alt=""
+                          onError={(e) => {
+                            // ถ้ารูปโหลดไม่ขึ้น (เช่น URL localhost dev ที่ใช้ไม่ได้แล้ว) ให้ fallback เป็น
+                            // placeholder ที่ seed คงที่ตาม userId/orderId แทน (ไม่ใช้ placeholder แบบสุ่ม
+                            // เพราะจะทำให้รูปเปลี่ยนไปเรื่อยๆ ทุกครั้งที่ re-render/รีเฟรช)
+                            const fallback = getFallbackAvatar(o.userId ?? o.id);
+                            if (e.currentTarget.src !== fallback) {
+                              e.currentTarget.src = fallback;
+                            }
+                          }}
                           className="h-9 w-9 rounded-full object-cover"
                         />
                         <div className="leading-tight">
@@ -516,8 +567,14 @@ export default function EmployeeOrders() {
                   detailOrder.items.map((item, idx) => (
                     <div key={item.productId || idx} className="flex items-center gap-3 px-4 py-3">
                       <img
-                        src={item.image || "https://i.pravatar.cc/64"}
+                        src={item.image || getFallbackAvatar(item.productId ?? idx)}
                         alt=""
+                        onError={(e) => {
+                          const fallback = getFallbackAvatar(item.productId ?? idx);
+                          if (e.currentTarget.src !== fallback) {
+                            e.currentTarget.src = fallback;
+                          }
+                        }}
                         className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 object-cover"
                       />
                       <div className="min-w-0 flex-1">
