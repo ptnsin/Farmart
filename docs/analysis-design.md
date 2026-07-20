@@ -21,18 +21,13 @@
 
 ```mermaid
 graph LR
-    GuestActor((ผู้ใช้งานทั่วไป))
     CustomerActor((ลูกค้า))
     EmployeeActor((พนักงาน))
+    AdminActor((แอดมิน))
 
-    %% ผู้ใช้งานทั่วไป
-    GuestActor --> UC_Home[เรียกดูหน้าแรก]
-    GuestActor --> UC_Search[ค้นหาสินค้า]
-    GuestActor --> UC_Detail[ดูรายละเอียดสินค้า]
 
     %% ลูกค้า
     CustomerActor --> UC_Register[สมัครสมาชิก]
-    UC_Register -.include.-> UC_Verify[ยืนยันตัวตน อีเมล/มือถือ]
     CustomerActor --> UC_Login[เข้าสู่ระบบ]
     CustomerActor --> UC_Profile[จัดการข้อมูลส่วนตัว]
     UC_Profile -.include.-> UC_EditProfile[แก้ไขข้อมูลส่วนตัว]
@@ -42,33 +37,25 @@ graph LR
     UC_Cart -.include.-> UC_CartOps["เพิ่ม/ลบสินค้า, ดูสรุปยอดรวม"]
     CustomerActor --> UC_Order[สั่งซื้อสินค้า]
     UC_Order -.include.-> UC_Address[เลือกที่อยู่จัดส่ง]
-    UC_Order -.extend.-> UC_Promo[ดูโปรโมชั่น/ส่วนลดที่มีอยู่]
-    CustomerActor --> UC_Pay[ชำระเงิน]
     UC_Pay -.include.-> UC_PayMethod[เลือกช่องทางชำระเงิน]
     CustomerActor --> UC_Track[ติดตามคำสั่งซื้อ]
     CustomerActor --> UC_Cancel[ยกเลิกคำสั่งซื้อ]
     UC_Cancel -.include.-> UC_ConfirmCancel[รับแจ้งเตือนยืนยันการยกเลิก]
-    UC_ConfirmCancel -.include.-> UC_RefundMail[รับข้อมูลการคืนเงินผ่านอีเมล]
     CustomerActor --> UC_Review["รีวิวสินค้า/ให้คะแนน"]
-    CustomerActor --> UC_Contact[ติดต่อสอบถาม]
 
     %% พนักงาน
     EmployeeActor --> UC_ManageProduct[จัดการสินค้า]
     UC_ManageProduct -.include.-> UC_ProductOps["เพิ่ม/ลบ/แก้ไขสินค้า"]
     EmployeeActor --> UC_Category[จัดหมวดหมู่สินค้า]
-    EmployeeActor --> UC_Content[จัดการเนื้อหาสินค้าในเว็บไซต์]
     EmployeeActor --> UC_ManageOrder[จัดการคำสั่งซื้อ]
     UC_ManageOrder -.include.-> UC_OrderOps["ตรวจสอบ/ยืนยัน, อัปเดตสถานะ, ยกเลิกคำสั่งซื้อ"]
-    EmployeeActor --> UC_ManagePay[จัดการการชำระเงิน]
-    EmployeeActor --> UC_ManageShip[จัดการการจัดส่ง]
-    UC_ManageOrder -.extend.-> UC_ManageRefund[จัดการคืนเงินเมื่อยกเลิกคำสั่งซื้อ]
+    EmployeeActor --> UC_ManageShip[จัดการการจัดส่ง
 
-    %% ผู้จัดการ
-    ManagerActor --> UC_ManageCustomer[จัดการลูกค้า]
-    ManagerActor --> UC_ManagePromo["จัดการโปรโมชั่น/ส่วนลด"]
-    ManagerActor --> UC_ManageReview[จัดการรีวิว]
-    ManagerActor --> UC_Report["รายงาน/สถิติ"]
-    ManagerActor --> UC_Approve[อนุมัติการจัดการสินค้า]
+    %% แอดมิน
+    AdminActor --> UC_ManageCustomer[จัดการลูกค้า]
+    AdminActor --> UC_ManageReview[จัดการรีวิว]
+    AdminActor --> UC_Report["รายงาน/สถิติ"]
+    AdminActor --> UC_Approve[อนุมัติการจัดการสินค้า]
 ```
 
 ---
