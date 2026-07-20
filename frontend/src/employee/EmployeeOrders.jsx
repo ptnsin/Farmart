@@ -34,23 +34,37 @@ const DELIVERY_LABELS = {
 
 const PAGE_SIZE = 10;
 
-// สร้าง fallback avatar ที่ "คงที่" ตาม id เดิมเสมอ (pravatar.cc มีรูป img=1 ถึง img=70 เท่านั้น)
-// ถ้าเรียก https://i.pravatar.cc/64 เฉยๆ โดยไม่ระบุ ?img= มันจะสุ่มรูปใหม่ทุกครั้งที่ยิง request
-// ทำให้รูปโปรไฟล์ "เปลี่ยนทุกครั้งที่รีเฟรช" — จึงต้อง seed ด้วย id เพื่อให้ได้รูปเดิมเสมอ
-function getFallbackAvatar(seed) {
-  const n = Number(seed);
-  const safeSeed = Number.isFinite(n) && n > 0 ? n : 1;
-  return `https://i.pravatar.cc/64?img=${(safeSeed % 70) + 1}`;
-}
-
-// ดึงรูปโปรไฟล์ลูกค้าโดย join จาก userAvatarMap (userId -> avatar)
-// ถ้าไม่พบ ให้ fallback ไปที่รูปสินค้าชิ้นแรก แล้วค่อย fallback ไปที่ placeholder ที่ seed คงที่ตาม userId/orderId
-function getCustomerAvatar(o, userAvatarMap) {
-  return (
-    userAvatarMap[o.userId] ||
-    o.items?.[0]?.image ||
-    getFallbackAvatar(o.userId ?? o.id)
+// ไอคอนโปรไฟล์เริ่มต้น (คนสีเทาบนพื้นขาว) สำหรับ user ที่ยังไม่เคยอัปโหลดรูปโปรไฟล์
+// ใช้ SVG แบบ inline แทนรูปสุ่ม/รูปสินค้า เพื่อไม่ให้ดูเหมือนเป็นรูปของสินค้าในออเดอร์
+const DEFAULT_AVATAR =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'>" +
+      "<rect width='64' height='64' rx='32' fill='#f1f5f9'/>" +
+      "<circle cx='32' cy='24' r='11' fill='#cbd5e1'/>" +
+      "<path d='M12 54c2-13 14-20 20-20s18 7 20 20' fill='#cbd5e1'/>" +
+      "</svg>"
   );
+
+// (ไม่ใช้ placeholder รูปสินค้าอีกแล้ว — ถ้าไม่มีรูปจริง จะไม่แสดงกล่องรูปเลยตามที่ต้องการ)
+
+// backend เก็บรูปสินค้าบางรายการเป็น path แบบ relative (เช่น "/uploads/products/SD001.svg")
+// พอเอาไปใส่ src ตรงๆ browser จะไปหาไฟล์ที่ origin ของหน้าเว็บ (frontend) แทนที่จะเป็น backend
+// ทำให้รูปโหลดไม่ขึ้น จึงต้องเติม base URL ของ backend ให้ path แบบ relative เหล่านี้ก่อนเสมอ
+// NOTE: ใช้ localhost:4000 ตามที่เห็นใน users.json/orders.json — ถ้า apiClient.js มี base URL
+// กำหนดไว้เป็น constant อยู่แล้ว แนะนำให้ import มาใช้แทนการ hardcode ตรงนี้
+const API_BASE = "http://localhost:4000";
+
+function resolveProductImage(url) {
+  if (!url) return null;
+  if (/^(https?:)?\/\//.test(url) || url.startsWith("data:")) return url;
+  return `${API_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+// ดึงรูปโปรไฟล์ลูกค้าโดย join จาก userAvatarMap (userId -> avatar) เท่านั้น
+// ถ้า user คนนั้นไม่มีรูปโปรไฟล์ (ยังไม่เคยอัปโหลด) ให้ใช้ไอคอนเริ่มต้นแทน
+// ห้าม fallback ไปที่รูปสินค้าในออเดอร์เด็ดขาด เพราะไม่ใช่รูปของ user
+function getCustomerAvatar(o, userAvatarMap) {
+  return userAvatarMap[o.userId] || DEFAULT_AVATAR;
 }
 
 function StatCard({ label, value, note, noteColor }) {
@@ -325,12 +339,10 @@ export default function EmployeeOrders() {
                           src={getCustomerAvatar(o, userAvatarMap)}
                           alt=""
                           onError={(e) => {
-                            // ถ้ารูปโหลดไม่ขึ้น (เช่น URL localhost dev ที่ใช้ไม่ได้แล้ว) ให้ fallback เป็น
-                            // placeholder ที่ seed คงที่ตาม userId/orderId แทน (ไม่ใช้ placeholder แบบสุ่ม
-                            // เพราะจะทำให้รูปเปลี่ยนไปเรื่อยๆ ทุกครั้งที่ re-render/รีเฟรช)
-                            const fallback = getFallbackAvatar(o.userId ?? o.id);
-                            if (e.currentTarget.src !== fallback) {
-                              e.currentTarget.src = fallback;
+                            // ถ้ารูปโหลดไม่ขึ้น (เช่น URL localhost dev ที่ใช้ไม่ได้แล้ว หรือไฟล์ถูกลบ)
+                            // ให้ fallback เป็นไอคอนโปรไฟล์เริ่มต้น (ไม่ใช้รูปสินค้าหรือรูปสุ่ม)
+                            if (e.currentTarget.src !== DEFAULT_AVATAR) {
+                              e.currentTarget.src = DEFAULT_AVATAR;
                             }
                           }}
                           className="h-9 w-9 rounded-full object-cover"
@@ -580,17 +592,18 @@ export default function EmployeeOrders() {
                 ) : (
                   detailOrder.items.map((item, idx) => (
                     <div key={item.productId || idx} className="flex items-center gap-3 px-4 py-3">
-                      <img
-                        src={item.image || getFallbackAvatar(item.productId ?? idx)}
-                        alt=""
-                        onError={(e) => {
-                          const fallback = getFallbackAvatar(item.productId ?? idx);
-                          if (e.currentTarget.src !== fallback) {
-                            e.currentTarget.src = fallback;
-                          }
-                        }}
-                        className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 object-cover"
-                      />
+                      {resolveProductImage(item.image) && (
+                        <img
+                          src={resolveProductImage(item.image)}
+                          alt=""
+                          onError={(e) => {
+                            // ถ้ารูปที่ควรจะโหลดได้ดันโหลดพัง (ลิงก์เสีย) ให้ซ่อนรูปไปเลย
+                            // ไม่ใช้กล่อง placeholder ตามที่ต้องการ "ถ้าไม่มีก็ไม่มี"
+                            e.currentTarget.style.display = "none";
+                          }}
+                          className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 object-cover"
+                        />
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-slate-800">
                           {item.name || item.productId}

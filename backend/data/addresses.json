@@ -88,5 +88,20 @@
     "postalCode": "73110",
     "isDefault": false,
     "createdAt": "2026-07-19T04:07:12.126Z"
+  },
+  {
+    "id": "addr_mrtn82ba3clu",
+    "ownerId": 13,
+    "ownerName": "ShiBas0happy",
+    "label": "wwwwwwwww",
+    "recipientName": "wwwwwwww",
+    "phone": "0646294022",
+    "addressLine": "4/24",
+    "subdistrict": "เขาเพิ่ม",
+    "district": "บ้านนา",
+    "province": "นครนายก",
+    "postalCode": "26110",
+    "isDefault": true,
+    "createdAt": "2026-07-20T19:54:19.702Z"
   }
 ]
