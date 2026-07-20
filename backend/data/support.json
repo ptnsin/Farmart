@@ -1,14 +1,14 @@
 [
   {
+    "type": "system",
+    "priority": "medium",
+    "relatedRef": "ORD-10255",
     "id": "SP-1043",
     "userId": 14,
     "role": "CUSTOMER",
     "subject": "การจัดส่ง",
     "message": "ทำไมไม่ส่งให้",
-    "type": "system",
-    "priority": "medium",
-    "relatedRef": "ORD-10255",
-    "status": "open",
+    "status": "resolved",
     "date": "2026-07-20"
   },
   {
@@ -22,17 +22,5 @@
     "message": "",
     "status": "open",
     "date": "2026-07-04"
-  },
-  {
-    "type": "system",
-    "priority": "medium",
-    "relatedRef": "",
-    "id": "SP-1039",
-    "userId": 3,
-    "role": "ADMIN",
-    "subject": "สอบถามขั้นตอนอนุมัติสินค้า",
-    "message": "",
-    "status": "resolved",
-    "date": "2026-07-02"
   }
 ]

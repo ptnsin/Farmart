@@ -68,3 +68,14 @@ export async function fetchUserById(id) {
   const data = await api.get(`/api/users/${id}`);
   return data.user;
 }
+
+/**
+ * เปลี่ยนสถานะตั๋ว support (เฉพาะ role ADMIN เท่านั้นตาม routes/support.js)
+ * ตรงกับ PUT /api/support/:id
+ * @param {string} id เช่น "SP-1042"
+ * @param {"open"|"resolved"} status
+ */
+export async function updateSupportTicketStatus(id, status) {
+  const data = await api.put(`/api/support/${id}`, { status });
+  return data.ticket;
+}

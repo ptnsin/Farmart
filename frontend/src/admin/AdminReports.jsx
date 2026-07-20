@@ -25,6 +25,7 @@ import {
   fetchCustomerIssues,
   fetchOrderById,
   fetchUserById,
+  updateSupportTicketStatus,
 } from "../data/reportsStore";
 
 // ไอคอน/สีของแต่ละ stat card ผูกกับ key ที่ backend ส่งกลับมา (revenue, orders, newCustomers)
@@ -325,6 +326,27 @@ export default function AdminReports() {
   const [error, setError] = useState(null);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [statusError, setStatusError] = useState(null);
+
+  const isAdmin = currentUser?.role === "ADMIN";
+
+  async function handleToggleStatus(ticket, table) {
+    const nextStatus = ticket.status === "open" ? "resolved" : "open";
+    setUpdatingId(ticket.id);
+    setStatusError(null);
+    try {
+      await updateSupportTicketStatus(ticket.id, nextStatus);
+      const updater = (list) =>
+        list.map((t) => (t.id === ticket.id ? { ...t, status: nextStatus } : t));
+      if (table === "employee") setIssues(updater);
+      else setCustomerIssues(updater);
+    } catch (err) {
+      setStatusError(err.message || "เปลี่ยนสถานะไม่สำเร็จ");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   useEffect(() => {
     fetchCurrentUser()
@@ -430,6 +452,19 @@ export default function AdminReports() {
               className="font-medium underline underline-offset-2"
             >
               ลองใหม่
+            </button>
+          </div>
+        )}
+
+        {statusError && (
+          <div className="mt-4 flex items-center justify-between rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            <span>{statusError}</span>
+            <button
+              type="button"
+              onClick={() => setStatusError(null)}
+              className="font-medium underline underline-offset-2"
+            >
+              ปิด
             </button>
           </div>
         )}
@@ -621,10 +656,26 @@ export default function AdminReports() {
                           })}
                         </td>
                         <td className="px-6 py-3.5">
-                          <span className={`flex items-center gap-1.5 whitespace-nowrap ${status.text}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                            {status.label}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`flex items-center gap-1.5 whitespace-nowrap ${status.text}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                              {status.label}
+                            </span>
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStatus(issue, "employee")}
+                                disabled={updatingId === issue.id}
+                                className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+                              >
+                                {updatingId === issue.id
+                                  ? "..."
+                                  : issue.status === "open"
+                                  ? "ทำเครื่องหมายว่าแก้ไขแล้ว"
+                                  : "เปิดใหม่"}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -719,10 +770,26 @@ export default function AdminReports() {
                           })}
                         </td>
                         <td className="px-6 py-3.5">
-                          <span className={`flex items-center gap-1.5 whitespace-nowrap ${status.text}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                            {status.label}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`flex items-center gap-1.5 whitespace-nowrap ${status.text}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                              {status.label}
+                            </span>
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStatus(issue, "customer")}
+                                disabled={updatingId === issue.id}
+                                className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+                              >
+                                {updatingId === issue.id
+                                  ? "..."
+                                  : issue.status === "open"
+                                  ? "ทำเครื่องหมายว่าแก้ไขแล้ว"
+                                  : "เปิดใหม่"}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
