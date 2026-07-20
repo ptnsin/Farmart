@@ -37,7 +37,7 @@ graph LR
     UC_Cart -.include.-> UC_CartOps["เพิ่ม/ลบสินค้า, ดูสรุปยอดรวม"]
     CustomerActor --> UC_Order[สั่งซื้อสินค้า]
     UC_Order -.include.-> UC_Address[เลือกที่อยู่จัดส่ง]
-    UC_Pay -.include.-> UC_PayMethod[เลือกช่องทางชำระเงิน]
+    UC_Order -.include.-> UC_PayMethod[เลือกช่องทางชำระเงิน]
     CustomerActor --> UC_Track[ติดตามคำสั่งซื้อ]
     CustomerActor --> UC_Cancel[ยกเลิกคำสั่งซื้อ]
     UC_Cancel -.include.-> UC_ConfirmCancel[รับแจ้งเตือนยืนยันการยกเลิก]
