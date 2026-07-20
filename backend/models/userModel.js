@@ -75,10 +75,15 @@ function deleteUser(id) {
 /** @throws {Error} ถ้าบัญชีถูกระงับ */
 function authenticate(email, password) {
   const user = findUserByEmail(email);
-  if (!user || user.password !== password) return null;
+
+  if (!user || user.password !== password) {
+    throw new Error("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+  }
+
   if (user.status === "suspended") {
     throw new Error("บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ");
   }
+
   return user;
 }
 
