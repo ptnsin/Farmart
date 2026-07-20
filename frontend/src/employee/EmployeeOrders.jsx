@@ -10,6 +10,7 @@ import {
 import EmployeeSidebar from "./Employeesidebar";
 import EmployeeTopBar from "./EmployeeTopBar";
 import { api } from "../data/apiClient";
+import { addNotification } from "../data/notificationStore";
 
 const TABS = [
   { key: "pending", label: "รอการตรวจสอบ" },
@@ -192,6 +193,19 @@ export default function EmployeeOrders() {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, ...updated, status } : o))
       );
+
+      // แจ้งเตือนลูกค้าเมื่อคำสั่งซื้อถูกยกเลิก (กรณีพนักงานอนุมัติไปแล้วแต่มายกเลิกทีหลัง)
+      // หา snapshot ของออเดอร์จาก state เดิม (ก่อนอัปเดต) ไว้ใช้แสดงยอดเงินในข้อความแจ้งเตือน
+      if (status === "cancelled") {
+        const orderInfo = orders.find((o) => o.id === orderId);
+        addNotification({
+          type: "order",
+          title: `คำสั่งซื้อ ${orderId} ถูกยกเลิก`,
+          message: `คำสั่งซื้อมูลค่า ฿${(orderInfo?.total || 0).toLocaleString()} ของคุณถูกยกเลิกโดยเจ้าหน้าที่ หากมีข้อสงสัยกรุณาติดต่อร้านค้า`,
+        }).catch(() => {
+          /* แจ้งเตือนล้มเหลวไม่ควรทำให้การยกเลิกออเดอร์ที่สำเร็จแล้วดูเหมือนพัง */
+        });
+      }
     } catch (err) {
       alert(err.message || "อัปเดตสถานะไม่สำเร็จ");
     } finally {
