@@ -1,5 +1,8 @@
 [
   {
+    "type": "system",
+    "priority": "medium",
+    "relatedRef": "",
     "id": "SP-1042",
     "userId": 1,
     "role": "EMPLOYEE",
@@ -9,6 +12,9 @@
     "date": "2026-07-04"
   },
   {
+    "type": "system",
+    "priority": "medium",
+    "relatedRef": "",
     "id": "SP-1039",
     "userId": 3,
     "role": "ADMIN",

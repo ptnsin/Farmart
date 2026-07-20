@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Loader2,
   MoreVertical,
+  X,
 } from "lucide-react";
 import EmployeeSidebar from "./Employeesidebar";
 import EmployeeTopBar from "./EmployeeTopBar";
@@ -23,6 +24,11 @@ const PAYMENT_LABELS = {
   cod: "เก็บเงินปลายทาง",
   card: "บัตรเครดิต/เดบิต",
   transfer: "โอนเงิน",
+};
+
+const DELIVERY_LABELS = {
+  standard: "จัดส่งมาตรฐาน (3-5 วันทำการ)",
+  express: "จัดส่งด่วน (1-2 วันทำการ)",
 };
 
 const PAGE_SIZE = 10;
@@ -50,12 +56,10 @@ export default function EmployeeOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actingId, setActingId] = useState(null); // order id ที่กำลังกดอนุมัติ/ปฏิเสธ/ยกเลิก
-  // เก็บ id ที่เพิ่งกด "อนุมัติ" สำเร็จในเซสชันนี้ ใช้กับสถิติ "อนุมัติแล้ววันนี้"
-  // (backend ไม่มีฟิลด์ approvedAt เก็บวันที่อนุมัติจริง มีแต่ date = วันที่สร้างออเดอร์
-  //  ถ้าใช้ o.date === today แบบเดิมจะได้ตัวเลขผิด เพราะเทียบวันที่สร้าง ไม่ใช่วันที่อนุมัติ)
-  const [approvedTodayIds, setApprovedTodayIds] = useState(() => new Set());
   // ออเดอร์ที่กำลังจะยืนยันยกเลิก (เปิด modal แจ้งเตือนแทน window.confirm)
   const [cancelTarget, setCancelTarget] = useState(null);
+  // ออเดอร์ที่กำลังเปิดดูรายละเอียดสินค้า (เปิดจากการคลิกที่แถวในตาราง)
+  const [detailOrder, setDetailOrder] = useState(null);
   // id ของแถวที่เปิดเมนู MoreVertical อยู่ (เปลี่ยนสถานะ: เตรียมพัสดุ / จัดส่ง)
   const [openMenuId, setOpenMenuId] = useState(null);
 
@@ -124,17 +128,13 @@ export default function EmployeeOrders() {
 
   const stats = useMemo(() => {
     const pending = orders.filter((o) => o.status === "pending");
-    const approvedToday = orders.filter(
-      (o) => o.status === "approved" && approvedTodayIds.has(o.id)
-    );
     const pendingValue = pending.reduce((sum, o) => sum + (o.total || 0), 0);
     return [
       { label: "รอการอนุมัติ", value: String(pending.length) },
       { label: "มูลค่ารวม (รอตรวจสอบ)", value: `฿${pendingValue.toLocaleString()}` },
       { label: "คำสั่งซื้อทั้งหมด", value: String(orders.length) },
-      { label: "อนุมัติแล้ววันนี้", value: String(approvedToday.length) },
     ];
-  }, [orders, approvedTodayIds]);
+  }, [orders]);
 
   async function handleStatusChange(orderId, status) {
     if (status === "rejected") {
@@ -150,10 +150,6 @@ export default function EmployeeOrders() {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, ...updated, status } : o))
       );
-
-      if (status === "approved") {
-        setApprovedTodayIds((prev) => new Set(prev).add(orderId));
-      }
     } catch (err) {
       alert(err.message || "อัปเดตสถานะไม่สำเร็จ");
     } finally {
@@ -217,7 +213,7 @@ export default function EmployeeOrders() {
         </div>
 
         {/* Stats */}
-        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((s) => (
             <StatCard key={s.label} {...s} />
           ))}
@@ -261,7 +257,11 @@ export default function EmployeeOrders() {
                 </tr>
               ) : (
                 pagedOrders.map((o) => (
-                  <tr key={o.id} className="border-b border-slate-50 last:border-0">
+                  <tr
+                    key={o.id}
+                    onClick={() => setDetailOrder(o)}
+                    className="cursor-pointer border-b border-slate-50 last:border-0 hover:bg-slate-50/70"
+                  >
                     <td className="px-6 py-4 font-medium text-slate-800">{o.id}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -317,7 +317,7 @@ export default function EmployeeOrders() {
                           : "รอการตรวจสอบ"}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <div
                         className="relative flex items-center justify-end gap-2"
                         data-order-menu
@@ -471,6 +471,110 @@ export default function EmployeeOrders() {
                 className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {actingId === cancelTarget.id ? "กำลังยกเลิก..." : "ยืนยันยกเลิก"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal รายละเอียดคำสั่งซื้อ (เปิดจากการคลิกแถวในตาราง) */}
+      {detailOrder && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
+          onClick={() => setDetailOrder(null)}
+        >
+          <div
+            className="w-full max-w-lg rounded-2xl bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-800">{detailOrder.id}</h2>
+                <p className="mt-0.5 text-sm text-slate-400">
+                  {detailOrder.customer || `User #${detailOrder.userId}`}
+                  {detailOrder.date ? ` · ${detailOrder.date}` : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="ปิด"
+                onClick={() => setDetailOrder(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-50"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto px-6 py-4">
+              <p className="mb-2 text-sm font-medium text-slate-600">รายการสินค้า</p>
+              <div className="divide-y divide-slate-50 rounded-xl border border-slate-100">
+                {(detailOrder.items || []).length === 0 ? (
+                  <p className="px-4 py-6 text-center text-sm text-slate-400">
+                    ไม่มีรายการสินค้าในคำสั่งซื้อนี้
+                  </p>
+                ) : (
+                  detailOrder.items.map((item, idx) => (
+                    <div key={item.productId || idx} className="flex items-center gap-3 px-4 py-3">
+                      <img
+                        src={item.image || "https://i.pravatar.cc/64"}
+                        alt=""
+                        className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-slate-800">
+                          {item.name || item.productId}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {item.quantity} x ฿{Number(item.price || 0).toLocaleString()}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-sm font-medium text-slate-700">
+                        ฿
+                        {(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString(
+                          undefined,
+                          { minimumFractionDigits: 2 }
+                        )}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-4 space-y-2 rounded-xl border border-slate-100 px-4 py-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">ที่อยู่จัดส่ง</span>
+                  <span className="max-w-[65%] text-right text-slate-700">
+                    {detailOrder.address || "-"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">ช่องทางชำระเงิน</span>
+                  <span className="text-slate-700">
+                    {PAYMENT_LABELS[detailOrder.paymentMethod] || detailOrder.paymentMethod || "-"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">วิธีจัดส่ง</span>
+                  <span className="text-slate-700">
+                    {DELIVERY_LABELS[detailOrder.deliveryMethod] || "จัดส่งมาตรฐาน (3-5 วันทำการ)"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-base">
+                  <span className="font-medium text-slate-600">ยอดรวมทั้งหมด</span>
+                  <span className="font-semibold text-emerald-700">
+                    ฿{(detailOrder.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setDetailOrder(null)}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                ปิด
               </button>
             </div>
           </div>

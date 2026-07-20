@@ -51,9 +51,9 @@
     ],
     "total": 820,
     "date": "2026-07-19",
-    "status": "shipping",
-    "statusStep": 2,
-    "statusLabel": "กำลังจัดส่ง",
+    "status": "delivered",
+    "statusStep": 4,
+    "statusLabel": "จัดส่งสำเร็จ",
     "address": "โกโจซาโตรุ (0984465331) 78/110 ตำบลหอมเกร็ด อำเภอสามพราน นครปฐม 73110",
     "paymentMethod": "promptpay",
     "deliveryMethod": "standard"
