@@ -6,14 +6,40 @@ import { addProduct } from "../data/productStore";
 import { api } from "../data/apiClient";
 import EmployeeTopBar from "./EmployeeTopBar";
 
-// รายการหมวดหมู่ตามข้อมูลสินค้าจริงในระบบ (ร้านขายอุปกรณ์การเกษตร ไม่ใช่พืชผักสด)
+// รายการหมวดหมู่ตามข้อมูลสินค้าจริงในระบบ
+// ตรวจสอบกับ products.json แล้ว (61 รายการ) มีครบ 10 หมวดหมู่ที่ใช้งานจริง
+// เดิม list นี้ขาด "ยาฆ่าแมลง", "ยาฆ่าหญ้า", "ไม้ดอก", "ไม้ผล" ไป ทั้งที่มีสินค้าในคลังแล้ว
+// (พนักงานเลยเพิ่มสินค้า 4 หมวดนี้ไม่ได้ ต้องเพิ่มให้ตรงกับของจริง)
 const CATEGORIES = [
   "เมล็ดพันธุ์",
   "ฮอร์โมน",
   "ปุ๋ย",
+  "ยาฆ่าแมลง",
+  "ยาฆ่าหญ้า",
+  "ไม้ดอก",
+  "ไม้ผล",
   "อุปกรณ์จัดการดิน",
   "อุปกรณ์รดน้ำ",
   "กระถาง",
+];
+
+// รายชื่อจังหวัดของไทยทั้งหมด (ข้อมูลจริงตามการแบ่งเขตปกครอง ไม่ได้อิงจากสถิติการใช้งานหรือ
+// การเดาว่าจังหวัดไหนเชี่ยวชาญอะไร) ใช้เป็นตัวช่วย autocomplete ในช่อง "แหล่งผลิต" เท่านั้น
+// ช่องนี้ยังพิมพ์เองได้อิสระเสมอ ไม่ได้บังคับเลือกจากลิสต์นี้ (รวมถึงพิมพ์ชื่อประเทศต่างประเทศได้)
+const THAI_PROVINCES = [
+  "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น",
+  "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท", "ชัยภูมิ", "ชุมพร",
+  "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก",
+  "นครปฐม", "นครพนม", "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี",
+  "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์", "ปทุมธานี", "ประจวบคีรีขันธ์",
+  "ปราจีนบุรี", "ปัตตานี", "พะเยา", "พังงา", "พัทลุง", "พิจิตร",
+  "พิษณุโลก", "เพชรบุรี", "เพชรบูรณ์", "แพร่", "ภูเก็ต", "มหาสารคาม",
+  "มุกดาหาร", "แม่ฮ่องสอน", "ยโสธร", "ยะลา", "ร้อยเอ็ด", "ระนอง",
+  "ระยอง", "ราชบุรี", "ลพบุรี", "ลำปาง", "ลำพูน", "เลย",
+  "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ", "สมุทรสงคราม",
+  "สมุทรสาคร", "สระแก้ว", "สระบุรี", "สิงห์บุรี", "สุโขทัย", "สุพรรณบุรี",
+  "สุราษฎร์ธานี", "สุรินทร์", "หนองคาย", "หนองบัวลำภู", "อ่างทอง", "อำนาจเจริญ",
+  "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี",
 ];
 
 export default function EmployeeProductAdd() {
@@ -36,6 +62,62 @@ export default function EmployeeProductAdd() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [formErrors, setFormErrors] = useState({});
+
+  // ตรวจความถูกต้องแบบพอดี ๆ: กันค่าที่ชัดเจนว่าผิด (ราคาติดลบ, ไม่กรอกชื่อ, จำนวนไม่ใช่ตัวเลข ฯลฯ)
+  // แต่ "ผู้จำหน่าย" กับ "แหล่งผลิต" ปล่อยเป็นข้อความอิสระตามเดิม เพราะอาจเป็นชื่อ/สถานที่
+  // จากต่างประเทศหรือรูปแบบที่คาดเดาล่วงหน้าไม่ได้ ไม่ควรบังคับรูปแบบตายตัว
+  const validate = (values) => {
+    const errs = {};
+    const name = values.name.trim();
+    if (!name) {
+      errs.name = "กรุณากรอกชื่อสินค้า";
+    } else if (name.length < 2) {
+      errs.name = "ชื่อสินค้าสั้นเกินไป";
+    } else if (name.length > 100) {
+      errs.name = "ชื่อสินค้ายาวเกินไป (ไม่เกิน 100 ตัวอักษร)";
+    } else if (!/[ก-๙a-zA-Z]/.test(name)) {
+      errs.name = "ชื่อสินค้าต้องมีตัวอักษร ไม่ใช่ตัวเลขหรือสัญลักษณ์ล้วน";
+    }
+
+    if (values.price === "" || Number.isNaN(Number(values.price))) {
+      errs.price = "กรุณากรอกราคาต่อหน่วยเป็นตัวเลข";
+    } else if (Number(values.price) <= 0) {
+      errs.price = "ราคาต่อหน่วยต้องมากกว่า 0";
+    } else if (Number(values.price) > 1000000) {
+      errs.price = "ราคาต่อหน่วยสูงผิดปกติ กรุณาตรวจสอบอีกครั้ง";
+    }
+
+    if (values.cost !== "") {
+      if (Number.isNaN(Number(values.cost))) {
+        errs.cost = "ต้นทุนต่อหน่วยต้องเป็นตัวเลข";
+      } else if (Number(values.cost) < 0) {
+        errs.cost = "ต้นทุนต่อหน่วยต้องไม่ติดลบ";
+      }
+    }
+
+    if (values.stock === "" || Number.isNaN(Number(values.stock))) {
+      errs.stock = "กรุณากรอกจำนวนคงเหลือเป็นตัวเลข";
+    } else if (!Number.isInteger(Number(values.stock))) {
+      errs.stock = "จำนวนคงเหลือต้องเป็นจำนวนเต็ม";
+    } else if (Number(values.stock) < 0) {
+      errs.stock = "จำนวนคงเหลือต้องไม่ติดลบ";
+    }
+
+    if (!values.description.trim()) {
+      errs.description = "กรุณากรอกรายละเอียดสินค้า";
+    } else if (values.description.trim().length < 10) {
+      errs.description = "อธิบายรายละเอียดให้มากกว่านี้อีกนิด (อย่างน้อย 10 ตัวอักษร)";
+    }
+
+    return errs;
+  };
+
+  // กันพิมพ์ -, +, e ในช่องตัวเลข (ราคา/ต้นทุน/จำนวน) เพราะ input type="number"
+  // เปิดให้พิมพ์อักขระพวกนี้ได้อยู่ดีแม้จะมี min="0"
+  const blockInvalidNumberKeys = (e) => {
+    if (["-", "+", "e", "E"].includes(e.key)) e.preventDefault();
+  };
 
   const handleField = (key) => (e) => {
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -65,6 +147,11 @@ export default function EmployeeProductAdd() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaveError("");
+
+    const errs = validate(form);
+    setFormErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
     setSaving(true);
     try {
       let imageUrl;
@@ -204,8 +291,15 @@ export default function EmployeeProductAdd() {
                   onChange={handleField("name")}
                   type="text"
                   placeholder="เช่น ข้าวหอมมะลิ 100%"
-                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  className={`w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:ring-2 ${
+                    formErrors.name
+                      ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                      : "border-slate-200 focus:border-emerald-400 focus:ring-emerald-100"
+                  }`}
                 />
+                {formErrors.name && (
+                  <p className="mt-1 text-xs text-rose-500">{formErrors.name}</p>
+                )}
               </div>
 
               <div>
@@ -246,11 +340,20 @@ export default function EmployeeProductAdd() {
                   required
                   value={form.price}
                   onChange={handleField("price")}
+                  onKeyDown={blockInvalidNumberKeys}
                   type="number"
                   min="0"
+                  step="0.01"
                   placeholder="0.00"
-                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  className={`w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:ring-2 ${
+                    formErrors.price
+                      ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                      : "border-slate-200 focus:border-emerald-400 focus:ring-emerald-100"
+                  }`}
                 />
+                {formErrors.price && (
+                  <p className="mt-1 text-xs text-rose-500">{formErrors.price}</p>
+                )}
               </div>
 
               <div>
@@ -260,11 +363,20 @@ export default function EmployeeProductAdd() {
                 <input
                   value={form.cost}
                   onChange={handleField("cost")}
+                  onKeyDown={blockInvalidNumberKeys}
                   type="number"
                   min="0"
+                  step="0.01"
                   placeholder="0.00 (ไม่บังคับ)"
-                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  className={`w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:ring-2 ${
+                    formErrors.cost
+                      ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                      : "border-slate-200 focus:border-emerald-400 focus:ring-emerald-100"
+                  }`}
                 />
+                {formErrors.cost && (
+                  <p className="mt-1 text-xs text-rose-500">{formErrors.cost}</p>
+                )}
               </div>
 
               <div>
@@ -275,11 +387,20 @@ export default function EmployeeProductAdd() {
                   required
                   value={form.stock}
                   onChange={handleField("stock")}
+                  onKeyDown={blockInvalidNumberKeys}
                   type="number"
                   min="0"
+                  step="1"
                   placeholder="0"
-                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  className={`w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:ring-2 ${
+                    formErrors.stock
+                      ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                      : "border-slate-200 focus:border-emerald-400 focus:ring-emerald-100"
+                  }`}
                 />
+                {formErrors.stock && (
+                  <p className="mt-1 text-xs text-rose-500">{formErrors.stock}</p>
+                )}
               </div>
 
               <div>
@@ -303,9 +424,18 @@ export default function EmployeeProductAdd() {
                   value={form.location}
                   onChange={handleField("location")}
                   type="text"
-                  placeholder="เช่น เชียงใหม่"
+                  list="location-suggestions"
+                  placeholder="เช่น เชียงใหม่ หรือ Chiang Mai, Thailand"
                   className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
                 />
+                <datalist id="location-suggestions">
+                  {THAI_PROVINCES.map((loc) => (
+                    <option key={loc} value={loc} />
+                  ))}
+                </datalist>
+                <p className="mt-1.5 text-xs text-slate-400">
+                  พิมพ์ 1-2 ตัวจะมีรายชื่อจังหวัดขึ้นให้เลือก หรือพิมพ์เองได้อิสระถ้าเป็นแหล่งผลิตจากต่างประเทศ
+                </p>
               </div>
 
               <div className="sm:col-span-2">
@@ -317,8 +447,15 @@ export default function EmployeeProductAdd() {
                   value={form.description}
                   onChange={handleField("description")}
                   placeholder="อธิบายรายละเอียดสินค้า"
-                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                  className={`w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:ring-2 ${
+                    formErrors.description
+                      ? "border-rose-400 focus:border-rose-400 focus:ring-rose-100"
+                      : "border-slate-200 focus:border-emerald-400 focus:ring-emerald-100"
+                  }`}
                 />
+                {formErrors.description && (
+                  <p className="mt-1 text-xs text-rose-500">{formErrors.description}</p>
+                )}
               </div>
             </div>
 
