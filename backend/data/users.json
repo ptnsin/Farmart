@@ -1,5 +1,17 @@
 [
   {
+    "id": 16,
+    "name": "สถาพร พานิชรักษาพงศ์",
+    "email": "sataporn@gmail.com",
+    "phone": "0999999999",
+    "password": "GMMTheeV",
+    "role": "ADMIN",
+    "status": "active",
+    "joined": "21 ก.ค. 2026",
+    "createdAt": "2026-07-21T12:54:58.993Z",
+    "avatar": "http://localhost:4000/uploads/avatars/1784638424725-933744878.jpg"
+  },
+  {
     "id": 15,
     "name": "ภัทรนันท์ สิงห์เชิดชู",
     "email": "patharanun@gmail.com",
@@ -154,17 +166,5 @@
     "joined": "20 ม.ค. 2023",
     "createdAt": "2023-01-20T00:00:00.000Z",
     "avatar": "https://i.pravatar.cc/64?img=33"
-  },
-  {
-    "id": 4,
-    "name": "สมบัติ พืชผล",
-    "email": "sombat.p@email.com",
-    "phone": "086-234-5674",
-    "password": "password123",
-    "role": "EMPLOYEE",
-    "status": "active",
-    "joined": "15 ส.ค. 2023",
-    "createdAt": "2023-08-15T00:00:00.000Z",
-    "avatar": "https://i.pravatar.cc/64?img=14"
   }
 ]

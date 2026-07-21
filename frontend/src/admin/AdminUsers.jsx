@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
-  Eye,
-  Pencil,
   MoreVertical,
   Lock,
   ChevronDown,
@@ -373,12 +371,6 @@ export default function AdminUsers() {
                     <td className="px-6 py-3.5 text-slate-500">{user.joined}</td>
                     <td className="px-6 py-3.5">
                       <div className="flex items-center justify-end gap-3 text-slate-400">
-                        <button type="button" aria-label="ดูข้อมูล" className="hover:text-slate-600">
-                          <Eye size={16} />
-                        </button>
-                        <button type="button" aria-label="แก้ไข" className="hover:text-slate-600">
-                          <Pencil size={16} />
-                        </button>
                         {user.status === "suspended" ? (
                           <button
                             type="button"
