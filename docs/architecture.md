@@ -28,7 +28,7 @@ graph TB
     subgraph Server["⚙️ Application Layer"]
         API[Express.js REST API<br/>Node.js Server]
         Auth[Authentication<br/>Login / Register]
-        Business[Business Logic<br/>Order, Cart, Payment, Stock]
+        Business[Business Logic<br/>Order, Cart, Stock]
     end
 
     subgraph Data["💾 Data Layer"]
@@ -57,8 +57,8 @@ graph TB
 
 | องค์ประกอบ | รายละเอียด |
 |---|---|
-| **Customer Frontend** | หน้าเว็บสำหรับลูกค้า — เรียกดูสินค้า, ตะกร้า, สั่งซื้อ, ชำระเงิน, ติดตามคำสั่งซื้อ |
-| **Admin/Employee Dashboard** | หน้าเว็บสำหรับพนักงาน/ผู้จัดการ — จัดการสินค้า, สต๊อก, คำสั่งซื้อ, รายงาน |
+| **Customer Frontend** | หน้าเว็บสำหรับลูกค้า — เรียกดูสินค้า, ตะกร้า, สั่งซื้อ, ติดตามคำสั่งซื้อ |
+| **Admin/Employee Dashboard** | หน้าเว็บสำหรับพนักงาน/ผู้ดูแลระบบ — จัดการสินค้า, สต๊อก, คำสั่งซื้อ, รายงาน |
 | **เทคโนโลยี** | React.js (Component-based UI), Tailwind CSS (Styling) |
 | **การสื่อสาร** | ส่ง HTTP Request ไปยัง Backend ผ่าน Fetch API หรือ Axios ในรูปแบบ JSON |
 
@@ -67,15 +67,15 @@ graph TB
 | องค์ประกอบ | รายละเอียด |
 |---|---|
 | **Express.js REST API** | จุดรับ-ส่งข้อมูลระหว่าง Client กับ Data Layer ผ่าน RESTful Endpoints |
-| **Authentication** | จัดการล็อกอิน/สมัครสมาชิก/ยืนยันตัวตนของ User (Customer, Employee, Manager) |
-| **Business Logic** | ประมวลผลตรรกะหลัก เช่น คำนวณราคา, จัดการตะกร้า, ตัดสต๊อกสินค้า, สร้างคำสั่งซื้อ |
+| **Authentication** | จัดการล็อกอิน/สมัครสมาชิก/ยืนยันตัวตนของ User (Customer, Employee, Admin) |
+| **Business Logic** | ประมวลผลตรรกะหลัก เช่น คำนวณราคา, จัดการตะกร้า, ตัดสต๊อกสินค้า, สร้างคำสั่งซื้อ (ไม่มีระบบประมวลผลการชำระเงิน/คืนเงินจริง — เก็บแค่วิธีที่ลูกค้าเลือกไว้เป็นข้อมูล) |
 | **เทคโนโลยี** | Node.js (Runtime), Express.js (Web Framework) |
 
 ### 3. Data Layer (ชั้นจัดเก็บข้อมูล)
 
 | องค์ประกอบ | รายละเอียด |
 |---|---|
-| **Local Storage** | จัดเก็บข้อมูลสินค้า, ผู้ใช้, คำสั่งซื้อ, ตะกร้า ฯลฯ ในรูปแบบไฟล์/หน่วยความจำฝั่งเซิร์ฟเวอร์ |
+| **Local Storage** | จัดเก็บข้อมูลในรูปแบบไฟล์ JSON ฝั่งเซิร์ฟเวอร์ ได้แก่ ผู้ใช้ (`users.json`), ที่อยู่ (`addresses.json`), สินค้า (`products.json`), หมวดหมู่ (`categories.json`), คำสั่งซื้อ (`orders.json`), การจัดส่ง (`shipments.json`), เซสชันล็อกอิน (`sessions.json`) และเรื่องติดต่อสอบถาม (`support.json`) — ตะกร้าสินค้าเป็น state ฝั่ง Client เท่านั้น ไม่ถูกบันทึกลง Data Layer |
 | **เหตุผลที่เลือกใช้** | เหมาะกับขอบเขตโครงงานระดับการศึกษา ไม่ต้องติดตั้ง Database Server แยกต่างหาก ลดความซับซ้อนในการ Deploy |
 
 ---
