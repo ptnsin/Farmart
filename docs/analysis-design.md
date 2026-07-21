@@ -262,4 +262,4 @@ classDiagram
 | **จัดการผู้ใช้งาน (User Management)** | เพิ่ม/แก้ไข/ลบ user, กำหนดสิทธิ์การเข้าถึง |
 | **รายงาน (Reports)** | ออกรายงานยอดขายรายวัน/เดือน, Export ข้อมูล |
 
-> 📌 **หมายเหตุ:** ไฟล์ Wireframe ต้นฉบับจาก Figma/Stitch AI แนบเป็น Screenshot ประกอบเอกสารนี้ (ดูภาพประกอบในโฟลเดอร์ `docs/wireframe/`)
+> 📌 **หมายเหตุ:** ไฟล์ Wireframe ต้นฉบับจาก Figma/Stitch AI ดูไฟล์ต้นฉบับได้ที่ 🔗 [Figma - Farmart Wireframe](https://www.figma.com/design/0V49KwKkBzVuuzm4Tzo7yk/Untitled?node-id=0-1&t=RTbh0i3hTGm6MaUd-1)
