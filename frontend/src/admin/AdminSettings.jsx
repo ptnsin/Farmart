@@ -47,10 +47,12 @@ export default function AdminSettings() {
       .then((user) => {
         setCurrentUser(user);
         setProfile({ name: user.name || "", email: user.email || "", phone: user.phone || "" });
+        setNotifications({ ...DEFAULT_NOTIFICATIONS, ...(user.notifyPreferences || {}) });
       })
       .catch((err) => {
         if (err.message.includes("เข้าสู่ระบบ")) navigate("/");
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const handleSaveProfile = async () => {
@@ -68,7 +70,6 @@ export default function AdminSettings() {
     }
   };
 
-  const NOTIFICATIONS_KEY = "farmart_admin_notifications";
   const DEFAULT_NOTIFICATIONS = {
     pendingApproval: true,
     lowStock: true,
@@ -76,13 +77,11 @@ export default function AdminSettings() {
     weeklyReport: false,
     newOrder: true,
   };
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      const raw = localStorage.getItem(NOTIFICATIONS_KEY);
-      return raw ? { ...DEFAULT_NOTIFICATIONS, ...JSON.parse(raw) } : DEFAULT_NOTIFICATIONS;
-    } catch {
-      return DEFAULT_NOTIFICATIONS;
-    }
+  // ค่าเริ่มต้น: ใช้ notifyPreferences ที่ backend เคยบันทึกไว้ (ถ้ามี) มา merge กับ default
+  // เพื่อกัน user เก่าที่ยังไม่เคยมี field นี้ในระบบ
+  const [notifications, setNotifications] = useState({
+    ...DEFAULT_NOTIFICATIONS,
+    ...(cached?.notifyPreferences || {}),
   });
   const [savingNotifications, setSavingNotifications] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
@@ -104,19 +103,18 @@ export default function AdminSettings() {
   const toggleNotification = (field) => () =>
     setNotifications((n) => ({ ...n, [field]: !n[field] }));
 
-  // หมายเหตุ: backend (authStore.updateMe / PUT /api/auth/me) ยังไม่มี field
-  // สำหรับเก็บการตั้งค่าแจ้งเตือน จึงเก็บไว้ที่ฝั่ง client (localStorage) ไปก่อน
-  // ค่าที่บันทึกภายใต้ NOTIFICATIONS_KEY นี้ ถูกอ่านโดย data/notificationStore.js
-  // เพื่อกรองว่าจะแสดงแจ้งเตือนประเภทไหนในปุ่มกระดิ่ง (NotificationBell) ของหน้าอื่น ๆ ด้วย
-  // ถ้าต้องการให้ค่านี้ sync ข้ามอุปกรณ์ ต้องเพิ่ม field/endpoint ฝั่ง backend เพิ่มเติม
+  // บันทึกการตั้งค่าแจ้งเตือนผ่าน PUT /api/auth/me (field notifyPreferences)
+  // backend เก็บไว้ในตัว user record เอง จึง sync ข้ามอุปกรณ์ได้ และ
+  // notificationController.getNotifications จะใช้ค่านี้กรองว่าจะส่งแจ้งเตือนประเภทไหนกลับมาบ้าง
   const handleSaveNotifications = async () => {
     setSavingNotifications(true);
     setNotificationMessage("");
     try {
-      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
-      setNotificationMessage("บันทึกการแจ้งเตือนเรียบร้อยแล้ว (บันทึกไว้ในเครื่องนี้)");
-    } catch {
-      setNotificationMessage("ไม่สามารถบันทึกการแจ้งเตือนได้ กรุณาลองใหม่อีกครั้ง");
+      const updated = await updateMe({ notifyPreferences: notifications });
+      setCurrentUser(updated);
+      setNotificationMessage("บันทึกการแจ้งเตือนเรียบร้อยแล้ว");
+    } catch (err) {
+      setNotificationMessage(err.message || "ไม่สามารถบันทึกการแจ้งเตือนได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setSavingNotifications(false);
     }

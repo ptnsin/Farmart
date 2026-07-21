@@ -5,10 +5,30 @@ const notificationModel = require("../models/notificationModel");
 // productModel.getProducts()) ถ้าชื่อไม่ตรง ให้แก้ import/เรียกใช้ในฟังก์ชัน createNotification ด้านล่าง
 const userModel = require("../models/userModel");
 
-/** GET /api/notifications - แจ้งเตือนของ user ที่ login อยู่เท่านั้น */
+// ค่า default ต้องตรงกับ DEFAULT_NOTIFICATIONS ฝั่ง frontend (AdminSettings.jsx)
+// ใช้ตอน user ยังไม่เคยกดบันทึกการตั้งค่าแจ้งเตือนเลยสักครั้ง (ไม่มี notifyPreferences ใน record)
+const DEFAULT_NOTIFY_PREFERENCES = {
+  pendingApproval: true,
+  lowStock: true,
+  newUser: true,
+  weeklyReport: false,
+  newOrder: true,
+};
+
+/** GET /api/notifications - แจ้งเตือนของ user ที่ login อยู่เท่านั้น (กรองตาม preference ของ user ด้วย) */
 function getNotifications(req, res) {
   const notifications = notificationModel.getNotificationsByUser(req.user.id);
-  res.json({ notifications, total: notifications.length });
+
+  // ดึงข้อมูล user สดจาก DB แทนที่จะพึ่ง req.user เฉย ๆ เผื่อ token payload
+  // เก็บ user snapshot ตอน login ไว้ ไม่มี notifyPreferences ล่าสุด
+  const user = userModel.getUserById(req.user.id);
+  const prefs = { ...DEFAULT_NOTIFY_PREFERENCES, ...(user?.notifyPreferences || {}) };
+
+  // ถ้า notification ไม่มี type ที่ตรงกับ key ไหนเลย (เช่น type ใหม่ที่ยังไม่ได้เพิ่มใน
+  // DEFAULT_NOTIFY_PREFERENCES) ให้แสดงไว้ก่อนเป็นค่า default (ปลอดภัยกว่าซ่อนไปเงียบ ๆ)
+  const filtered = notifications.filter((n) => prefs[n.type] !== false);
+
+  res.json({ notifications: filtered, total: filtered.length });
 }
 
 /** PUT /api/notifications/:id/read - อ่านแจ้งเตือนรายการเดียว (ต้องเป็นเจ้าของเท่านั้น) */

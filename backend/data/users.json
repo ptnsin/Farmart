@@ -74,7 +74,14 @@
     "status": "active",
     "joined": "15 ก.ค. 2026",
     "createdAt": "2026-07-15T01:25:41.414Z",
-    "avatar": "http://localhost:4000/uploads/avatars/1784078695515-600554139.jpg"
+    "avatar": "http://localhost:4000/uploads/avatars/1784078695515-600554139.jpg",
+    "notifyPreferences": {
+      "pendingApproval": false,
+      "lowStock": true,
+      "newUser": true,
+      "weeklyReport": false,
+      "newOrder": true
+    }
   },
   {
     "id": 8,

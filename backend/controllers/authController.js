@@ -66,7 +66,7 @@ function me(req, res) {
 
 function updateMe(req, res) {
   const updates = {};
-  const { name, phone, avatar, password } = req.body || {};
+  const { name, phone, avatar, password, notifyPreferences } = req.body || {};
 
   if (name !== undefined) {
     if (!String(name).trim()) {
@@ -85,6 +85,19 @@ function updateMe(req, res) {
       return res.status(400).json({ error: "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร" });
     }
     updates.password = password;
+  }
+  if (notifyPreferences !== undefined) {
+    if (
+      typeof notifyPreferences !== "object" ||
+      notifyPreferences === null ||
+      Array.isArray(notifyPreferences)
+    ) {
+      return res.status(400).json({ error: "รูปแบบการตั้งค่าแจ้งเตือนไม่ถูกต้อง" });
+    }
+    // merge กับของเดิมที่เคยบันทึกไว้ (ถ้ามี) แทนที่จะ overwrite ทั้งก้อน
+    // เผื่อ frontend ส่งมาแค่บาง field ในอนาคต
+    const existing = userModel.getUserById(req.user.id);
+    updates.notifyPreferences = { ...(existing?.notifyPreferences || {}), ...notifyPreferences };
   }
 
   if (Object.keys(updates).length === 0) {
