@@ -35,19 +35,33 @@ function hasPurchasedProduct(userId, productId) {
   );
 }
 
-/** GET /api/products - รายการสินค้าทั้งหมด (public) รองรับ query: category, search, stockLevel */
+/**
+ * GET /api/products - รายการสินค้า รองรับ query: category, search, stockLevel, approvalStatus
+ * ใช้ optionalAuth (ดู routes/products.js) เพื่อรู้ว่าคนเรียกคือใคร:
+ * - ADMIN/EMPLOYEE ที่ login แล้ว -> ดูสินค้าได้ทุกสถานะ เลือกกรองด้วย query approvalStatus ได้เอง
+ *   (เช่นหน้า EmployeeWarehouse.jsx ต้องเห็นสินค้า pending ด้วย)
+ * - customer ที่ login หรือ guest ที่ไม่ได้ login -> เห็นเฉพาะสินค้าที่ approvalStatus === "approved"
+ *   เท่านั้น เสมอ ไม่ว่าจะพยายามส่ง query approvalStatus มาเป็นค่าอื่นก็ตาม (กันปลอม query ดู pending)
+ */
 function getProducts(req, res) {
   let products = productModel.getProducts();
   const { category, search, stockLevel, approvalStatus } = req.query;
+
+  const isStaff = req.user && (req.user.role === "ADMIN" || req.user.role === "EMPLOYEE");
+
+  if (isStaff) {
+    if (approvalStatus) {
+      products = products.filter((p) => p.approvalStatus === approvalStatus);
+    }
+  } else {
+    products = products.filter((p) => p.approvalStatus === "approved");
+  }
 
   if (category) {
     products = products.filter((p) => p.category === category);
   }
   if (stockLevel) {
     products = products.filter((p) => p.stockLevel === stockLevel);
-  }
-  if (approvalStatus) {
-    products = products.filter((p) => p.approvalStatus === approvalStatus);
   }
   if (search) {
     const q = String(search).toLowerCase();

@@ -2,10 +2,12 @@
 const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/productController");
-const { requireRole, requireAuth } = require("../middleware/auth");
+const { requireRole, requireAuth, optionalAuth } = require("../middleware/auth");
 
 // GET /api/products - public รองรับ query: category, search, stockLevel, approvalStatus
-router.get("/", productController.getProducts);
+// ใช้ optionalAuth เพื่อให้รู้ว่าคนเรียกเป็น admin/employee หรือ customer/guest
+// (customer/guest จะเห็นเฉพาะสินค้า approved เท่านั้น ดู logic ใน productController.getProducts)
+router.get("/", optionalAuth, productController.getProducts);
 
 // GET /api/products/:id - public
 router.get("/:id", productController.getProductById);
