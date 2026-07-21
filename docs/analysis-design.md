@@ -42,13 +42,11 @@ graph LR
     CustomerActor --> UC_Cancel[ยกเลิกคำสั่งซื้อ]
     UC_Cancel -.include.-> UC_ConfirmCancel[รับแจ้งเตือนยืนยันการยกเลิก]
     CustomerActor --> UC_Review["รีวิวสินค้า/ให้คะแนน"]
-    CustomerActor --> UC_Contact[ติดต่อสอบถาม]
 
     %% พนักงาน
     EmployeeActor --> UC_ManageProduct[จัดการสินค้า]
     UC_ManageProduct -.include.-> UC_ProductOps["เพิ่ม/ลบ/แก้ไขสินค้า"]
     EmployeeActor --> UC_Category[จัดหมวดหมู่สินค้า]
-    EmployeeActor --> UC_Content[จัดการเนื้อหาสินค้าในเว็บไซต์]
     EmployeeActor --> UC_ManageOrder[จัดการคำสั่งซื้อ]
     UC_ManageOrder -.include.-> UC_OrderOps["ตรวจสอบ/ยืนยัน, อัปเดตสถานะ, ยกเลิกคำสั่งซื้อ"]
     EmployeeActor --> UC_ManageShip[จัดการการจัดส่ง]
@@ -76,7 +74,6 @@ graph LR
 | | ยกเลิกคำสั่งซื้อ | `<<include>>` รับแจ้งเตือนยืนยันการยกเลิก |
 | | รีวิวสินค้า/ให้คะแนน, ติดต่อสอบถาม | - |
 | **พนักงาน** | จัดการสินค้า | `<<include>>` เพิ่ม/ลบ/แก้ไขสินค้า |
-| | จัดหมวดหมู่สินค้า, จัดการเนื้อหาสินค้าในเว็บไซต์ | - |
 | | จัดการคำสั่งซื้อ | `<<include>>` ตรวจสอบ/ยืนยัน, อัปเดตสถานะ, ยกเลิก |
 | | จัดการการจัดส่ง | - |
 | **ผู้ดูแลระบบ (Admin)** | จัดการลูกค้า, จัดการรีวิว, รายงาน/สถิติ, อนุมัติการจัดการสินค้า | - |
