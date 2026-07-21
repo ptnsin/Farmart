@@ -24,12 +24,33 @@ const DELIVERY_ETA_DAYS = { standard: 5, express: 2 };
 // notifyPreferences ของ user (Profile.jsx / AdminSettings.jsx) ไม่งั้นจะไม่ขึ้นไอคอนที่ถูกต้อง/โดนกรองทิ้ง
 const STATUS_NOTIFY_CONTENT = {
   approved: {
-    title: (order) => `คำสั่งซื้อ ${order.id} ได้รับการอนุมัติ`,
-    message: () => "คำสั่งซื้อของคุณได้รับการตรวจสอบและอนุมัติจากพนักงานเรียบร้อยแล้ว กำลังเตรียมจัดส่งให้คุณเร็ว ๆ นี้",
+    title: (order) => `สั่งซื้อสำเร็จ ${order.id}`,
+    message: () => "ยืนยันคำสั่งซื้อของคุณเรียบร้อยแล้ว กำลังเตรียมจัดส่งให้คุณเร็ว ๆ นี้",
   },
   rejected: {
     title: (order) => `คำสั่งซื้อ ${order.id} ถูกปฏิเสธ`,
     message: () => "ขออภัย คำสั่งซื้อของคุณไม่ผ่านการตรวจสอบ กรุณาติดต่อฝ่ายบริการลูกค้าหากมีข้อสงสัย",
+  },
+  // เดิมไม่มี 3 สถานะนี้ ทำให้ถ้าพนักงานเปลี่ยนสถานะผ่าน endpoint ทั่วไป (updateOrder/updateStatus)
+  // แทนที่จะกดผ่าน advance() ทีละสเต็ป ลูกค้าจะไม่ได้รับแจ้งเตือนเลย — ใช้ข้อความเดียวกับ
+  // STEP_NOTIFY_CONTENT ด้านล่างเพื่อให้ถ้อยคำตรงกันไม่ว่าจะอัปเดตจากทางไหน
+  preparing: {
+    title: (order) => `คำสั่งซื้อ ${order.id} กำลังเตรียมพัสดุ`,
+    message: () => "เจ้าหน้าที่กำลังจัดเตรียมสินค้าของคุณ จะแจ้งเตือนอีกครั้งเมื่อเริ่มจัดส่ง",
+  },
+  shipping: {
+    title: (order) => `คำสั่งซื้อ ${order.id} กำลังจัดส่ง`,
+    message: () => "พัสดุของคุณออกเดินทางแล้ว กรุณาเตรียมรับสินค้า",
+  },
+  delivered: {
+    title: (order) => `คำสั่งซื้อ ${order.id} จัดส่งสำเร็จ`,
+    message: () => "คำสั่งซื้อของคุณจัดส่งสำเร็จเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ Farmart",
+  },
+  // เดิมไม่มี — ครอบคลุมเคสพนักงาน/แอดมินสั่งยกเลิกออเดอร์ผ่าน endpoint สถานะทั่วไป
+  // (แยกจาก cancelOrder() ที่ลูกค้ายกเลิกเองด้านล่าง ซึ่งเดิมก็ไม่แจ้งเตือนเช่นกัน)
+  cancelled: {
+    title: (order) => `คำสั่งซื้อ ${order.id} ถูกยกเลิก`,
+    message: () => "คำสั่งซื้อของคุณถูกยกเลิกเรียบร้อยแล้ว หากมีข้อสงสัยกรุณาติดต่อฝ่ายบริการลูกค้า",
   },
 };
 
@@ -209,10 +230,30 @@ function updateStatus(req, res) {
   res.json({ order });
 }
 
+// เดิม advance() แก้แค่ statusStep/statusLabel ของ order เท่านั้น ไม่เคยแตะ order.status หรือเรียก
+// syncShipmentForOrder() เลย ต่างจาก updateStatus/updateOrder ที่ sync shipment ให้อยู่แล้ว — ผลคือถ้า
+// พนักงานเลื่อนสถานะผ่านปุ่มที่ยิง endpoint นี้ (แทนที่จะ set status ตรง ๆ ) ออเดอร์จะไม่มีแถวในหน้า
+// "การขนส่ง" เลย เพราะ syncShipmentForOrder เช็คจาก order.status ไม่ใช่ statusStep
+// ใช้ key เป็น statusStep เพราะนี่คือค่าที่ advanceOrderStep คืนมาให้เช็ค ไม่มี step 0/3 เพราะ 0 คือ
+// "ยืนยันคำสั่งซื้อ" (ตั้ง status เป็น approved จากทางอื่นอยู่แล้ว ไม่ผ่านทางนี้) และ 3 คือ "ถึงจุดหมาย"
+// ซึ่งไม่มี status/shipment status ของตัวเองแยกต่างหาก (shipment ยังคงเป็น in_transit ต่อจาก step 2)
+const STEP_TO_STATUS = {
+  1: "preparing",
+  2: "shipping",
+  4: "delivered",
+};
+
 /** PATCH /api/orders/:id/advance (employee/admin) - เลื่อนสถานะการจัดส่งไปขั้นถัดไป */
 function advance(req, res) {
-  const order = orderModel.advanceOrderStep(req.params.id);
+  let order = orderModel.advanceOrderStep(req.params.id);
   if (!order) return res.status(404).json({ error: "ไม่พบคำสั่งซื้อ" });
+
+  const mappedStatus = STEP_TO_STATUS[order.statusStep];
+  if (mappedStatus) {
+    // sync order.status ให้ตรงกับ step ปัจจุบัน แล้วสร้าง/อัปเดต shipment ตามสถานะนั้น
+    order = orderModel.updateOrder(order.id, { status: mappedStatus });
+    syncShipmentForOrder(order, mappedStatus);
+  }
 
   notifyOrder(order, STEP_NOTIFY_CONTENT[order.statusStep]);
 
@@ -263,6 +304,8 @@ function cancelOrder(req, res) {
   for (const item of existing.items || []) {
     productModel.restoreStock(item.productId, item.quantity);
   }
+
+  notifyOrder(order, STATUS_NOTIFY_CONTENT.cancelled);
 
   res.json({ order });
 }

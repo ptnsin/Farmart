@@ -32,6 +32,20 @@ function getNotificationById(id) {
  */
 function addNotification({ userId, type = "general", title, message }) {
   const list = getAllNotifications();
+
+  // กันแจ้งเตือนซ้ำ: ถ้ามี endpoint มากกว่า 1 จุดยิงมาแจ้งเรื่องเดียวกัน (เช่น สถานะ order
+  // อัปเดตได้ทั้งจากหน้า "คำสั่งซื้อ" และหน้า "การขนส่ง") จะได้ไม่เห็นข้อความซ้ำกันเป๊ะภายในไม่กี่วินาที
+  const DUPLICATE_WINDOW_MS = 5000;
+  const now = Date.now();
+  const duplicate = list.find(
+    (n) =>
+      String(n.userId) === String(userId) &&
+      n.title === title &&
+      n.message === message &&
+      now - n.createdAt < DUPLICATE_WINDOW_MS
+  );
+  if (duplicate) return duplicate;
+
   const notification = {
     id: db.nextId(list),
     userId,

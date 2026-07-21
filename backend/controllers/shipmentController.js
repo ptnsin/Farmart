@@ -1,7 +1,45 @@
 // controllers/shipmentController.js
 const shipmentModel = require("../models/shipmentModel");
+const orderModel = require("../models/orderModel");
+const notificationModel = require("../models/notificationModel");
 
 const VALID_STATUSES = ["preparing", "in_transit", "delivered"];
+
+// เดิม controller นี้ไม่เคยสร้างแจ้งเตือนเลย ทั้งที่หน้า "การขนส่ง" (EmployeeShipping.jsx) ก็เป็นอีกจุดที่
+// พนักงานกดเปลี่ยนสถานะได้เหมือนกับหน้า "คำสั่งซื้อ" — shipmentModel จะ sync สถานะกลับไปที่ order ให้เอง
+// อยู่แล้ว แต่ sync แค่ตัวข้อมูล ไม่ได้ยิงแจ้งเตือน ทำให้ลูกค้าไม่รู้ถ้าพนักงานอัปเดตจากหน้านี้แทน
+// ใช้ถ้อยคำเดียวกับ STEP_NOTIFY_CONTENT ใน orderController.js เพื่อไม่ให้ข้อความไม่ตรงกันระหว่าง 2 หน้า
+const SHIPMENT_STATUS_NOTIFY_CONTENT = {
+  preparing: {
+    title: (order) => `คำสั่งซื้อ ${order.id} กำลังเตรียมพัสดุ`,
+    message: () => "เจ้าหน้าที่กำลังจัดเตรียมสินค้าของคุณ จะแจ้งเตือนอีกครั้งเมื่อเริ่มจัดส่ง",
+  },
+  in_transit: {
+    title: (order) => `คำสั่งซื้อ ${order.id} กำลังจัดส่ง`,
+    message: () => "พัสดุของคุณออกเดินทางแล้ว กรุณาเตรียมรับสินค้า",
+  },
+  delivered: {
+    title: (order) => `คำสั่งซื้อ ${order.id} จัดส่งสำเร็จ`,
+    message: () => "คำสั่งซื้อของคุณจัดส่งสำเร็จเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ Farmart",
+  },
+};
+
+/** แจ้งเตือนลูกค้าเจ้าของ order ที่ผูกกับ shipment นี้ (ไม่ทำให้ request หลักล้มเหลวถ้าแจ้งเตือนพัง) */
+function notifyOrderForShipment(shipment, content) {
+  try {
+    if (!content || !shipment?.order) return;
+    const order = orderModel.getOrderById(shipment.order);
+    if (!order) return;
+    notificationModel.addNotification({
+      userId: order.userId,
+      type: "orderUpdates",
+      title: content.title(order),
+      message: content.message(order),
+    });
+  } catch (err) {
+    console.error("แจ้งเตือนลูกค้าเรื่องสถานะการจัดส่งไม่สำเร็จ:", err.message);
+  }
+}
 
 /** GET /api/shipments (employee/admin) รองรับ query: status */
 function getShipments(req, res) {
@@ -31,6 +69,12 @@ function updateShipment(req, res) {
   }
 
   const shipment = shipmentModel.updateShipment(req.params.id, patch);
+
+  // แจ้งเตือนเฉพาะตอนสถานะเปลี่ยนจริง กันแจ้งซ้ำถ้า PUT มาด้วย status เดิม หรือ patch ไม่มี status เลย
+  if (patch.status && existing.status !== patch.status) {
+    notifyOrderForShipment(shipment, SHIPMENT_STATUS_NOTIFY_CONTENT[patch.status]);
+  }
+
   res.json({ shipment });
 }
 
@@ -55,10 +99,16 @@ function deleteShipment(req, res) {
 
 /** PATCH /api/shipments/:id/advance (employee/admin) - preparing -> in_transit -> delivered */
 function advance(req, res) {
+  const existing = shipmentModel.getShipmentById(req.params.id);
   const shipment = shipmentModel.advanceShipment(req.params.id);
   if (!shipment) {
     return res.status(404).json({ error: "ไม่พบรายการจัดส่งนี้ หรืออยู่ในสถานะสุดท้ายแล้ว" });
   }
+
+  if (!existing || existing.status !== shipment.status) {
+    notifyOrderForShipment(shipment, SHIPMENT_STATUS_NOTIFY_CONTENT[shipment.status]);
+  }
+
   res.json({ shipment });
 }
 

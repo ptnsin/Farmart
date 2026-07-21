@@ -7,9 +7,9 @@
     "unit": "หน่วย",
     "price": 25,
     "cost": 0,
-    "stockUnits": 10,
+    "stockUnits": 8,
     "stockPercent": 0,
-    "stockLevel": "healthy",
+    "stockLevel": "low",
     "farmer": "eiei",
     "location": "เชียงใหม่",
     "description": "eieiza",
@@ -17,7 +17,16 @@
     "images": [
       "http://localhost:4000/uploads/products/1784666471918-222051468.png"
     ],
-    "reviews": [],
+    "reviews": [
+      {
+        "id": 1,
+        "customer": "ShiBas0happy",
+        "rating": 5,
+        "date": "2026-07-21T22:50:58.527Z",
+        "comment": "Good good",
+        "reply": ""
+      }
+    ],
     "approvalStatus": "approved"
   },
   {
@@ -161,8 +170,8 @@
     "unit": "ซอง",
     "price": 40,
     "cost": 31,
-    "stockUnits": 200,
-    "stockPercent": 91,
+    "stockUnits": 198,
+    "stockPercent": 90,
     "stockLevel": "healthy",
     "farmer": "โอเรียนท์ ซีดส์",
     "location": "ลำปาง",
