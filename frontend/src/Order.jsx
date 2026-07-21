@@ -32,9 +32,8 @@ import NotificationBell from "./NotificationBell";
 //   3 = ถึงจุดหมาย (arrived)
 //   4 = จัดส่งสำเร็จ (delivered)
 // We map each step to a standard, easy-to-scan color (gray -> amber -> blue
-// -> purple -> green), plus a dedicated red state for locally-cancelled
-// orders ("cancelled" isn't a real numeric step from the API — it's a
-// client-side override, see `cancelledIds` below).
+// -> purple -> green), plus a dedicated red state for cancelled orders and
+// another dedicated red state for orders rejected by an employee/admin.
 const SHIPPING_STEP = 2;
 
 const STATUS_STYLES = {
@@ -44,6 +43,7 @@ const STATUS_STYLES = {
   3: "bg-purple-100 text-purple-700",
   4: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-700",
+  rejected: "bg-red-100 text-red-700",
 };
 
 const STATUS_DOT = {
@@ -53,6 +53,7 @@ const STATUS_DOT = {
   3: "bg-purple-500",
   4: "bg-green-600",
   cancelled: "bg-red-500",
+  rejected: "bg-red-500",
 };
 
 // Real product photos, keyed by keyword (Thai + English) so an item is
@@ -167,7 +168,8 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ออเดอร์ที่ยกเลิกแล้ว (client-side override จนกว่าจะรีเฟรชจาก API)
+  // ออเดอร์ที่ยกเลิกแล้ว (optimistic client-side override ระหว่างรอ
+  // refetch จาก API หลังกดยกเลิกสำเร็จ)
   const [cancelledIds, setCancelledIds] = useState(() => new Set());
   // ออเดอร์ที่กำลังแสดงกล่องยืนยันการยกเลิก
   const [confirmCancelId, setConfirmCancelId] = useState(null);
@@ -206,11 +208,6 @@ export default function Orders() {
     setCancellingId(orderId);
     setCancelError(null);
     try {
-      // PATCH matches the convention the other status-changing routes use
-      // (/status, /advance) — but this route doesn't exist on the backend
-      // yet. See routes/orders.js: only PATCH /:id/status and DELETE /:id
-      // exist today, and both require EMPLOYEE/ADMIN. A customer-facing
-      // PATCH /api/orders/:id/cancel route needs to be added server-side.
       await api.patch(`/api/orders/${orderId}/cancel`);
       setCancelledIds((prev) => new Set(prev).add(orderId));
       setConfirmCancelId(null);
@@ -244,7 +241,21 @@ export default function Orders() {
       const total = order.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
       const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
       const itemsSummary = order.items.map((i) => i.name).join(", ");
-      const isCancelled = cancelledIds.has(order.id) || order.cancelled === true;
+
+      // Source of truth คือ order.status ตรงๆ จาก backend (ดู
+      // controllers/orderController.js):
+      // - cancelOrder (ลูกค้ายกเลิกเอง)      -> status: "cancelled"
+      // - updateStatus (staff กดปฏิเสธ)     -> status: "rejected"
+      // ไม่มี field แยกอื่น (เช่น order.rejected boolean) และไม่สะกด
+      // "canceled" แบบอเมริกัน จึงไม่ต้องเผื่อเช็คแบบนั้น การเดาจาก
+      // statusLabel ("ยกเลิก"/"ปฏิเสธ") ก็ตัดออกด้วย เพราะ label
+      // เป็นข้อความที่มาจาก backend อยู่แล้วและอาจเปลี่ยนคำได้ในอนาคต —
+      // เช็คจาก status ตรงๆ แม่นยำกว่าและไม่มีทาง false-positive จาก
+      // ชื่อสินค้าหรือข้อความอื่นที่บังเอิญมีคำเหล่านี้ปนอยู่
+      const rawStatus = (order.status || "").toString().toLowerCase();
+
+      const isRejected = rawStatus === "rejected";
+      const isCancelled = !isRejected && (cancelledIds.has(order.id) || rawStatus === "cancelled");
 
       return {
         ...order,
@@ -253,11 +264,18 @@ export default function Orders() {
         itemsSummary,
         date: order.date ? new Date(order.date).toLocaleDateString("th-TH") : "-",
         isCancelled,
-        // Client-side override once the person cancels — until the order
-        // list is refetched, treat it as its own status.
-        statusKey: isCancelled ? "cancelled" : order.statusStep,
-        statusLabel: isCancelled ? "ยกเลิกแล้ว" : order.statusLabel,
-        canCancel: !isCancelled && order.statusStep < SHIPPING_STEP,
+        isRejected,
+        // Rejection (from an employee) always wins over a plain-cancelled
+        // state since it's the more specific, authoritative status. The
+        // badge itself always gets the red "cancelled"/"rejected" style
+        // here instead of falling through to order.statusStep's gray/etc.
+        statusKey: isRejected ? "rejected" : isCancelled ? "cancelled" : order.statusStep,
+        statusLabel: isRejected
+          ? "ถูกยกเลิกโดยเจ้าหน้าที่"
+          : isCancelled
+          ? "ยกเลิกแล้ว"
+          : order.statusLabel,
+        canCancel: !isCancelled && !isRejected && order.statusStep < SHIPPING_STEP,
       };
     })
     .sort((a, b) => b.id.localeCompare(a.id));
@@ -394,7 +412,7 @@ export default function Orders() {
                 const isCancellingThis = cancellingId === order.id;
 
                 return (
-                  <div key={order.id} className={order.isCancelled ? "opacity-70" : ""}>
+                  <div key={order.id} className={order.isCancelled || order.isRejected ? "opacity-70" : ""}>
                     <button
                       type="button"
                       onClick={() => setOpenId(isOpen ? null : order.id)}
@@ -496,7 +514,8 @@ export default function Orders() {
                               <span className="font-bold text-green-800">฿{order.total.toLocaleString()}</span>
                             </div>
 
-                            {!order.isCancelled && (
+                            {/* ปุ่มติดตามพัสดุ — ซ่อนถ้ายกเลิกแล้ว (ไม่ว่าโดยลูกค้าเองหรือเจ้าหน้าที่ปฏิเสธ) */}
+                            {!order.isCancelled && !order.isRejected && (
                               <Link
                                 to={`/tracking?order=${order.id}`}
                                 className="mt-1 w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-white bg-green-800 hover:bg-green-900 rounded-lg py-2.5 transition-colors"
@@ -505,8 +524,12 @@ export default function Orders() {
                               </Link>
                             )}
 
-                            {/* --- Cancel order --- */}
-                            {order.isCancelled ? (
+                            {/* --- Cancel / Rejected order status --- */}
+                            {order.isRejected ? (
+                              <p className="flex items-center gap-1.5 text-xs font-medium text-red-600 pt-1">
+                                <XCircle className="w-3.5 h-3.5" /> คำสั่งซื้อนี้ถูกยกเลิกโดยเจ้าหน้าที่ กรุณาติดต่อร้านค้าหากมีข้อสงสัย
+                              </p>
+                            ) : order.isCancelled ? (
                               <p className="flex items-center gap-1.5 text-xs font-medium text-red-600 pt-1">
                                 <XCircle className="w-3.5 h-3.5" /> คำสั่งซื้อนี้ถูกยกเลิกแล้ว
                               </p>

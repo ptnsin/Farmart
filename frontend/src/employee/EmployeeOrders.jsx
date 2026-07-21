@@ -10,6 +10,7 @@ import {
 import EmployeeSidebar from "./Employeesidebar";
 import EmployeeTopBar from "./EmployeeTopBar";
 import { api } from "../data/apiClient";
+import { addNotification } from "../data/notificationStore";
 
 const TABS = [
   { key: "pending", label: "รอการตรวจสอบ" },
@@ -33,6 +34,39 @@ const DELIVERY_LABELS = {
 
 const PAGE_SIZE = 10;
 
+// ไอคอนโปรไฟล์เริ่มต้น (คนสีเทาบนพื้นขาว) สำหรับ user ที่ยังไม่เคยอัปโหลดรูปโปรไฟล์
+// ใช้ SVG แบบ inline แทนรูปสุ่ม/รูปสินค้า เพื่อไม่ให้ดูเหมือนเป็นรูปของสินค้าในออเดอร์
+const DEFAULT_AVATAR =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'>" +
+      "<rect width='64' height='64' rx='32' fill='#f1f5f9'/>" +
+      "<circle cx='32' cy='24' r='11' fill='#cbd5e1'/>" +
+      "<path d='M12 54c2-13 14-20 20-20s18 7 20 20' fill='#cbd5e1'/>" +
+      "</svg>"
+  );
+
+// (ไม่ใช้ placeholder รูปสินค้าอีกแล้ว — ถ้าไม่มีรูปจริง จะไม่แสดงกล่องรูปเลยตามที่ต้องการ)
+
+// backend เก็บรูปสินค้าบางรายการเป็น path แบบ relative (เช่น "/uploads/products/SD001.svg")
+// พอเอาไปใส่ src ตรงๆ browser จะไปหาไฟล์ที่ origin ของหน้าเว็บ (frontend) แทนที่จะเป็น backend
+// ทำให้รูปโหลดไม่ขึ้น จึงต้องเติม base URL ของ backend ให้ path แบบ relative เหล่านี้ก่อนเสมอ
+// NOTE: ใช้ localhost:4000 ตามที่เห็นใน users.json/orders.json — ถ้า apiClient.js มี base URL
+// กำหนดไว้เป็น constant อยู่แล้ว แนะนำให้ import มาใช้แทนการ hardcode ตรงนี้
+const API_BASE = "http://localhost:4000";
+
+function resolveProductImage(url) {
+  if (!url) return null;
+  if (/^(https?:)?\/\//.test(url) || url.startsWith("data:")) return url;
+  return `${API_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+// ดึงรูปโปรไฟล์ลูกค้าโดย join จาก userAvatarMap (userId -> avatar) เท่านั้น
+// ถ้า user คนนั้นไม่มีรูปโปรไฟล์ (ยังไม่เคยอัปโหลด) ให้ใช้ไอคอนเริ่มต้นแทน
+// ห้าม fallback ไปที่รูปสินค้าในออเดอร์เด็ดขาด เพราะไม่ใช่รูปของ user
+function getCustomerAvatar(o, userAvatarMap) {
+  return userAvatarMap[o.userId] || DEFAULT_AVATAR;
+}
+
 function StatCard({ label, value, note, noteColor }) {
   return (
     <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -53,6 +87,7 @@ export default function EmployeeOrders() {
   const [page, setPage] = useState(1);
 
   const [orders, setOrders] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actingId, setActingId] = useState(null); // order id ที่กำลังกดอนุมัติ/ปฏิเสธ/ยกเลิก
@@ -76,12 +111,25 @@ export default function EmployeeOrders() {
   }, [openMenuId]);
 
   // ดึงคำสั่งซื้อทั้งหมดครั้งเดียว ใช้คำนวณทั้งสถิติการ์ดด้านบนและตาราง (กรองตามแท็บฝั่ง client)
+  // ดึง users มาพร้อมกันด้วย เพื่อ join รูปโปรไฟล์ลูกค้าผ่าน userId
   const loadOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get("/api/orders");
-      setOrders(Array.isArray(data) ? data : data.orders || []);
+      const ordersData = await api.get("/api/orders");
+      const ordersList = Array.isArray(ordersData) ? ordersData : ordersData.orders || [];
+      setOrders(ordersList);
+
+      // ดึงเฉพาะ user ที่มีอยู่ในออเดอร์จริงๆ ทีละคนผ่าน /api/users/:id (ไม่ดึง list ทั้งหมด)
+      // เพื่อเลี่ยงปัญหาสิทธิ์เข้าถึง และไม่ต้องโหลดข้อมูล user ที่ไม่เกี่ยวข้อง
+      const uniqueUserIds = [...new Set(ordersList.map((o) => o.userId).filter(Boolean))];
+      const userResults = await Promise.allSettled(
+        uniqueUserIds.map((id) => api.get(`/api/users/${id}`))
+      );
+      const fetchedUsers = userResults
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => (r.value?.user ? r.value.user : r.value));
+      setUsers(fetchedUsers);
     } catch (err) {
       setError(err.message || "โหลดคำสั่งซื้อไม่สำเร็จ");
     } finally {
@@ -92,6 +140,15 @@ export default function EmployeeOrders() {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  // lookup map จาก userId -> avatar เพื่อใช้แสดงรูปโปรไฟล์ลูกค้าในตาราง
+  const userAvatarMap = useMemo(() => {
+    const map = {};
+    for (const u of users) {
+      map[u.id] = u.avatar;
+    }
+    return map;
+  }, [users]);
 
   // แท็บ "อนุมัติแล้ว" ต้องรวมออเดอร์ที่กำลัง "เตรียมพัสดุ" ด้วย (จะหายไปจากแท็บนี้ก็ต่อเมื่อกด "จัดส่ง" แล้วเท่านั้น)
   const tableOrders = useMemo(() => {
@@ -150,6 +207,19 @@ export default function EmployeeOrders() {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, ...updated, status } : o))
       );
+
+      // แจ้งเตือนลูกค้าเมื่อคำสั่งซื้อถูกยกเลิก (กรณีพนักงานอนุมัติไปแล้วแต่มายกเลิกทีหลัง)
+      // หา snapshot ของออเดอร์จาก state เดิม (ก่อนอัปเดต) ไว้ใช้แสดงยอดเงินในข้อความแจ้งเตือน
+      if (status === "cancelled") {
+        const orderInfo = orders.find((o) => o.id === orderId);
+        addNotification({
+          type: "order",
+          title: `คำสั่งซื้อ ${orderId} ถูกยกเลิก`,
+          message: `คำสั่งซื้อมูลค่า ฿${(orderInfo?.total || 0).toLocaleString()} ของคุณถูกยกเลิกโดยเจ้าหน้าที่ หากมีข้อสงสัยกรุณาติดต่อร้านค้า`,
+        }).catch(() => {
+          /* แจ้งเตือนล้มเหลวไม่ควรทำให้การยกเลิกออเดอร์ที่สำเร็จแล้วดูเหมือนพัง */
+        });
+      }
     } catch (err) {
       alert(err.message || "อัปเดตสถานะไม่สำเร็จ");
     } finally {
@@ -266,8 +336,15 @@ export default function EmployeeOrders() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img
-                          src={o.items?.[0]?.image || "https://i.pravatar.cc/64"}
+                          src={getCustomerAvatar(o, userAvatarMap)}
                           alt=""
+                          onError={(e) => {
+                            // ถ้ารูปโหลดไม่ขึ้น (เช่น URL localhost dev ที่ใช้ไม่ได้แล้ว หรือไฟล์ถูกลบ)
+                            // ให้ fallback เป็นไอคอนโปรไฟล์เริ่มต้น (ไม่ใช้รูปสินค้าหรือรูปสุ่ม)
+                            if (e.currentTarget.src !== DEFAULT_AVATAR) {
+                              e.currentTarget.src = DEFAULT_AVATAR;
+                            }
+                          }}
                           className="h-9 w-9 rounded-full object-cover"
                         />
                         <div className="leading-tight">
@@ -515,11 +592,18 @@ export default function EmployeeOrders() {
                 ) : (
                   detailOrder.items.map((item, idx) => (
                     <div key={item.productId || idx} className="flex items-center gap-3 px-4 py-3">
-                      <img
-                        src={item.image || "https://i.pravatar.cc/64"}
-                        alt=""
-                        className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 object-cover"
-                      />
+                      {resolveProductImage(item.image) && (
+                        <img
+                          src={resolveProductImage(item.image)}
+                          alt=""
+                          onError={(e) => {
+                            // ถ้ารูปที่ควรจะโหลดได้ดันโหลดพัง (ลิงก์เสีย) ให้ซ่อนรูปไปเลย
+                            // ไม่ใช้กล่อง placeholder ตามที่ต้องการ "ถ้าไม่มีก็ไม่มี"
+                            e.currentTarget.style.display = "none";
+                          }}
+                          className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 object-cover"
+                        />
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-slate-800">
                           {item.name || item.productId}
