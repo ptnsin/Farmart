@@ -19,12 +19,6 @@ const NAV_ITEMS = [
     href: "/admin/product-approvals",
   },
   { key: "inventory", label: "คลังสินค้า", icon: Warehouse, href: "/admin/inventory" },
-  {
-    key: "promotions",
-    label: "โปรโมชั่น/ส่วนลด",
-    icon: BadgePercent,
-    href: "/admin/promotions",
-  },
   { key: "reports", label: "รายงาน/สถิติ", icon: BarChart3, href: "/admin/reports" },
 ];
 
@@ -72,13 +66,6 @@ export default function AdminSidebar() {
         >
           <Settings size={18} />
           Settings
-        </Link>
-        <Link
-          to="/admin/support"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-500 hover:bg-slate-50"
-        >
-          <LifeBuoy size={18} />
-          Support
         </Link>
       </div>
     </aside>

@@ -5,14 +5,12 @@ import {
   User,
   Bell,
   Lock,
-  Globe,
   Save,
   Loader2,
   LogOut,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
-import { getCachedUser, fetchCurrentUser, logout } from "../data/authStore";
-import { updateUser } from "../data/userStore";
+import { getCachedUser, fetchCurrentUser, logout, updateMe } from "../data/authStore";
 
 function Toggle({ checked, onChange }) {
   return (
@@ -60,7 +58,7 @@ export default function AdminSettings() {
     setSaving(true);
     setSaveMessage("");
     try {
-      const updated = await updateUser(currentUser.id, profile);
+      const updated = await updateMe(profile);
       setCurrentUser(updated);
       setSaveMessage("บันทึกข้อมูลเรียบร้อยแล้ว");
     } catch (err) {
@@ -70,19 +68,27 @@ export default function AdminSettings() {
     }
   };
 
-  const [notifications, setNotifications] = useState({
-    newOrder: true,
-    lowStock: true,
-    weeklyReport: false,
+  const NOTIFICATIONS_KEY = "farmart_admin_notifications";
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const raw = localStorage.getItem(NOTIFICATIONS_KEY);
+      return raw
+        ? JSON.parse(raw)
+        : { newOrder: true, lowStock: true, weeklyReport: false };
+    } catch {
+      return { newOrder: true, lowStock: true, weeklyReport: false };
+    }
   });
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   const [passwords, setPasswords] = useState({
     current: "",
     next: "",
     confirm: "",
   });
-
-  const [locale, setLocale] = useState({ language: "th", timezone: "Asia/Bangkok" });
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
 
   const updateProfile = (field) => (e) =>
     setProfile((p) => ({ ...p, [field]: e.target.value }));
@@ -92,6 +98,52 @@ export default function AdminSettings() {
 
   const toggleNotification = (field) => () =>
     setNotifications((n) => ({ ...n, [field]: !n[field] }));
+
+  // หมายเหตุ: backend (authStore.updateMe / PUT /api/auth/me) ยังไม่มี field
+  // สำหรับเก็บการตั้งค่าแจ้งเตือน จึงเก็บไว้ที่ฝั่ง client (localStorage) ไปก่อน
+  // ถ้าต้องการให้ค่านี้ sync ข้ามอุปกรณ์ ต้องเพิ่ม field/endpoint ฝั่ง backend เพิ่มเติม
+  const handleSaveNotifications = async () => {
+    setSavingNotifications(true);
+    setNotificationMessage("");
+    try {
+      localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+      setNotificationMessage("บันทึกการแจ้งเตือนเรียบร้อยแล้ว (บันทึกไว้ในเครื่องนี้)");
+    } catch {
+      setNotificationMessage("ไม่สามารถบันทึกการแจ้งเตือนได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSavingNotifications(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!currentUser) return;
+    setPasswordMessage("");
+
+    if (!passwords.current || !passwords.next || !passwords.confirm) {
+      setPasswordMessage("กรุณากรอกข้อมูลรหัสผ่านให้ครบทุกช่อง");
+      return;
+    }
+    if (passwords.next.length < 8) {
+      setPasswordMessage("รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 8 ตัวอักษร");
+      return;
+    }
+    if (passwords.next !== passwords.confirm) {
+      setPasswordMessage("รหัสผ่านใหม่และการยืนยันไม่ตรงกัน");
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      // PUT /api/auth/me รับ field "password" เพื่อเปลี่ยนรหัสผ่านของบัญชีตัวเอง
+      await updateMe({ password: passwords.next });
+      setPasswords({ current: "", next: "", confirm: "" });
+      setPasswordMessage("อัปเดตรหัสผ่านเรียบร้อยแล้ว");
+    } catch (err) {
+      setPasswordMessage(err.message);
+    } finally {
+      setSavingPassword(false);
+    }
+  };
 
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -116,7 +168,7 @@ export default function AdminSettings() {
               <h1 className="text-2xl font-semibold text-slate-800">ตั้งค่า</h1>
             </div>
             <p className="mt-1 text-sm text-slate-400">
-              จัดการข้อมูลบัญชี การแจ้งเตือน ความปลอดภัย และการตั้งค่าระบบของ Admin Console
+              จัดการข้อมูลบัญชี การแจ้งเตือน และความปลอดภัยของ Admin Console
             </p>
           </div>
           <button
@@ -236,6 +288,30 @@ export default function AdminSettings() {
                 />
               </div>
             </div>
+
+            {notificationMessage && (
+              <p
+                className={`mt-3 text-sm ${
+                  notificationMessage.includes("เรียบร้อย") ? "text-emerald-600" : "text-rose-600"
+                }`}
+              >
+                {notificationMessage}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSaveNotifications}
+              disabled={savingNotifications}
+              className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
+            >
+              {savingNotifications ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Save size={16} />
+              )}
+              {savingNotifications ? "กำลังบันทึก..." : "บันทึกการแจ้งเตือน"}
+            </button>
           </div>
 
           {/* Security */}
@@ -278,53 +354,24 @@ export default function AdminSettings() {
               </div>
             </div>
 
-            <button
-              type="button"
-              className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
-            >
-              <Save size={16} />
-              อัปเดตรหัสผ่าน
-            </button>
-          </div>
-
-          {/* System */}
-          <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-800">
-              <Globe size={18} className="text-emerald-600" />
-              การตั้งค่าระบบ
-            </h2>
-
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-sm text-slate-600">ภาษา</label>
-                <select
-                  value={locale.language}
-                  onChange={(e) => setLocale((l) => ({ ...l, language: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-                >
-                  <option value="th">ไทย</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-sm text-slate-600">เขตเวลา</label>
-                <select
-                  value={locale.timezone}
-                  onChange={(e) => setLocale((l) => ({ ...l, timezone: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
-                >
-                  <option value="Asia/Bangkok">Asia/Bangkok (GMT+7)</option>
-                  <option value="UTC">UTC</option>
-                </select>
-              </div>
-            </div>
+            {passwordMessage && (
+              <p
+                className={`mt-3 text-sm ${
+                  passwordMessage.includes("เรียบร้อย") ? "text-emerald-600" : "text-rose-600"
+                }`}
+              >
+                {passwordMessage}
+              </p>
+            )}
 
             <button
               type="button"
-              className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+              onClick={handleUpdatePassword}
+              disabled={savingPassword}
+              className="mt-5 flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
             >
-              <Save size={16} />
-              บันทึกการตั้งค่า
+              {savingPassword ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              {savingPassword ? "กำลังอัปเดต..." : "อัปเดตรหัสผ่าน"}
             </button>
           </div>
         </div>
