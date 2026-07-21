@@ -85,8 +85,6 @@ graph LR
 
 ## 3. Class Diagram
 
-> 📌 **หมายเหตุ:** ปรับปรุงจาก schema เดิม (ที่แยก Customer/Admin/Employee ด้วย inheritance และมี Cart, Payment, Inventory เป็น table แยก) ให้ตรงกับโครงสร้างข้อมูลจริงใน `users.json`, `addresses.json`, `products.json`, `orders.json`, `shipments.json`, `support.json` และ `sessions.json` (ตัดฟีเจอร์โปรโมชั่น/ส่วนลดออกจากระบบแล้ว) — ระบบปัจจุบันเก็บ **role เป็น field เดียวใน User** (ไม่ได้แยกตาราง), และ **OrderItem / Review ถูก embed อยู่ในเอกสารแม่** (Order / Product) ไม่ใช่ตารางลูกแยกต่างหาก
-
 ```mermaid
 classDiagram
     class User {
@@ -124,16 +122,6 @@ classDiagram
         +addAddress() void
         +updateAddress() void
         +deleteAddress() void
-    }
-
-    class Category {
-        -int id
-        -string name
-        -string slug
-        -string description
-        -string icon
-        -string status
-        +getProducts() List~Product~
     }
 
     class Product {
@@ -229,7 +217,6 @@ classDiagram
     User "1" -- "0..*" Order : สั่งซื้อ
     User "1" -- "0..*" SupportTicket : แจ้งปัญหา/ติดต่อ
     User "1" -- "0..*" Session : เข้าสู่ระบบ
-    Category "1" -- "0..*" Product : มี (อ้างอิงด้วยชื่อ category)
     Product "1" -- "0..*" Review : ถูกรีวิว (embedded)
     Order "1" *-- "1..*" OrderItem : ประกอบด้วย (embedded)
     OrderItem "0..*" ..> "1" Product : อ้างอิงด้วย productId
@@ -244,7 +231,6 @@ classDiagram
 |---|---|---|
 | **User** | เก็บข้อมูลบัญชีผู้ใช้ทุกประเภทในตารางเดียว แยกสิทธิ์ด้วย field `role` (`CUSTOMER` / `EMPLOYEE` / `ADMIN`) แทนการแยก class ย่อย | มี Address, Order, SupportTicket, Session ได้หลายรายการ |
 | **Address** | ที่อยู่จัดส่งของผู้ใช้ (อ้างอิงเจ้าของด้วย `ownerId`) | เชื่อมกับ User (1 คนมีได้หลายที่อยู่, ตั้งค่า `isDefault` ได้) |
-| **Category** | หมวดหมู่สินค้า | Product อ้างอิงกลับมาด้วย **ชื่อหมวดหมู่ (string)** ไม่ใช่ FK id |
 | **Product** | ข้อมูลสินค้า รวมสต็อก (`stockUnits`/`stockLevel`) และสถานะอนุมัติไว้ในตัวเอง | มี Review แบบ embedded อยู่ในตัวสินค้าโดยตรง (ไม่มี Inventory table แยก) |
 | **Review** | รีวิวและให้คะแนนสินค้า | **embedded อยู่ใน Product** (array `reviews[]`) ไม่ใช่ตารางแยกที่มี FK มาเชื่อม |
 | **Order** | คำสั่งซื้อ เก็บชื่อ/ที่อยู่ลูกค้า วิธีชำระเงิน และสถานะไว้ในตัวเอง | อ้างอิง User ด้วย `userId`, มี OrderItem แบบ embedded, จับคู่กับ Shipment ผ่าน order id |
@@ -252,8 +238,6 @@ classDiagram
 | **Shipment** | ข้อมูลการจัดส่งสินค้า | เชื่อมกับ Order ผ่าน field `order` (string เก็บ order id) ไม่ใช่ FK เชิงตัวเลข |
 | **SupportTicket** | เรื่องร้องเรียน/แจ้งปัญหาจากผู้ใช้ (`support.json`) | อ้างอิง User ด้วย `userId` และอาจอ้างอิง Order ผ่าน `relatedRef` |
 | **Session** | เซสชันการเข้าสู่ระบบ (token → userId) | อ้างอิง User ด้วย `userId`, ไม่มี expiry field ในข้อมูลปัจจุบัน |
-
-> ⚠️ **หมายเหตุสำคัญ:** ไม่มี Cart/CartItem, Payment, Inventory หรือ Customer/Admin/Employee เป็น table แยกในข้อมูลจริง — หากต้องการให้ระบบมีตะกร้าสินค้าแบบ persistent, ประวัติการชำระเงินแยกจาก Order, หรือแยกสิทธิ์ผู้ดูแลระบบออกจากพนักงาน จะต้อง**เพิ่ม schema ใหม่** ไม่ใช่แค่แก้ diagram
 
 ---
 
