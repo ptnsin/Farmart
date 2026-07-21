@@ -46,7 +46,6 @@ graph LR
     %% พนักงาน
     EmployeeActor --> UC_ManageProduct[จัดการสินค้า]
     UC_ManageProduct -.include.-> UC_ProductOps["เพิ่ม/ลบ/แก้ไขสินค้า"]
-    EmployeeActor --> UC_Category[จัดหมวดหมู่สินค้า]
     EmployeeActor --> UC_ManageOrder[จัดการคำสั่งซื้อ]
     UC_ManageOrder -.include.-> UC_OrderOps["ตรวจสอบ/ยืนยัน, อัปเดตสถานะ, ยกเลิกคำสั่งซื้อ"]
     EmployeeActor --> UC_ManageShip[จัดการการจัดส่ง]
