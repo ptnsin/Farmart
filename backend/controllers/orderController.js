@@ -1,6 +1,7 @@
 // controllers/orderController.js
 const orderModel = require("../models/orderModel");
 const shipmentModel = require("../models/shipmentModel");
+const productModel = require("../models/productModel");
 
 // order.status -> shipment.status ที่ต้อง sync ไปด้วยทุกครั้งที่ order เปลี่ยนสถานะผ่าน endpoint นี้
 // (shipmentModel.js sync กลับมาหา order ทางเดียวอยู่แล้วผ่าน syncOrderStatus แต่ order -> shipment
@@ -81,6 +82,18 @@ function createOrder(req, res) {
     }
   }
 
+  // เช็คสต็อกคงเหลือก่อนตัดจริง กันสั่งเกินจำนวนที่มี (ก่อนหน้านี้ไม่มีการเช็ค/ตัดสต็อกเลย
+  // ทำให้สั่งซื้อได้ไม่จำกัดและ stockUnits ไม่เคยลดหลัง checkout)
+  for (const item of items) {
+    const product = productModel.getProductById(item.productId);
+    if (!product) {
+      return res.status(400).json({ error: `ไม่พบสินค้ารหัส ${item.productId}` });
+    }
+    if (Number(product.stockUnits) < Number(item.quantity)) {
+      return res.status(400).json({ error: `สินค้า "${product.name}" มีไม่พอในสต็อก (เหลือ ${product.stockUnits} ${product.unit})` });
+    }
+  }
+
   const order = orderModel.createOrder({
     userId: req.user.id,
     customer: req.user.name,
@@ -89,6 +102,12 @@ function createOrder(req, res) {
     paymentMethod,
     deliveryMethod,
   });
+
+  // ตัดสต็อกของแต่ละสินค้าตามจำนวนที่สั่ง หลังสร้างออเดอร์สำเร็จ
+  for (const item of items) {
+    productModel.decreaseStock(item.productId, item.quantity);
+  }
+
   res.status(201).json({ order });
 }
 
@@ -176,6 +195,11 @@ function cancelOrder(req, res) {
     status: "cancelled",
     statusLabel: "ยกเลิกแล้ว",
   });
+
+  // คืนสต็อกสินค้าที่เคยถูกตัดไปตอนสร้างออเดอร์ กลับเข้าคลังเมื่อออเดอร์ถูกยกเลิก
+  for (const item of existing.items || []) {
+    productModel.restoreStock(item.productId, item.quantity);
+  }
 
   res.json({ order });
 }

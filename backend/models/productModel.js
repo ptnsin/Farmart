@@ -76,6 +76,40 @@ function updateProduct(id, patch) {
   return products.find((p) => String(p.id) === String(id)) || null;
 }
 
+/**
+ * ตัดสต็อกสินค้าหลังลูกค้าสั่งซื้อ (เดิมไม่มีใครเรียกเลย ทำให้ stockUnits ไม่ลดหลัง checkout)
+ * คำนวณ stockPercent ใหม่ตามสัดส่วนเดิมของ stockUnits/stockPercent (เทียบเท่าคำนวณจาก
+ * "ความจุ" คงที่ = stockUnits/stockPercent*100) เพื่อให้แถบเปอร์เซ็นต์ในหน้า inventory/warehouse
+ * ยังสัมพันธ์กับจำนวนจริงหลังตัดสต็อก แล้ว sync stockLevel ตาม threshold เดิมที่ระบบใช้อยู่แล้ว
+ * (reportController: out = stockUnits 0, low = stockPercent < 20, ที่เหลือ healthy)
+ * คืนค่า null ถ้าไม่พบสินค้า และไม่ยอมให้ stockUnits ติดลบ (กันสต็อกกลายเป็นค่าลบถ้ามีการสั่งซื้อพร้อมกันเกินสต็อก)
+ */
+function decreaseStock(id, quantity) {
+  const products = getProducts();
+  const product = products.find((p) => String(p.id) === String(id));
+  if (!product) return null;
+
+  const qty = Number(quantity) || 0;
+  const oldUnits = Number(product.stockUnits) || 0;
+  const oldPercent = Number(product.stockPercent) || 0;
+  const newUnits = Math.max(0, oldUnits - qty);
+  const newPercent = oldUnits > 0 ? Math.round((oldPercent * newUnits) / oldUnits) : 0;
+  const newLevel = newUnits === 0 ? "out" : newPercent < 20 ? "low" : "healthy";
+
+  const updated = products.map((p) =>
+    String(p.id) === String(id)
+      ? { ...p, stockUnits: newUnits, stockPercent: newPercent, stockLevel: newLevel }
+      : p
+  );
+  saveProducts(updated);
+  return updated.find((p) => String(p.id) === String(id)) || null;
+}
+
+/** คืนสต็อกกลับ (ใช้ตอนลูกค้ายกเลิกคำสั่งซื้อ) — ใช้สูตรเดียวกับ decreaseStock แต่บวกกลับแทน */
+function restoreStock(id, quantity) {
+  return decreaseStock(id, -Math.abs(Number(quantity) || 0));
+}
+
 function deleteProduct(id) {
   const products = getProducts().filter((p) => String(p.id) !== String(id));
   saveProducts(products);
@@ -148,6 +182,8 @@ module.exports = {
   resetProducts,
   addProduct,
   updateProduct,
+  decreaseStock,
+  restoreStock,
   deleteProduct,
   replyToReview,
   deleteReply,
