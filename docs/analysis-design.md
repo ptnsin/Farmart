@@ -97,178 +97,155 @@ graph LR
 
 ## 3. Class Diagram
 
+> 📌 **หมายเหตุ:** ปรับปรุงจาก schema เดิม (ที่แยก Customer/Manager/Employee ด้วย inheritance และมี Cart, Payment, Inventory เป็น table แยก) ให้ตรงกับโครงสร้างข้อมูลจริงใน `users.json`, `addresses.json`, `products.json`, `orders.json`, `promotions.json`, `shipments.json`, `support.json` และ `sessions.json` — ระบบปัจจุบันเก็บ **role เป็น field เดียวใน User** (ไม่ได้แยกตาราง), และ **OrderItem / Review ถูก embed อยู่ในเอกสารแม่** (Order / Product) ไม่ใช่ตารางลูกแยกต่างหาก
+
 ```mermaid
 classDiagram
     class User {
-        -int userId
+        -int id
         -string name
         -string email
-        -string password
         -string phone
+        -string password
         -string role
+        -string status
+        -string joined
         -datetime createdAt
+        -string avatar
         +register() void
         +login(email, password) bool
         +logout() void
         +updateProfile() void
     }
+    note for User "role: CUSTOMER | EMPLOYEE | ADMIN\nไม่มี table แยกสำหรับแต่ละ role"
 
     class Address {
-        -int addressId
-        -int customerId
+        -string id
+        -int ownerId
+        -string ownerName
+        -string label
         -string recipientName
         -string phone
         -string addressLine
-        -string city
+        -string subdistrict
+        -string district
         -string province
         -string postalCode
         -bool isDefault
+        -datetime createdAt
         +addAddress() void
         +updateAddress() void
         +deleteAddress() void
     }
 
     class Category {
-        -int categoryId
-        -string categoryName
+        -int id
+        -string name
+        -string slug
         -string description
+        -string icon
+        -string status
         +getProducts() List~Product~
     }
 
     class Product {
-        -int productId
-        -int categoryId
-        -string productName
-        -string description
+        -int id
+        -string sku
+        -string name
+        -string category
+        -string unit
         -decimal price
-        -string imageUrl
-        -datetime createdAt
+        -decimal cost
+        -int stockUnits
+        -int stockPercent
+        -string stockLevel
+        -string farmer
+        -string location
+        -string description
+        -string image
+        -string[] images
+        -string approvalStatus
+        -datetime submittedAt
+        -string lotCode
         +updateStock(qty) void
         +getDetail() Product
     }
 
-    class Inventory {
-        -int inventoryId
-        -int productId
-        -int stockQty
-        +increaseStock(qty) void
-        +decreaseStock(qty) void
-    }
-
-    class Customer {
-        -int customerId
-        -int userId
-        +placeOrder() void
-        +trackOrder() void
-        +cancelOrder() void
+    class Review {
+        -int id
+        -string customer
+        -int rating
+        -string date
+        -string comment
+        -string reply
         +submitReview() void
-        +applyPromotion() void
-    }
-
-    class Cart {
-        -int cartId
-        -int customerId
-        +addItem() void
-    }
-
-    class CartItem {
-        -int cartItemId
-        -int productId
-        -int quantity
-        +getSubtotal() decimal
     }
 
     class Order {
-        -int orderId
-        -int customerId
-        -int addressId
+        -string id
+        -int userId
+        -string customer
+        -decimal total
+        -string date
         -string status
-        -decimal totalAmount
-        -datetime createdAt
+        -int statusStep
+        -string statusLabel
+        -string address
+        -string paymentMethod
+        -string deliveryMethod
+        -bool cancelled
         +cancelOrder() void
     }
 
     class OrderItem {
-        -int orderItemId
         -int productId
+        -string name
+        -decimal price
         -int quantity
+        -string image
         +getLineTotal() decimal
     }
 
-    class Payment {
-        -int paymentId
-        -int orderId
-        -string method
-        +processPayment() bool
-    }
-
     class Shipment {
-        -int shipmentId
-        -int orderId
-        -string shippingMethod
-        -string trackingNumber
-        -datetime shippedDate
-        -datetime deliveredDate
+        -string id
+        -string order
+        -string carrier
         -string status
+        -datetime eta
         +updateStatus(status) void
     }
 
-    class Review {
-        -int reviewId
-        -int customerId
-        -int productId
-        -int rating
-        -string comment
-        +submitReview() void
-    }
-
-    class Manager {
-        -int managerId
+    class SupportTicket {
+        -string id
+        -string type
+        -string priority
+        -string relatedRef
         -int userId
-        +approveProduct() void
-        +managePromotion() void
-        +manageReview() void
-        +viewReport() Report
-        +manageEmployee() void
+        -string role
+        -string subject
+        -string message
+        -string status
+        -string date
+        +createTicket() void
+        +resolveTicket() void
     }
 
-    class Promotion {
-        -int promotionId
-        -string code
-        -decimal discountPercent
-        -decimal minPurchase
-        +applyDiscount() decimal
-    }
-
-    class Employee {
-        -int employeeId
+    class Session {
+        -string token
         -int userId
-        -string position
-        +manageProduct() void
-        +manageOrder() void
-        +manageStock() void
-        +manageShipping() void
+        -datetime createdAt
+        +isValid() bool
     }
 
-    User <|-- Customer
-    User <|-- Manager
-    User <|-- Employee
-    User "1" -- "1..*" Address : มี
-    Customer "1" -- "1" Cart : จัดการตะกร้า
-    Cart "1" -- "1..*" CartItem : มี
-    Customer "1" -- "0..*" Order : สั่งซื้อ
-    Order "1" -- "1..*" OrderItem : ประกอบ
-    Product "1..*" -- "1..*" OrderItem : อ้างอิงสินค้า
-    Category "1" -- "0..*" Product : มี
-    Product "1" -- "1" Inventory : จัดการสต็อกสินค้า
-    Order "1" -- "1" Payment : ชำระเงิน
-    Order "1" -- "0..1" Shipment : จัดส่ง
-    Product "1" -- "0..*" Review : ผลตอบรับ
-    Manager ..> Promotion : จัดการโปรโมชั่น
-    Promotion ..> Payment : ใช้ส่วนลด
-    Employee ..> Payment : จัดการการชำระเงิน
-    Employee ..> Shipment : จัดการการจัดส่ง
-    Manager ..> Employee : ตรวจสอบ
+    User "1" -- "0..*" Address : มีที่อยู่จัดส่ง
+    User "1" -- "0..*" Order : สั่งซื้อ
+    User "1" -- "0..*" SupportTicket : แจ้งปัญหา/ติดต่อ
+    User "1" -- "0..*" Session : เข้าสู่ระบบ
+    Category "1" -- "0..*" Product : มี (อ้างอิงด้วยชื่อ category)
+    Product "1" -- "0..*" Review : ถูกรีวิว (embedded)
+    Order "1" *-- "1..*" OrderItem : ประกอบด้วย (embedded)
+    OrderItem "0..*" ..> "1" Product : อ้างอิงด้วย productId
+    Order "0..1" -- "0..1" Shipment : จัดส่งโดย (จับคู่ผ่าน order id)
 ```
 
 ---
@@ -277,20 +254,18 @@ classDiagram
 
 | Class | หน้าที่หลัก | ความสัมพันธ์สำคัญ |
 |---|---|---|
-| **User** | Class แม่ (Base class) เก็บข้อมูลบัญชีผู้ใช้ทุกประเภท, มี register/login/logout/updateProfile | เป็น parent ของ Customer, Manager, Employee (Inheritance) และมี Address ได้หลายรายการ |
-| **Address** | ที่อยู่จัดส่งของผู้ใช้ | เชื่อมกับ User (1 คนมีได้หลายที่อยู่) |
-| **Customer** | ลูกค้าที่สั่งซื้อสินค้า | สั่งซื้อ (Order), มีตะกร้า (Cart), เขียนรีวิว (Review), ใช้โปรโมชั่น |
-| **Cart / CartItem** | ตะกร้าสินค้าและรายการสินค้าในตะกร้า | Cart 1 ใบมีได้หลาย CartItem |
-| **Category** | หมวดหมู่สินค้า | 1 หมวดหมู่มีได้หลายสินค้า |
-| **Product** | ข้อมูลสินค้า | เชื่อมกับ Category, Inventory (สต็อก), OrderItem, Review |
-| **Inventory** | จัดการสต็อกคงเหลือของสินค้าแต่ละชิ้น | 1 สินค้า ต่อ 1 Inventory |
-| **Order / OrderItem** | คำสั่งซื้อและรายการสินค้าที่สั่ง | Order เชื่อมกับ Payment, Shipment, Customer |
-| **Payment** | ข้อมูลการชำระเงินของคำสั่งซื้อ | 1 Order ต่อ 1 Payment |
-| **Shipment** | ข้อมูลการจัดส่งสินค้า | 1 Order ต่อ 0-1 Shipment |
-| **Review** | รีวิวและให้คะแนนสินค้า | เชื่อมกับ Customer และ Product |
-| **Manager** | ผู้จัดการระบบ อนุมัติสินค้า, จัดการโปรโมชั่น/รีวิว, ดูรายงาน, จัดการพนักงาน | สืบทอดจาก User, ดูแล/ตรวจสอบ Employee |
-| **Employee** | พนักงาน จัดการสินค้า คำสั่งซื้อ สต็อก และการจัดส่ง | สืบทอดจาก User, จัดการ Payment และ Shipment |
-| **Promotion** | โค้ดส่วนลด/โปรโมชั่น | ใช้ร่วมกับ Payment ตอนคำนวณส่วนลด |
+| **User** | เก็บข้อมูลบัญชีผู้ใช้ทุกประเภทในตารางเดียว แยกสิทธิ์ด้วย field `role` (`CUSTOMER` / `EMPLOYEE` / `ADMIN`) แทนการแยก class ย่อย | มี Address, Order, SupportTicket, Session ได้หลายรายการ |
+| **Address** | ที่อยู่จัดส่งของผู้ใช้ (อ้างอิงเจ้าของด้วย `ownerId`) | เชื่อมกับ User (1 คนมีได้หลายที่อยู่, ตั้งค่า `isDefault` ได้) |
+| **Category** | หมวดหมู่สินค้า | Product อ้างอิงกลับมาด้วย **ชื่อหมวดหมู่ (string)** ไม่ใช่ FK id |
+| **Product** | ข้อมูลสินค้า รวมสต็อก (`stockUnits`/`stockLevel`) และสถานะอนุมัติไว้ในตัวเอง | มี Review แบบ embedded อยู่ในตัวสินค้าโดยตรง (ไม่มี Inventory table แยก) |
+| **Review** | รีวิวและให้คะแนนสินค้า | **embedded อยู่ใน Product** (array `reviews[]`) ไม่ใช่ตารางแยกที่มี FK มาเชื่อม |
+| **Order** | คำสั่งซื้อ เก็บชื่อ/ที่อยู่ลูกค้า วิธีชำระเงิน และสถานะไว้ในตัวเอง | อ้างอิง User ด้วย `userId`, มี OrderItem แบบ embedded, จับคู่กับ Shipment ผ่าน order id |
+| **OrderItem** | รายการสินค้าที่สั่งในแต่ละ Order | **embedded อยู่ใน Order** (array `items[]`), อ้างอิง Product ด้วย `productId` แบบหลวมๆ (ไม่มี FK บังคับ) |
+| **Shipment** | ข้อมูลการจัดส่งสินค้า | เชื่อมกับ Order ผ่าน field `order` (string เก็บ order id) ไม่ใช่ FK เชิงตัวเลข |
+| **SupportTicket** | เรื่องร้องเรียน/แจ้งปัญหาจากผู้ใช้ (`support.json`) | อ้างอิง User ด้วย `userId` และอาจอ้างอิง Order ผ่าน `relatedRef` |
+| **Session** | เซสชันการเข้าสู่ระบบ (token → userId) | อ้างอิง User ด้วย `userId`, ไม่มี expiry field ในข้อมูลปัจจุบัน |
+
+> ⚠️ **หมายเหตุสำคัญ:** ไม่มี Cart/CartItem, Payment, Inventory หรือ Customer/Manager/Employee เป็น table แยกในข้อมูลจริง — หากต้องการให้ระบบมีตะกร้าสินค้าแบบ persistent, ประวัติการชำระเงินแยกจาก Order, หรือแยกสิทธิ์ผู้จัดการออกจากพนักงาน จะต้อง**เพิ่ม schema ใหม่** ไม่ใช่แค่แก้ diagram
 
 ---
 
