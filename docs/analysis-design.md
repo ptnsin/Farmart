@@ -17,16 +17,16 @@
 
 ## 1. Use Case Diagram
 
-แสดงความสัมพันธ์ระหว่างผู้ใช้งาน (Actors) ทั้ง 3 กลุ่ม กับฟังก์ชันของระบบ ได้แก่ **ผู้ใช้งานทั่วไป, ลูกค้า, พนักงาน**
+แสดงความสัมพันธ์ระหว่างผู้ใช้งาน (Actors) ทั้ง 3 กลุ่ม กับฟังก์ชันของระบบ ได้แก่ **ลูกค้า, พนักงาน, ผู้ดูแลระบบ** (ระบบไม่มี role ผู้ใช้งานทั่วไปที่ไม่ล็อกอิน)
 
 ```mermaid
 graph LR
     CustomerActor((ลูกค้า))
     EmployeeActor((พนักงาน))
-    AdminActor((แอดมิน))
-
+    AdminActor((ผู้ดูแลระบบ))
 
     %% ลูกค้า
+    CustomerActor --> UC_Home[เรียกดูหน้าแรก]
     CustomerActor --> UC_Register[สมัครสมาชิก]
     UC_Register -.include.-> UC_Verify[ยืนยันตัวตน อีเมล/มือถือ]
     CustomerActor --> UC_Login[เข้าสู่ระบบ]
@@ -38,25 +38,26 @@ graph LR
     UC_Cart -.include.-> UC_CartOps["เพิ่ม/ลบสินค้า, ดูสรุปยอดรวม"]
     CustomerActor --> UC_Order[สั่งซื้อสินค้า]
     UC_Order -.include.-> UC_Address[เลือกที่อยู่จัดส่ง]
-    UC_Order -.include.-> UC_PayMethod[เลือกช่องทางชำระเงิน]
     CustomerActor --> UC_Track[ติดตามคำสั่งซื้อ]
     CustomerActor --> UC_Cancel[ยกเลิกคำสั่งซื้อ]
     UC_Cancel -.include.-> UC_ConfirmCancel[รับแจ้งเตือนยืนยันการยกเลิก]
     CustomerActor --> UC_Review["รีวิวสินค้า/ให้คะแนน"]
+    CustomerActor --> UC_Contact[ติดต่อสอบถาม]
 
     %% พนักงาน
     EmployeeActor --> UC_ManageProduct[จัดการสินค้า]
     UC_ManageProduct -.include.-> UC_ProductOps["เพิ่ม/ลบ/แก้ไขสินค้า"]
+    EmployeeActor --> UC_Category[จัดหมวดหมู่สินค้า]
+    EmployeeActor --> UC_Content[จัดการเนื้อหาสินค้าในเว็บไซต์]
     EmployeeActor --> UC_ManageOrder[จัดการคำสั่งซื้อ]
     UC_ManageOrder -.include.-> UC_OrderOps["ตรวจสอบ/ยืนยัน, อัปเดตสถานะ, ยกเลิกคำสั่งซื้อ"]
     EmployeeActor --> UC_ManageShip[จัดการการจัดส่ง]
 
-    %% แอดมิน
+    %% ผู้ดูแลระบบ (Admin)
     AdminActor --> UC_ManageCustomer[จัดการลูกค้า]
     AdminActor --> UC_ManageReview[จัดการรีวิว]
     AdminActor --> UC_Report["รายงาน/สถิติ"]
     AdminActor --> UC_Approve[อนุมัติการจัดการสินค้า]
-    AdminActor --> UC_Product[เข้าถึงสินค้า]
 ```
 
 ---
@@ -65,24 +66,26 @@ graph LR
 
 | กลุ่มผู้ใช้ | Use Case | ความสัมพันธ์ |
 |---|---|---|
-| **ลูกค้า** | สมัครสมาชิก | `<<include>>` ยืนยันตัวตน (อีเมล/มือถือ) |
+| **ลูกค้า** | เรียกดูหน้าแรก, ค้นหาสินค้า, ดูรายละเอียดสินค้า | - |
+| | สมัครสมาชิก | `<<include>>` ยืนยันตัวตน (อีเมล/มือถือ) |
 | | เข้าสู่ระบบ | - |
 | | จัดการข้อมูลส่วนตัว | `<<include>>` แก้ไขข้อมูลส่วนตัว |
 | | จัดการสินค้าในตะกร้า | `<<include>>` เพิ่ม/ลบสินค้า, ดูสรุปยอดรวม |
-| | สั่งซื้อสินค้า | `<<include>>` เลือกที่อยู่จัดส่ง / `<<include>>` เลือกช่องทางชำระเงิน |
+| | สั่งซื้อสินค้า | `<<include>>` เลือกที่อยู่จัดส่ง |
 | | ติดตามคำสั่งซื้อ | - |
 | | ยกเลิกคำสั่งซื้อ | `<<include>>` รับแจ้งเตือนยืนยันการยกเลิก |
-| | รีวิวสินค้า/ให้คะแนน | - |
+| | รีวิวสินค้า/ให้คะแนน, ติดต่อสอบถาม | - |
 | **พนักงาน** | จัดการสินค้า | `<<include>>` เพิ่ม/ลบ/แก้ไขสินค้า |
+| | จัดหมวดหมู่สินค้า, จัดการเนื้อหาสินค้าในเว็บไซต์ | - |
 | | จัดการคำสั่งซื้อ | `<<include>>` ตรวจสอบ/ยืนยัน, อัปเดตสถานะ, ยกเลิก |
 | | จัดการการจัดส่ง | - |
-| **ผู้จัดการ** | จัดการลูกค้า, จัดการรีวิว, รายงาน/สถิติ, อนุมัติการจัดการสินค้า | - |
+| **ผู้ดูแลระบบ (Admin)** | จัดการลูกค้า, จัดการรีวิว, รายงาน/สถิติ, อนุมัติการจัดการสินค้า | - |
 
 ---
 
 ## 3. Class Diagram
 
-> 📌 **หมายเหตุ:** ปรับปรุงจาก schema เดิม (ที่แยก Customer/Manager/Employee ด้วย inheritance และมี Cart, Payment, Inventory เป็น table แยก) ให้ตรงกับโครงสร้างข้อมูลจริงใน `users.json`, `addresses.json`, `products.json`, `orders.json`, `promotions.json`, `shipments.json`, `support.json` และ `sessions.json` — ระบบปัจจุบันเก็บ **role เป็น field เดียวใน User** (ไม่ได้แยกตาราง), และ **OrderItem / Review ถูก embed อยู่ในเอกสารแม่** (Order / Product) ไม่ใช่ตารางลูกแยกต่างหาก
+> 📌 **หมายเหตุ:** ปรับปรุงจาก schema เดิม (ที่แยก Customer/Admin/Employee ด้วย inheritance และมี Cart, Payment, Inventory เป็น table แยก) ให้ตรงกับโครงสร้างข้อมูลจริงใน `users.json`, `addresses.json`, `products.json`, `orders.json`, `shipments.json`, `support.json` และ `sessions.json` (ตัดฟีเจอร์โปรโมชั่น/ส่วนลดออกจากระบบแล้ว) — ระบบปัจจุบันเก็บ **role เป็น field เดียวใน User** (ไม่ได้แยกตาราง), และ **OrderItem / Review ถูก embed อยู่ในเอกสารแม่** (Order / Product) ไม่ใช่ตารางลูกแยกต่างหาก
 
 ```mermaid
 classDiagram
@@ -250,7 +253,7 @@ classDiagram
 | **SupportTicket** | เรื่องร้องเรียน/แจ้งปัญหาจากผู้ใช้ (`support.json`) | อ้างอิง User ด้วย `userId` และอาจอ้างอิง Order ผ่าน `relatedRef` |
 | **Session** | เซสชันการเข้าสู่ระบบ (token → userId) | อ้างอิง User ด้วย `userId`, ไม่มี expiry field ในข้อมูลปัจจุบัน |
 
-> ⚠️ **หมายเหตุสำคัญ:** ไม่มี Cart/CartItem, Payment, Inventory หรือ Customer/Manager/Employee เป็น table แยกในข้อมูลจริง — หากต้องการให้ระบบมีตะกร้าสินค้าแบบ persistent, ประวัติการชำระเงินแยกจาก Order, หรือแยกสิทธิ์ผู้จัดการออกจากพนักงาน จะต้อง**เพิ่ม schema ใหม่** ไม่ใช่แค่แก้ diagram
+> ⚠️ **หมายเหตุสำคัญ:** ไม่มี Cart/CartItem, Payment, Inventory หรือ Customer/Admin/Employee เป็น table แยกในข้อมูลจริง — หากต้องการให้ระบบมีตะกร้าสินค้าแบบ persistent, ประวัติการชำระเงินแยกจาก Order, หรือแยกสิทธิ์ผู้ดูแลระบบออกจากพนักงาน จะต้อง**เพิ่ม schema ใหม่** ไม่ใช่แค่แก้ diagram
 
 ---
 
