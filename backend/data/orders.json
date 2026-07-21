@@ -1,5 +1,49 @@
 [
   {
+    "id": "ORD-10262",
+    "userId": 13,
+    "customer": "ShiBas0happy",
+    "items": [
+      {
+        "productId": 4,
+        "name": "เมล็ดพันธุ์คะน้า",
+        "price": 25,
+        "quantity": 2,
+        "image": "http://localhost:4000/uploads/products/SD007.svg"
+      }
+    ],
+    "total": 50,
+    "date": "2026-07-21",
+    "status": "approved",
+    "statusStep": 0,
+    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "address": "wwwwwwww (0646294022) 4/24 ตำบลเขาเพิ่ม อำเภอบ้านนา นครนายก 26110",
+    "paymentMethod": "promptpay",
+    "deliveryMethod": "standard"
+  },
+  {
+    "id": "ORD-10261",
+    "userId": 13,
+    "customer": "ShiBas0happy",
+    "items": [
+      {
+        "productId": 1,
+        "name": "เมล็ดพันธุ์ข้าวโพดหวาน",
+        "price": 20,
+        "quantity": 1,
+        "image": "http://localhost:4000/uploads/products/SD001.svg"
+      }
+    ],
+    "total": 20,
+    "date": "2026-07-21",
+    "status": "approved",
+    "statusStep": 0,
+    "statusLabel": "ยืนยันคำสั่งซื้อ",
+    "address": "wwwwwwww (0646294022) 4/24 ตำบลเขาเพิ่ม อำเภอบ้านนา นครนายก 26110",
+    "paymentMethod": "promptpay",
+    "deliveryMethod": "express"
+  },
+  {
     "id": "ORD-10260",
     "userId": 14,
     "customer": "toon",
@@ -102,7 +146,7 @@
     ],
     "total": 20,
     "date": "2026-07-20",
-    "status": "pending",
+    "status": "approved",
     "statusStep": 0,
     "statusLabel": "ยืนยันคำสั่งซื้อ",
     "address": "wwwwwwww (0646294022) 4/24 ตำบลเขาเพิ่ม อำเภอบ้านนา นครนายก 26110",

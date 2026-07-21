@@ -2,6 +2,7 @@
 const orderModel = require("../models/orderModel");
 const shipmentModel = require("../models/shipmentModel");
 const productModel = require("../models/productModel");
+const notificationModel = require("../models/notificationModel");
 
 // order.status -> shipment.status ที่ต้อง sync ไปด้วยทุกครั้งที่ order เปลี่ยนสถานะผ่าน endpoint นี้
 // (shipmentModel.js sync กลับมาหา order ทางเดียวอยู่แล้วผ่าน syncOrderStatus แต่ order -> shipment
@@ -17,6 +18,56 @@ const ORDER_TO_SHIPMENT_STATUS = {
 // เลือกไว้ตอน Checkout (ดู SHIPPING_METHODS ใน Checkout.jsx: standard "3-5 วันทำการ", express "1-2 วันทำการ")
 // ใช้ค่าสูงสุดของแต่ละช่วงเพื่อไม่ให้ ETA ที่แสดงดูเร็วเกินจริง
 const DELIVERY_ETA_DAYS = { standard: 5, express: 2 };
+
+// ข้อความแจ้งเตือนตาม "status" ที่เปลี่ยน (ใช้กับ updateStatus/updateOrder)
+// type ต้องเป็น "orderUpdates" ให้ตรงกับ NotificationBell.jsx (NOTIF_TYPE_META) และ
+// notifyPreferences ของ user (Profile.jsx / AdminSettings.jsx) ไม่งั้นจะไม่ขึ้นไอคอนที่ถูกต้อง/โดนกรองทิ้ง
+const STATUS_NOTIFY_CONTENT = {
+  approved: {
+    title: (order) => `คำสั่งซื้อ ${order.id} ได้รับการอนุมัติ`,
+    message: () => "คำสั่งซื้อของคุณได้รับการตรวจสอบและอนุมัติจากพนักงานเรียบร้อยแล้ว กำลังเตรียมจัดส่งให้คุณเร็ว ๆ นี้",
+  },
+  rejected: {
+    title: (order) => `คำสั่งซื้อ ${order.id} ถูกปฏิเสธ`,
+    message: () => "ขออภัย คำสั่งซื้อของคุณไม่ผ่านการตรวจสอบ กรุณาติดต่อฝ่ายบริการลูกค้าหากมีข้อสงสัย",
+  },
+};
+
+// ข้อความแจ้งเตือนตาม "statusStep" ที่เลื่อนไป (ใช้กับ advance()) — เขียนให้ตรงกับ
+// รูปแบบข้อความจริงที่มีอยู่แล้วใน data/notifications.json (ORD-10259/10260)
+const STEP_NOTIFY_CONTENT = {
+  1: {
+    title: (order) => `คำสั่งซื้อ ${order.id} กำลังเตรียมพัสดุ`,
+    message: () => "เจ้าหน้าที่กำลังจัดเตรียมสินค้าของคุณ จะแจ้งเตือนอีกครั้งเมื่อเริ่มจัดส่ง",
+  },
+  2: {
+    title: (order) => `คำสั่งซื้อ ${order.id} กำลังจัดส่ง`,
+    message: () => "พัสดุของคุณออกเดินทางแล้ว กรุณาเตรียมรับสินค้า",
+  },
+  3: {
+    title: (order) => `คำสั่งซื้อ ${order.id} ถึงจุดหมายแล้ว`,
+    message: () => "พัสดุของคุณจัดส่งถึงที่อยู่ปลายทางเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ Farmart",
+  },
+  4: {
+    title: (order) => `คำสั่งซื้อ ${order.id} จัดส่งสำเร็จ`,
+    message: () => "คำสั่งซื้อของคุณจัดส่งสำเร็จเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ Farmart",
+  },
+};
+
+/** สร้างแจ้งเตือนให้ลูกค้าเจ้าของออเดอร์ (ไม่ทำให้ request หลักล้มเหลวถ้าแจ้งเตือนพัง) */
+function notifyOrder(order, content) {
+  try {
+    if (!content || !order) return;
+    notificationModel.addNotification({
+      userId: order.userId,
+      type: "orderUpdates",
+      title: content.title(order),
+      message: content.message(order),
+    });
+  } catch (err) {
+    console.error("แจ้งเตือนลูกค้าเรื่องสถานะคำสั่งซื้อไม่สำเร็จ:", err.message);
+  }
+}
 
 /** สร้าง/อัปเดต shipment ของ order ให้ตรงกับสถานะล่าสุด ถ้า status ที่เปลี่ยนไปไม่เกี่ยวกับการขนส่ง (เช่น rejected/cancelled) จะไม่ทำอะไร */
 function syncShipmentForOrder(order, status) {
@@ -122,7 +173,15 @@ function updateOrder(req, res) {
   }
 
   const order = orderModel.updateOrder(req.params.id, patch);
-  if (patch.status) syncShipmentForOrder(order, patch.status);
+
+  if (patch.status) {
+    syncShipmentForOrder(order, patch.status);
+    // แจ้งเตือนเฉพาะตอนสถานะเปลี่ยนจริง กันแจ้งซ้ำถ้า PUT มาด้วย status เดิม
+    if (existing.status !== patch.status) {
+      notifyOrder(order, STATUS_NOTIFY_CONTENT[patch.status]);
+    }
+  }
+
   res.json({ order });
 }
 
@@ -145,6 +204,7 @@ function updateStatus(req, res) {
   if (!order) return res.status(404).json({ error: "ไม่พบคำสั่งซื้อ" });
 
   syncShipmentForOrder(order, status);
+  notifyOrder(order, STATUS_NOTIFY_CONTENT[status]);
 
   res.json({ order });
 }
@@ -153,6 +213,9 @@ function updateStatus(req, res) {
 function advance(req, res) {
   const order = orderModel.advanceOrderStep(req.params.id);
   if (!order) return res.status(404).json({ error: "ไม่พบคำสั่งซื้อ" });
+
+  notifyOrder(order, STEP_NOTIFY_CONTENT[order.statusStep]);
+
   res.json({ order });
 }
 
