@@ -345,41 +345,54 @@ export default function Home() {
         </div>
       </section>
 
-{/* Promotion banner */}
+{/* Customer reviews */}
 <section className="max-w-6xl mx-auto px-6 py-14">
-  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-900 to-green-700">
-    <img
-      src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=1200&auto=format&fit=crop"
-      alt="โปรโมชั่นผลผลิตสด"
-      className="absolute inset-0 w-full h-full object-cover opacity-25"
-    />
-    <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 px-8 py-10">
-      <div className="flex items-center gap-5">
-        <img
-          src="https://images.unsplash.com/photo-1567306301408-9b74779a11af?q=80&w=300&auto=format&fit=crop"
-          alt="ผักผลไม้สด"
-          className="hidden sm:block w-20 h-20 rounded-xl object-cover border-2 border-white/30 shrink-0"
-        />
-        <div>
-          <span className="inline-block text-xs font-semibold tracking-widest text-green-200 bg-white/10 px-3 py-1 rounded-full mb-3">
-            โปรโมชั่นประจำเดือน
-          </span>
-          <h2 className="text-2xl font-bold text-white mb-2">
-            ลดสูงสุด 30% สำหรับผลผลิตคัดพิเศษ
-          </h2>
-          <p className="text-white/70 text-sm max-w-md">
-            เลือกซื้อผัก ผลไม้ และเมล็ดพันธุ์คุณภาพจากเกษตรกรทั่วประเทศ
-            ในราคาสุดคุ้ม วันนี้ถึงสิ้นเดือนนี้เท่านั้น
-          </p>
+  <div className="text-center mb-10">
+    <span className="inline-block text-xs font-semibold tracking-widest text-green-700 bg-green-50 px-3 py-1 rounded-full mb-3">
+      เสียงจากลูกค้าจริง
+    </span>
+    <h2 className="text-2xl font-bold text-gray-900">
+      ลูกค้าพูดถึง Farmart ว่าอย่างไร
+    </h2>
+  </div>
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {[
+      {
+        name: "นภัสสร ใจดี",
+        comment: "สินค้าคุณภาพดีมาก ใช้แล้วได้ผลตามที่คาดหวัง แนะนำเลยค่ะ",
+        rating: 5,
+      },
+      {
+        name: "ธีรพงษ์ วงศ์สกุล",
+        comment: "สั่งง่าย จัดส่งไว ผลผลิตสดใหม่ทุกครั้ง ประทับใจบริการมากครับ",
+        rating: 5,
+      },
+      {
+        name: "อรวรรณ ศรีสุข",
+        comment: "ชอบที่เห็นแหล่งที่มาของสินค้าชัดเจน ซื้อแล้วอุ่นใจว่าได้ของคุณภาพจริง",
+        rating: 4,
+      },
+    ].map((review, i) => (
+      <div key={i} className="rounded-xl border border-gray-100 bg-white shadow-sm p-6">
+        <div className="flex gap-0.5 mb-3">
+          {Array.from({ length: 5 }).map((_, j) => (
+            <Star
+              key={j}
+              className={`w-4 h-4 ${
+                j < review.rating ? "fill-amber-400 text-amber-400" : "text-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+        <p className="text-gray-600 text-sm leading-relaxed mb-4">"{review.comment}"</p>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-semibold">
+            {review.name.charAt(0)}
+          </div>
+          <p className="font-medium text-sm text-gray-900">{review.name}</p>
         </div>
       </div>
-      <Link
-        to="/products"
-        className="shrink-0 bg-white text-green-900 hover:bg-green-50 text-sm font-semibold px-6 py-3 rounded-lg transition-colors"
-      >
-        ช้อปโปรโมชั่นนี้
-      </Link>
-    </div>
+    ))}
   </div>
 </section>
 
