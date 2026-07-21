@@ -24,6 +24,7 @@ import {
 import { useCart } from "./CartContext";
 import { fetchCurrentUser, getCachedUser, isAuthenticated } from "./data/authStore";
 import { submitSupportTicket } from "./data/reportsStore";
+import { getMyOrders, toStatusBadge } from "./data/orderStore";
 import NotificationBell from "./NotificationBell";
 import Footer from "./Footer";
 
@@ -144,6 +145,20 @@ export default function HelpCenter() {
   const [submitError, setSubmitError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const loggedIn = isAuthenticated();
+
+  // รายการคำสั่งซื้อของผู้ใช้คนนี้ ใช้เติมตัวเลือกในช่อง "เลขคำสั่งซื้อที่เกี่ยวข้อง"
+  // กันลูกค้าพิมพ์เลขออเดอร์ผิด/จำไม่ได้ ให้เลือกจากลิสต์ของตัวเองแทน
+  const [myOrders, setMyOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    setOrdersLoading(true);
+    getMyOrders()
+      .then((orders) => setMyOrders(orders || []))
+      .catch(() => setMyOrders([]))
+      .finally(() => setOrdersLoading(false));
+  }, [loggedIn]);
 
   function handleCategoryClick(title) {
     setForm((f) => ({ ...f, subject: title }));
@@ -419,13 +434,36 @@ export default function HelpCenter() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   เลขคำสั่งซื้อที่เกี่ยวข้อง (ถ้ามี)
                 </label>
-                <input
-                  type="text"
-                  value={form.relatedRef}
-                  onChange={(e) => setForm((f) => ({ ...f, relatedRef: e.target.value }))}
-                  placeholder="เช่น ORD-10231"
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                />
+                {ordersLoading ? (
+                  <div className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-400 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> กำลังโหลดคำสั่งซื้อของคุณ...
+                  </div>
+                ) : myOrders.length > 0 ? (
+                  <select
+                    value={form.relatedRef}
+                    onChange={(e) => setForm((f) => ({ ...f, relatedRef: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"
+                  >
+                    <option value="">ไม่ระบุ / ไม่เกี่ยวกับคำสั่งซื้อ</option>
+                    {myOrders.map((o) => {
+                      const badge = toStatusBadge(o.status);
+                      return (
+                        <option key={o.id} value={o.id}>
+                          {o.id} • {o.date} • {badge.label}
+                        </option>
+                      );
+                    })}
+                  </select>
+                ) : (
+                  // ไม่มีคำสั่งซื้อเลย ก็ยังปล่อยให้พิมพ์เองได้ เผื่อลูกค้ามีเลขอ้างอิงจากช่องทางอื่น
+                  <input
+                    type="text"
+                    value={form.relatedRef}
+                    onChange={(e) => setForm((f) => ({ ...f, relatedRef: e.target.value }))}
+                    placeholder="เช่น ORD-10231"
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">รายละเอียด</label>
