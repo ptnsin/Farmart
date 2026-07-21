@@ -8,15 +8,8 @@ import {
   Truck,
   ShieldCheck,
   BadgeCheck,
-  ChevronDown,
-  Package,
-  CreditCard,
-  RotateCcw,
-  UserCog,
-  Leaf,
   Phone,
   Mail,
-  Clock,
   Send,
   CheckCircle2,
   Loader2,
@@ -28,98 +21,25 @@ import { getMyOrders, toStatusBadge } from "./data/orderStore";
 import NotificationBell from "./NotificationBell";
 import Footer from "./Footer";
 
-const categories = [
-  {
-    icon: Package,
-    title: "การสั่งซื้อ",
-    desc: "แก้ไข ยกเลิก หรือตรวจสอบสถานะคำสั่งซื้อ",
-  },
-  {
-    icon: Truck,
-    title: "การจัดส่ง",
-    desc: "ระยะเวลา ค่าส่ง และพื้นที่ให้บริการ",
-  },
-  {
-    icon: CreditCard,
-    title: "การชำระเงิน",
-    desc: "ช่องทางชำระเงินและใบเสร็จรับเงิน",
-  },
-  {
-    icon: RotateCcw,
-    title: "การคืนสินค้า",
-    desc: "ขั้นตอนคืนเงินและเปลี่ยนสินค้า",
-  },
-  {
-    icon: UserCog,
-    title: "บัญชีผู้ใช้",
-    desc: "ตั้งค่าโปรไฟล์ ความปลอดภัย และการแจ้งเตือน",
-  },
-  {
-    icon: Leaf,
-    title: "คุณภาพผลผลิต",
-    desc: "มาตรฐานสินค้าและการรับรองแหล่งที่มา",
-  },
-];
-
-const faqs = [
-  {
-    q: "ฉันสามารถติดตามสถานะคำสั่งซื้อได้อย่างไร",
-    a: "เข้าสู่หน้า \"ติดตามพัสดุ\" แล้วกรอกหมายเลขคำสั่งซื้อของคุณ ระบบจะแสดงสถานะล่าสุดแบบเรียลไทม์ ตั้งแต่การเตรียมสินค้าจนถึงการจัดส่งถึงมือคุณ",
-  },
-  {
-    q: "ผลผลิตสดจะจัดส่งถึงภายในกี่วัน",
-    a: "โดยทั่วไปสินค้าสดจะถูกจัดส่งภายใน 24-48 ชั่วโมงหลังเก็บเกี่ยว เพื่อรักษาความสดใหม่ให้ได้มากที่สุด ระยะเวลาอาจแตกต่างกันไปตามพื้นที่ปลายทาง",
-  },
-  {
-    q: "หากได้รับสินค้าที่ไม่ได้คุณภาพ ต้องทำอย่างไร",
-    a: "ถ่ายภาพสินค้าที่มีปัญหาแล้วแจ้งผ่านหน้า \"คำสั่งซื้อ\" ภายใน 24 ชั่วโมงหลังได้รับสินค้า ทีมงานจะดำเนินการคืนเงินหรือจัดส่งสินค้าใหม่ให้โดยไม่มีค่าใช้จ่ายเพิ่มเติม",
-  },
-  {
-    q: "มีช่องทางการชำระเงินอะไรบ้าง",
-    a: "รองรับบัตรเครดิต/เดบิต โอนผ่านธนาคาร พร้อมเพย์ และการชำระเงินปลายทางสำหรับพื้นที่ที่ร่วมรายการ",
-  },
-  {
-    q: "สินค้าทุกชิ้นผ่านการรับรองมาตรฐานหรือไม่",
-    a: "สินค้าทุกชิ้นบนแพลตฟอร์มผ่านการตรวจสอบย้อนกลับแหล่งที่มา และเกษตรกรผู้ผลิตทุกรายได้รับการยืนยันตัวตนตามมาตรฐานเกษตรอินทรีย์ของเรา",
-  },
-  {
-    q: "ต้องการยกเลิกคำสั่งซื้อ สามารถทำได้เมื่อไหร่",
-    a: "สามารถยกเลิกได้ฟรีก่อนที่สถานะจะเปลี่ยนเป็น \"กำลังจัดเตรียมสินค้า\" หลังจากนั้นกรุณาติดต่อทีมสนับสนุนเพื่อขอความช่วยเหลือเพิ่มเติม",
-  },
-];
-
-function FaqItem({ item, isOpen, onToggle }) {
+function ContactCard({ icon: Icon, title, detail, href, cta }) {
   return (
-    <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
-      >
-        <span className="text-sm font-semibold text-gray-900">{item.q}</span>
-        <ChevronDown
-          className={`w-4 h-4 text-green-700 shrink-0 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      <div
-        className={`grid transition-all duration-200 ease-in-out ${
-          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-        style={{ display: "grid" }}
-      >
-        <div className="overflow-hidden">
-          <p className="px-5 pb-4 text-sm text-gray-500 leading-relaxed">{item.a}</p>
-        </div>
+    <div className="border border-gray-100 rounded-xl p-5 flex flex-col gap-3">
+      <div className="w-10 h-10 rounded-lg bg-green-800 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-white" />
       </div>
+      <div>
+        <p className="text-sm font-semibold text-gray-900">{title}</p>
+        <p className="text-xs text-gray-500 mt-1">{detail}</p>
+      </div>
+      <a href={href} className="mt-auto text-xs font-semibold text-green-700 hover:underline">
+        {cta}
+      </a>
     </div>
   );
 }
 
 export default function HelpCenter() {
   const { itemCount } = useCart();
-  const [openIndex, setOpenIndex] = useState(0);
-  const [query, setQuery] = useState("");
 
   // รูปโปรไฟล์ผู้ใช้ปัจจุบัน (แสดงที่ไอคอนมุมขวาบน)
   const [avatar, setAvatar] = useState(null);
@@ -133,18 +53,13 @@ export default function HelpCenter() {
       .catch(() => {});
   }, []);
 
-  const filteredFaqs = faqs.filter(
-    (f) =>
-      f.q.toLowerCase().includes(query.toLowerCase()) ||
-      f.a.toLowerCase().includes(query.toLowerCase())
-  );
+  const loggedIn = isAuthenticated();
 
   // ฟอร์มแจ้งปัญหา/ติดต่อทีมงาน
   const [form, setForm] = useState({ subject: "", message: "", relatedRef: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
-  const loggedIn = isAuthenticated();
 
   // รายการคำสั่งซื้อของผู้ใช้คนนี้ ใช้เติมตัวเลือกในช่อง "เลขคำสั่งซื้อที่เกี่ยวข้อง"
   // กันลูกค้าพิมพ์เลขออเดอร์ผิด/จำไม่ได้ ให้เลือกจากลิสต์ของตัวเองแทน
@@ -159,11 +74,6 @@ export default function HelpCenter() {
       .catch(() => setMyOrders([]))
       .finally(() => setOrdersLoading(false));
   }, [loggedIn]);
-
-  function handleCategoryClick(title) {
-    setForm((f) => ({ ...f, subject: title }));
-    document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
 
   async function handleSubmitTicket(e) {
     e.preventDefault();
@@ -261,126 +171,29 @@ export default function HelpCenter() {
           <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-4">
             มีคำถาม? เราพร้อมช่วยเหลือคุณ
           </h1>
-          <p className="text-white/70 text-sm max-w-lg mx-auto mb-7 leading-relaxed">
-            ค้นหาคำตอบเกี่ยวกับคำสั่งซื้อ การจัดส่ง และบริการต่าง ๆ
-            หรือติดต่อทีมงานของเราได้โดยตรง
+          <p className="text-white/70 text-sm max-w-lg mx-auto leading-relaxed">
+            แจ้งปัญหาหรือส่งข้อความถึงทีมงานของเราด้านล่าง เราจะติดต่อกลับโดยเร็วที่สุด
           </p>
-          <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              type="text"
-              placeholder="พิมพ์คำถามของคุณ เช่น การคืนเงิน"
-              className="w-full pl-11 pr-4 py-3 rounded-xl text-sm text-gray-900 bg-white border border-transparent focus:outline-none focus:ring-2 focus:ring-green-500 shadow-lg"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section className="max-w-6xl mx-auto px-6 py-14">
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900">หมวดหมู่ความช่วยเหลือ</h2>
-          <p className="text-sm text-gray-500 mt-1">เลือกหัวข้อที่ตรงกับสิ่งที่คุณต้องการทราบ</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {categories.map((c) => {
-            const Icon = c.icon;
-            return (
-              <button
-                key={c.title}
-                onClick={() => handleCategoryClick(c.title)}
-                className="text-left border border-gray-100 rounded-xl p-4 hover:shadow-md hover:border-green-100 transition-all bg-white"
-              >
-                <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center mb-3">
-                  <Icon className="w-5 h-5 text-green-700" />
-                </div>
-                <p className="text-sm font-semibold text-gray-900 mb-1">{c.title}</p>
-                <p className="text-xs text-gray-500 leading-relaxed">{c.desc}</p>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="bg-green-50/60">
-        <div className="max-w-3xl mx-auto px-6 py-14">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-gray-900">คำถามที่พบบ่อย</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {query ? `ผลการค้นหาสำหรับ "${query}"` : "รวมคำตอบที่ลูกค้าถามมากที่สุด"}
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {filteredFaqs.length > 0 ? (
-              filteredFaqs.map((item, idx) => (
-                <FaqItem
-                  key={item.q}
-                  item={item}
-                  isOpen={openIndex === idx}
-                  onToggle={() => setOpenIndex(openIndex === idx ? -1 : idx)}
-                />
-              ))
-            ) : (
-              <div className="text-center py-10 border border-dashed border-gray-200 rounded-xl bg-white">
-                <p className="text-sm text-gray-500">
-                  ไม่พบคำตอบที่ตรงกับ "{query}" ลองติดต่อทีมสนับสนุนของเราด้านล่าง
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       </section>
 
       {/* Contact support */}
-{/* Contact support */}
       <section id="contact" className="max-w-6xl mx-auto px-6 py-14 scroll-mt-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="border border-gray-100 rounded-xl p-5 flex flex-col gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-800 flex items-center justify-center">
-              <Phone className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">โทรหาเรา</p>
-              <p className="text-xs text-gray-500 mt-1">02-123-4567 (จันทร์-เสาร์ 08:00-18:00 น.)</p>
-            </div>
-            <a href="tel:0212345678" className="mt-auto text-xs font-semibold text-green-700 hover:underline">
-              โทรเลย
-            </a>
-          </div>
-          <div className="border border-gray-100 rounded-xl p-5 flex flex-col gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-800 flex items-center justify-center">
-              <Mail className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">อีเมลสนับสนุน</p>
-              <p className="text-xs text-gray-500 mt-1">[email protected] ตอบกลับภายใน 24 ชม.</p>
-            </div>
-            <a href="mailto:[email protected]" className="mt-auto text-xs font-semibold text-green-700 hover:underline">
-              ส่งอีเมล
-            </a>
-          </div>
-        </div>
-
-        <div className="rounded-xl bg-green-950 text-white p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-              <Clock className="w-5 h-5 text-green-300" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">ยังไม่พบคำตอบที่ต้องการใช่ไหม?</p>
-              <p className="text-white/60 text-xs mt-0.5">ทีมงานของเราพร้อมช่วยเหลือคุณตลอดสัปดาห์</p>
-            </div>
-          </div>
-          <Link
-            to="/orders"
-            className="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors shrink-0"
-          >
-            ดูคำสั่งซื้อของฉัน
-          </Link>
+          <ContactCard
+            icon={Phone}
+            title="โทรหาเรา"
+            detail="02-123-4567 (จันทร์-เสาร์ 08:00-18:00 น.)"
+            href="tel:0212345678"
+            cta="โทรเลย"
+          />
+          <ContactCard
+            icon={Mail}
+            title="อีเมลสนับสนุน"
+            detail="[email protected] ตอบกลับภายใน 24 ชม."
+            href="mailto:[email protected]"
+            cta="ส่งอีเมล"
+          />
         </div>
 
         {/* Report an issue form — เชื่อมกับ POST /api/support จริง */}

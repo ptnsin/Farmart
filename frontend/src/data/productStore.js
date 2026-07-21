@@ -175,6 +175,7 @@ export function toDisplayProduct(p) {
     reviews: reviews.map((r) => ({
       id: r.id,
       name: r.customer,
+      avatar: resolveImageUrl(r.avatar),
       rating: r.rating,
       date: r.date,
       comment: r.comment,

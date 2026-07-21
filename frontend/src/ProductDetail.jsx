@@ -51,7 +51,21 @@ function ReviewCard({ review }) {
   return (
     <div className="border-b border-gray-100 pb-5">
       <div className="flex items-start gap-3">
-        <div className="w-9 h-9 shrink-0 rounded-full bg-green-100 text-green-800 font-bold flex items-center justify-center text-sm">
+        {review.avatar ? (
+          <img
+            src={review.avatar}
+            alt={review.name}
+            className="w-9 h-9 shrink-0 rounded-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              e.currentTarget.nextSibling.style.display = "flex";
+            }}
+          />
+        ) : null}
+        <div
+          className="w-9 h-9 shrink-0 rounded-full bg-green-100 text-green-800 font-bold items-center justify-center text-sm"
+          style={{ display: review.avatar ? "none" : "flex" }}
+        >
           {review.name.trim().charAt(0)}
         </div>
         <div className="flex-1 min-w-0">

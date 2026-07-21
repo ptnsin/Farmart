@@ -35,6 +35,17 @@ function hasPurchasedProduct(userId, productId) {
   );
 }
 
+/** เติม avatar ของผู้รีวิวแต่ละคนเข้าไปใน reviews (join สดจาก userModel ทุกครั้งที่ดึงสินค้า
+ * เพื่อให้ถ้า user เปลี่ยนรูปโปรไฟล์ทีหลัง รีวิวเก่าจะได้รูปใหม่ตามไปด้วย ไม่ใช่รูป ณ วันที่รีวิว) */
+function attachReviewerAvatars(product) {
+  if (!product || !Array.isArray(product.reviews)) return product;
+  const reviews = product.reviews.map((r) => {
+    const user = userModel.getUserById(r.userId);
+    return { ...r, avatar: user?.avatar || null };
+  });
+  return { ...product, reviews };
+}
+
 /**
  * GET /api/products - รายการสินค้า รองรับ query: category, search, stockLevel, approvalStatus
  * ใช้ optionalAuth (ดู routes/products.js) เพื่อรู้ว่าคนเรียกคือใคร:
@@ -77,7 +88,7 @@ function getProducts(req, res) {
 function getProductById(req, res) {
   const product = productModel.getProductById(req.params.id);
   if (!product) return res.status(404).json({ error: "ไม่พบสินค้า" });
-  res.json({ product });
+  res.json({ product: attachReviewerAvatars(product) });
 }
 
 /** POST /api/products (employee/admin) - เพิ่มสินค้าใหม่ */
@@ -174,7 +185,7 @@ function addReview(req, res) {
     comment,
   });
   if (!product) return res.status(404).json({ error: "ไม่พบสินค้า" });
-  res.status(201).json({ product });
+  res.status(201).json({ product: attachReviewerAvatars(product) });
 }
 
 /** POST /api/products/:id/reviews/:reviewId/reply (employee/admin) - ร้านตอบกลับ/แก้ไขคำตอบรีวิว */
