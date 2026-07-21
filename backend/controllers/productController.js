@@ -2,6 +2,28 @@
 const productModel = require("../models/productModel");
 const categoryModel = require("../models/categoryModel");
 const orderModel = require("../models/orderModel");
+const notificationModel = require("../models/notificationModel");
+// TODO: ตรวจสอบว่า models/userModel.js มีฟังก์ชัน getUsers() จริงหรือไม่ (เดาตามแบบแผน
+// เดียวกับ productModel.getProducts()) ถ้าชื่อฟังก์ชันไม่ตรง ให้แก้ใน notifyAdminsOfPendingProduct ด้านล่าง
+const userModel = require("../models/userModel");
+
+/** แจ้งเตือน ADMIN ทุกคนเมื่อมีสินค้าใหม่ส่งเข้ามารออนุมัติ (ไม่ทำให้การเพิ่มสินค้าล้มเหลวถ้าแจ้งเตือนพัง) */
+function notifyAdminsOfPendingProduct(product, submittedBy) {
+  try {
+    const admins = userModel.getUsers().filter((u) => u.role === "ADMIN");
+    if (admins.length === 0) return;
+    notificationModel.addNotificationForUsers(
+      admins.map((a) => a.id),
+      {
+        type: "pendingApproval",
+        title: "มีสินค้าใหม่รอการอนุมัติ",
+        message: `${submittedBy?.name || "พนักงาน"} เพิ่มสินค้า "${product.name}" เข้ามารอตรวจสอบ`,
+      }
+    );
+  } catch (err) {
+    console.error("แจ้งเตือน admin เรื่องสินค้ารออนุมัติไม่สำเร็จ:", err.message);
+  }
+}
 
 /** เช็คว่า user คนนี้เคยสั่งซื้อสินค้า productId ชิ้นนี้จริง (คำสั่งซื้อที่ไม่ถูกปฏิเสธ) หรือยัง */
 function hasPurchasedProduct(userId, productId) {
@@ -63,6 +85,11 @@ function createProduct(req, res) {
     // EMPLOYEE เพิ่มสินค้าใหม่ต้องรออนุมัติจาก ADMIN ก่อน, ADMIN เพิ่มเองอนุมัติทันที
     approvalStatus: req.user.role === "ADMIN" ? "approved" : "pending",
   });
+
+  if (product.approvalStatus === "pending") {
+    notifyAdminsOfPendingProduct(product, req.user);
+  }
+
   res.status(201).json({ product });
 }
 

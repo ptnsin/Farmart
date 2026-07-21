@@ -69,14 +69,19 @@ export default function AdminSettings() {
   };
 
   const NOTIFICATIONS_KEY = "farmart_admin_notifications";
+  const DEFAULT_NOTIFICATIONS = {
+    pendingApproval: true,
+    lowStock: true,
+    newUser: true,
+    weeklyReport: false,
+    newOrder: true,
+  };
   const [notifications, setNotifications] = useState(() => {
     try {
       const raw = localStorage.getItem(NOTIFICATIONS_KEY);
-      return raw
-        ? JSON.parse(raw)
-        : { newOrder: true, lowStock: true, weeklyReport: false };
+      return raw ? { ...DEFAULT_NOTIFICATIONS, ...JSON.parse(raw) } : DEFAULT_NOTIFICATIONS;
     } catch {
-      return { newOrder: true, lowStock: true, weeklyReport: false };
+      return DEFAULT_NOTIFICATIONS;
     }
   });
   const [savingNotifications, setSavingNotifications] = useState(false);
@@ -101,6 +106,8 @@ export default function AdminSettings() {
 
   // หมายเหตุ: backend (authStore.updateMe / PUT /api/auth/me) ยังไม่มี field
   // สำหรับเก็บการตั้งค่าแจ้งเตือน จึงเก็บไว้ที่ฝั่ง client (localStorage) ไปก่อน
+  // ค่าที่บันทึกภายใต้ NOTIFICATIONS_KEY นี้ ถูกอ่านโดย data/notificationStore.js
+  // เพื่อกรองว่าจะแสดงแจ้งเตือนประเภทไหนในปุ่มกระดิ่ง (NotificationBell) ของหน้าอื่น ๆ ด้วย
   // ถ้าต้องการให้ค่านี้ sync ข้ามอุปกรณ์ ต้องเพิ่ม field/endpoint ฝั่ง backend เพิ่มเติม
   const handleSaveNotifications = async () => {
     setSavingNotifications(true);
@@ -265,10 +272,13 @@ export default function AdminSettings() {
             <div className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-700">คำสั่งซื้อใหม่</p>
-                  <p className="text-xs text-slate-400">แจ้งเตือนทุกครั้งที่มีคำสั่งซื้อเข้ามา</p>
+                  <p className="text-sm text-slate-700">สินค้ารออนุมัติ</p>
+                  <p className="text-xs text-slate-400">แจ้งเตือนเมื่อมีสินค้าใหม่ส่งเข้ามารอตรวจสอบ</p>
                 </div>
-                <Toggle checked={notifications.newOrder} onChange={toggleNotification("newOrder")} />
+                <Toggle
+                  checked={notifications.pendingApproval}
+                  onChange={toggleNotification("pendingApproval")}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
@@ -276,6 +286,20 @@ export default function AdminSettings() {
                   <p className="text-xs text-slate-400">แจ้งเตือนเมื่อสต็อกสินค้าต่ำกว่าเกณฑ์</p>
                 </div>
                 <Toggle checked={notifications.lowStock} onChange={toggleNotification("lowStock")} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-700">ผู้ใช้งานใหม่</p>
+                  <p className="text-xs text-slate-400">แจ้งเตือนเมื่อมีผู้ใช้งานหรือผู้ขายสมัครสมาชิกใหม่</p>
+                </div>
+                <Toggle checked={notifications.newUser} onChange={toggleNotification("newUser")} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-700">คำสั่งซื้อใหม่</p>
+                  <p className="text-xs text-slate-400">แจ้งเตือนทุกครั้งที่มีคำสั่งซื้อเข้ามา</p>
+                </div>
+                <Toggle checked={notifications.newOrder} onChange={toggleNotification("newOrder")} />
               </div>
               <div className="flex items-center justify-between">
                 <div>

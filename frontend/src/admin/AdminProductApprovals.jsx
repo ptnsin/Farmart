@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
-  Bell,
   ClipboardCheck,
   Clock,
   CheckCircle2,
@@ -13,6 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import AdminSidebar from "./AdminSidebar";
+import NotificationBell from "./NotificationBell";
 import { getCachedUser, fetchCurrentUser } from "../data/authStore";
 import { getProducts, updateApproval } from "../data/productStore";
 
@@ -157,13 +157,7 @@ export default function AdminProductApprovals() {
               className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
-          <button
-            type="button"
-            aria-label="แจ้งเตือน"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:bg-slate-50"
-          >
-            <Bell size={18} />
-          </button>
+          <NotificationBell />
           <div className="flex items-center gap-3 rounded-full border border-slate-200 py-1.5 pl-1.5 pr-4">
             <img
               src={currentUser?.avatar || "https://i.pravatar.cc/64?img=12"}

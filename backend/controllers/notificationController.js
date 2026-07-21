@@ -1,0 +1,90 @@
+// controllers/notificationController.js
+const notificationModel = require("../models/notificationModel");
+
+// TODO: ตรวจสอบว่า models/userModel.js มีฟังก์ชันชื่อนี้จริงหรือไม่ (เดาตามแบบแผนของ
+// productModel.getProducts()) ถ้าชื่อไม่ตรง ให้แก้ import/เรียกใช้ในฟังก์ชัน createNotification ด้านล่าง
+const userModel = require("../models/userModel");
+
+/** GET /api/notifications - แจ้งเตือนของ user ที่ login อยู่เท่านั้น */
+function getNotifications(req, res) {
+  const notifications = notificationModel.getNotificationsByUser(req.user.id);
+  res.json({ notifications, total: notifications.length });
+}
+
+/** PUT /api/notifications/:id/read - อ่านแจ้งเตือนรายการเดียว (ต้องเป็นเจ้าของเท่านั้น) */
+function markAsRead(req, res) {
+  const existing = notificationModel.getNotificationById(req.params.id);
+  if (!existing) return res.status(404).json({ error: "ไม่พบการแจ้งเตือนนี้" });
+  if (String(existing.userId) !== String(req.user.id)) {
+    return res.status(403).json({ error: "ไม่มีสิทธิ์เข้าถึงการแจ้งเตือนนี้" });
+  }
+
+  const notification = notificationModel.markAsRead(req.params.id);
+  res.json({ notification });
+}
+
+/** PUT /api/notifications/read-all - อ่านแจ้งเตือนทั้งหมดของตัวเอง */
+function markAllAsRead(req, res) {
+  const notifications = notificationModel.markAllAsRead(req.user.id);
+  res.json({ notifications });
+}
+
+/** DELETE /api/notifications/:id - ลบแจ้งเตือน (ต้องเป็นเจ้าของเท่านั้น) */
+function deleteNotification(req, res) {
+  const existing = notificationModel.getNotificationById(req.params.id);
+  if (!existing) return res.status(404).json({ error: "ไม่พบการแจ้งเตือนนี้" });
+  if (String(existing.userId) !== String(req.user.id)) {
+    return res.status(403).json({ error: "ไม่มีสิทธิ์ลบการแจ้งเตือนนี้" });
+  }
+
+  const notifications = notificationModel.deleteNotificationForUser(req.params.id, req.user.id);
+  res.json({ notifications, message: "ลบการแจ้งเตือนเรียบร้อยแล้ว" });
+}
+
+/**
+ * POST /api/notifications (admin only) - สร้างแจ้งเตือนเอง เช่น ยิงโปรโมชั่นหาลูกค้า
+ * body รองรับ 3 แบบ:
+ *  - { userId, type, title, message }              -> ส่งให้ user คนเดียว
+ *  - { userIds: [...], type, title, message }       -> ส่งให้ user ตาม id ที่ระบุ
+ *  - { broadcast: true, role, type, title, message } -> ส่งให้ user ทุกคน (กรอง role ได้ถ้าระบุ)
+ */
+function createNotification(req, res) {
+  const { userId, userIds, broadcast, role, type, title, message } = req.body || {};
+
+  if (!title || !message) {
+    return res.status(400).json({ error: "กรุณากรอกหัวข้อและข้อความแจ้งเตือนให้ครบถ้วน" });
+  }
+
+  if (broadcast) {
+    const allUsers = userModel.getUsers();
+    const targets = role ? allUsers.filter((u) => u.role === role) : allUsers;
+    const notifications = notificationModel.addNotificationForUsers(
+      targets.map((u) => u.id),
+      { type, title, message }
+    );
+    return res.status(201).json({ notifications });
+  }
+
+  if (Array.isArray(userIds) && userIds.length > 0) {
+    const notifications = notificationModel.addNotificationForUsers(userIds, {
+      type,
+      title,
+      message,
+    });
+    return res.status(201).json({ notifications });
+  }
+
+  if (!userId) {
+    return res.status(400).json({ error: "กรุณาระบุ userId, userIds หรือ broadcast" });
+  }
+  const notification = notificationModel.addNotification({ userId, type, title, message });
+  res.status(201).json({ notification });
+}
+
+module.exports = {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  createNotification,
+};
