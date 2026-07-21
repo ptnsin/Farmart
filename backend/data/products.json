@@ -1,5 +1,26 @@
 [
   {
+    "id": 61,
+    "sku": "SD021",
+    "name": "ลิเก",
+    "category": "เมล็ดพันธุ์",
+    "unit": "หน่วย",
+    "price": 25,
+    "cost": 0,
+    "stockUnits": 10,
+    "stockPercent": 0,
+    "stockLevel": "healthy",
+    "farmer": "eiei",
+    "location": "เชียงใหม่",
+    "description": "eieiza",
+    "image": "http://localhost:4000/uploads/products/1784666471918-222051468.png",
+    "images": [
+      "http://localhost:4000/uploads/products/1784666471918-222051468.png"
+    ],
+    "reviews": [],
+    "approvalStatus": "approved"
+  },
+  {
     "id": 1,
     "sku": "SD001",
     "name": "เมล็ดพันธุ์ข้าวโพดหวาน",

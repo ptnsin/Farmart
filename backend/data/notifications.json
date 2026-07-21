@@ -1,5 +1,59 @@
 [
   {
+    "id": 17,
+    "userId": 16,
+    "type": "pendingApproval",
+    "title": "มีสินค้าใหม่รอการอนุมัติ",
+    "message": "โทม่าฟ้อก เพิ่มสินค้า \"ลิเก\" เข้ามารอตรวจสอบ",
+    "read": false,
+    "createdAt": 1784666471925
+  },
+  {
+    "id": 18,
+    "userId": 9,
+    "type": "pendingApproval",
+    "title": "มีสินค้าใหม่รอการอนุมัติ",
+    "message": "โทม่าฟ้อก เพิ่มสินค้า \"ลิเก\" เข้ามารอตรวจสอบ",
+    "read": false,
+    "createdAt": 1784666471925
+  },
+  {
+    "id": 19,
+    "userId": 3,
+    "type": "pendingApproval",
+    "title": "มีสินค้าใหม่รอการอนุมัติ",
+    "message": "โทม่าฟ้อก เพิ่มสินค้า \"ลิเก\" เข้ามารอตรวจสอบ",
+    "read": true,
+    "createdAt": 1784666471925
+  },
+  {
+    "id": 14,
+    "userId": 16,
+    "type": "pendingApproval",
+    "title": "มีการแจ้งปัญหาใหม่จากลูกค้า",
+    "message": "ShiBas0happy ส่งข้อความ: \"sssssssss\" - sssssssssssss",
+    "read": false,
+    "createdAt": 1784664880027
+  },
+  {
+    "id": 15,
+    "userId": 9,
+    "type": "pendingApproval",
+    "title": "มีการแจ้งปัญหาใหม่จากลูกค้า",
+    "message": "ShiBas0happy ส่งข้อความ: \"sssssssss\" - sssssssssssss",
+    "read": false,
+    "createdAt": 1784664880027
+  },
+  {
+    "id": 16,
+    "userId": 3,
+    "type": "pendingApproval",
+    "title": "มีการแจ้งปัญหาใหม่จากลูกค้า",
+    "message": "ShiBas0happy ส่งข้อความ: \"sssssssss\" - sssssssssssss",
+    "read": true,
+    "createdAt": 1784664880027
+  },
+  {
     "id": 13,
     "userId": 13,
     "type": "orderUpdates",
@@ -77,7 +131,7 @@
     "type": "pendingApproval",
     "title": "มีสินค้าใหม่รอการอนุมัติ",
     "message": "โทม่าฟ้อก เพิ่มสินค้า \"เมล็ดหมา\" เข้ามารอตรวจสอบ",
-    "read": false,
+    "read": true,
     "createdAt": 1784639100926
   },
   {
@@ -95,7 +149,7 @@
     "type": "pendingApproval",
     "title": "มีสินค้าใหม่รอการอนุมัติ",
     "message": "โทม่าฟ้อก เพิ่มสินค้า \"เมื่อไหร่จะฉาย\" เข้ามารอตรวจสอบ",
-    "read": false,
+    "read": true,
     "createdAt": 1784624490183
   },
   {
@@ -113,7 +167,7 @@
     "type": "pendingApproval",
     "title": "มีสินค้าใหม่รอการอนุมัติ",
     "message": "โทม่าฟ้อก เพิ่มสินค้า \"หมาขุดดิน\" เข้ามารอตรวจสอบ",
-    "read": false,
+    "read": true,
     "createdAt": 1784623436814
   }
 ]

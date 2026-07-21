@@ -1,6 +1,7 @@
 // controllers/supportController.js
 const supportModel = require("../models/supportModel");
 const userModel = require("../models/userModel");
+const notificationModel = require("../models/notificationModel");
 
 const VALID_STATUSES = ["open", "resolved"];
 const VALID_TYPES = ["delivery", "stock", "system"];
@@ -13,6 +14,28 @@ function attachReporter(ticket) {
     ...ticket,
     reportedBy: user ? { id: user.id, name: user.name, role: ticket.role } : null,
   };
+}
+
+/** แจ้งเตือน ADMIN ทุกคนเมื่อมีตั๋วช่วยเหลือใหม่เข้ามา (ไม่ทำให้การส่งตั๋วล้มเหลวถ้าแจ้งเตือนพัง) */
+function notifyAdminsOfNewTicket(ticket, reporter) {
+  try {
+    const admins = userModel.getUsers().filter((u) => u.role === "ADMIN");
+    if (admins.length === 0) return;
+
+    const roleLabel = ticket.role === "EMPLOYEE" ? "พนักงาน" : "ลูกค้า";
+    notificationModel.addNotificationForUsers(
+      admins.map((a) => a.id),
+      {
+        // ใช้ type เดิม "pendingApproval" ให้ตรงกับ noti ฝั่ง admin ที่มีอยู่แล้ว
+        // (ดู notifyAdminsOfPendingProduct ใน productController.js)
+        type: "pendingApproval",
+        title: `มีการแจ้งปัญหาใหม่จาก${roleLabel}`,
+        message: `${reporter?.name || roleLabel} ส่งข้อความ: "${ticket.subject}" - ${ticket.message}`,
+      }
+    );
+  } catch (err) {
+    console.error("แจ้งเตือน admin เรื่องตั๋วช่วยเหลือใหม่ไม่สำเร็จ:", err.message);
+  }
 }
 
 /**
@@ -71,6 +94,9 @@ function createTicket(req, res) {
     priority,
     relatedRef,
   });
+
+  notifyAdminsOfNewTicket(ticket, req.user);
+
   res.status(201).json({ ticket: attachReporter(ticket) });
 }
 
