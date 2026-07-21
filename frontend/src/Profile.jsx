@@ -930,18 +930,7 @@ export default function Profile() {
                 </div>
 
                 {/* Danger zone */}
-                <div className="bg-white border border-red-100 rounded-xl shadow-sm p-6">
-                  <h2 className="text-base font-bold text-red-600 mb-1">ลบบัญชีผู้ใช้</h2>
-                  <p className="text-sm text-gray-500 mb-4">
-                    การลบบัญชีจะลบข้อมูลทั้งหมดอย่างถาวรและไม่สามารถกู้คืนได้
-                  </p>
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="text-sm font-semibold text-red-600 border border-red-200 hover:bg-red-50 px-5 py-2.5 rounded-lg transition-colors"
-                  >
-                    ลบบัญชีของฉัน
-                  </button>
-                </div>
+                
 
                 {showDeleteConfirm && (
                   <div className="fixed inset-0 z-30 bg-black/40 flex items-center justify-center p-4">
