@@ -33,7 +33,12 @@
     "status": "active",
     "joined": "17 ก.ค. 2026",
     "createdAt": "2026-07-17T10:07:29.675Z",
-    "avatar": "https://i.pravatar.cc/64?img=15"
+    "avatar": "https://i.pravatar.cc/64?img=15",
+    "notifyPreferences": {
+      "orderUpdates": true,
+      "promotions": false,
+      "newsletter": true
+    }
   },
   {
     "id": 13,

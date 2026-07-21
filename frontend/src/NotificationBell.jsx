@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, Tag, PackageCheck, Check, Trash2 } from "lucide-react";
+import { Bell, Tag, PackageCheck, Mail, Trash2 } from "lucide-react";
 import {
   fetchNotifications,
   getCachedNotifications,
@@ -9,6 +9,7 @@ import {
   subscribeNotifications,
   unreadCount,
 } from "./data/notificationStore";
+import { getCachedUser } from "./data/authStore";
 
 function timeAgo(ts) {
   const diffMs = Date.now() - ts;
@@ -21,9 +22,34 @@ function timeAgo(ts) {
   return `${day} วันที่แล้ว`;
 }
 
+// ต้อง sync กับ DEFAULT_NOTIF ใน Profile.jsx และ "type" ที่ backend ใส่ให้ตอนสร้าง
+// notification จริง (ดู notificationController.js) — ใช้ทั้งเลือกไอคอน/สี และกรองตาม
+// notifyPreferences ของผู้ใช้ ถ้า backend ใช้คีย์คนละชื่อ ให้แก้ให้ตรงตรงนี้ที่เดียว
+const NOTIF_TYPE_META = {
+  orderUpdates: { icon: PackageCheck, wrap: "bg-blue-50 text-blue-600" },
+  promotions: { icon: Tag, wrap: "bg-orange-50 text-orange-600" },
+  newsletter: { icon: Mail, wrap: "bg-purple-50 text-purple-600" },
+};
+const DEFAULT_TYPE_META = { icon: Bell, wrap: "bg-gray-50 text-gray-500" };
+
+function getTypeMeta(type) {
+  return NOTIF_TYPE_META[type] || DEFAULT_TYPE_META;
+}
+
+// เคารพการตั้งค่าแจ้งเตือนจากหน้า Settings ฝั่ง client ด้วย (นอกเหนือจากที่ backend
+// กรองตอนสร้าง record) เพื่อกันเคส record เก่าที่ถูกสร้างไว้ก่อนผู้ใช้จะปิดประเภทนั้น
+function isNotifVisible(n, prefs) {
+  if (!prefs) return true;
+  if (!(n.type in prefs)) return true; // ประเภทที่ไม่รู้จัก ให้แสดงไว้ก่อน (fail-open)
+  return prefs[n.type] !== false;
+}
+
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState(
     () => getCachedNotifications() ?? []
+  );
+  const [notifPrefs, setNotifPrefs] = useState(
+    () => getCachedUser()?.notifyPreferences ?? null
   );
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -32,7 +58,6 @@ export default function NotificationBell() {
     fetchNotifications()
       .then(setNotifications)
       .catch(() => {});
-    // sync แบบ real-time เมื่อมีการเปลี่ยนแปลงจากที่อื่น (เช่นแท็บอื่น หรือ addNotification)
     const unsubscribe = subscribeNotifications((list) => {
       setNotifications([...list].sort((a, b) => b.createdAt - a.createdAt));
     });
@@ -49,9 +74,25 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const unread = unreadCount(notifications);
+  // รีเฟรชค่า preference เมื่อกลับมาโฟกัสแท็บ เผื่อเพิ่งไปกดบันทึกที่หน้า Settings
+  useEffect(() => {
+    function refreshPrefs() {
+      setNotifPrefs(getCachedUser()?.notifyPreferences ?? null);
+    }
+    window.addEventListener("focus", refreshPrefs);
+    return () => window.removeEventListener("focus", refreshPrefs);
+  }, []);
 
-  const handleToggle = () => setOpen((o) => !o);
+  const visibleNotifications = notifications.filter((n) =>
+    isNotifVisible(n, notifPrefs)
+  );
+  const unread = unreadCount(visibleNotifications);
+
+  const handleToggle = () => {
+    // ดึงค่า preference ล่าสุดทุกครั้งที่เปิดกระดิ่ง เผื่อเพิ่งกดบันทึกในแท็บ Settings มา
+    setNotifPrefs(getCachedUser()?.notifyPreferences ?? null);
+    setOpen((o) => !o);
+  };
 
   const handleMarkAllRead = async (e) => {
     e.stopPropagation();
@@ -102,11 +143,6 @@ export default function NotificationBell() {
 
       {open && (
         <div
-          // NOTE: ความกว้างของกล่องนี้ตั้งค่าผ่าน inline style แทน Tailwind
-          // (w-80 / max-w-[90vw]) เพราะ arbitrary-value class เหล่านี้อาจไม่ถูก build
-          // เข้าไปจริงในบางสภาพแวดล้อม/config ทำให้กล่องแคบเกินไปและข้อความภาษาไทย
-          // ถูกตัดคำละ 2-3 ตัวอักษร การ inline style จึงรับประกันความกว้าง 100%
-          // ไม่ว่า Tailwind config จะเป็นแบบไหน
           className="absolute right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg z-30 overflow-hidden"
           style={{ width: 320, maxWidth: "90vw" }}
         >
@@ -123,13 +159,15 @@ export default function NotificationBell() {
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {visibleNotifications.length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-8">
-                ยังไม่มีการแจ้งเตือน
+                {notifications.length === 0
+                  ? "ยังไม่มีการแจ้งเตือน"
+                  : "ไม่มีการแจ้งเตือนตามที่คุณตั้งค่าไว้"}
               </p>
             ) : (
-              notifications.map((n) => {
-                const Icon = n.type === "order" ? PackageCheck : Tag;
+              visibleNotifications.map((n) => {
+                const { icon: Icon, wrap } = getTypeMeta(n.type);
                 return (
                   <button
                     key={n.id}
@@ -140,11 +178,7 @@ export default function NotificationBell() {
                     }`}
                   >
                     <span
-                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                        n.type === "order"
-                          ? "bg-blue-50 text-blue-600"
-                          : "bg-orange-50 text-orange-600"
-                      }`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${wrap}`}
                     >
                       <Icon className="w-4 h-4" />
                     </span>

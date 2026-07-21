@@ -44,6 +44,15 @@ const sidebarItems = [
   { key: "settings", label: "ตั้งค่าบัญชี", icon: Settings },
 ];
 
+// ค่าเริ่มต้นของการแจ้งเตือน ใช้ตอน user ยังไม่เคยกดบันทึกการตั้งค่าแจ้งเตือนเลยสักครั้ง
+// (ไม่มี notifyPreferences ใน record) — คีย์ต้องตรงกับ "type" ที่ backend จะใส่ตอนสร้าง
+// แจ้งเตือนแต่ละประเภทให้ลูกค้า (ดู controllers/notificationController.js: prefs[n.type])
+const DEFAULT_NOTIF = {
+  orderUpdates: true,
+  promotions: false,
+  newsletter: true,
+};
+
 // Same delivery-step color scheme used on the /orders page, keyed by
 // order.statusStep (0-4) coming from the real backend.
 const STEP_BADGE = {
@@ -166,6 +175,8 @@ export default function Profile() {
       setForm(cachedForm);
       setSavedForm(cachedForm);
       if (cached.avatar) setAvatar(cached.avatar);
+      // ใช้ notifyPreferences ที่เคยบันทึกไว้ (ถ้ามี) มา merge กับ default ทันที ไม่ต้องรอ network
+      setNotif({ ...DEFAULT_NOTIF, ...(cached.notifyPreferences || {}) });
     }
 
     // แล้วยืนยันกับ backend ว่า token ยังใช้ได้ + ได้ข้อมูลล่าสุด
@@ -180,6 +191,7 @@ export default function Profile() {
         setForm(nextForm);
         setSavedForm(nextForm);
         if (user.avatar) setAvatar(user.avatar);
+        setNotif({ ...DEFAULT_NOTIF, ...(user.notifyPreferences || {}) });
       } catch (err) {
         setFetchError(err.message || "โหลดข้อมูลไม่สำเร็จ กรุณาเข้าสู่ระบบใหม่");
       } finally {
@@ -381,11 +393,9 @@ export default function Profile() {
   };
 
   // ----- Settings -----
-  const [notif, setNotif] = useState({
-    orderUpdates: true,
-    promotions: false,
-    newsletter: true,
-  });
+  const [notif, setNotif] = useState(DEFAULT_NOTIF);
+  const [savingNotif, setSavingNotif] = useState(false);
+  const [notifError, setNotifError] = useState("");
   const [pwd, setPwd] = useState({ current: "", next: "", confirm: "" });
   const [pwdVisible, setPwdVisible] = useState(false);
   const [pwdError, setPwdError] = useState("");
@@ -408,6 +418,24 @@ export default function Profile() {
 
   const toggleNotif = (key) => {
     setNotif((n) => ({ ...n, [key]: !n[key] }));
+    setNotifError("");
+  };
+
+  // บันทึกการตั้งค่าแจ้งเตือนผ่าน PUT /api/auth/me (field notifyPreferences)
+  // backend เก็บไว้ในตัว user record เอง จึง sync ข้ามอุปกรณ์ได้ และ
+  // notificationController.getNotifications จะใช้ค่านี้กรองว่าจะส่งแจ้งเตือนประเภทไหนกลับมาให้กระดิ่งบ้าง
+  const handleSaveNotif = async () => {
+    setSavingNotif(true);
+    setNotifError("");
+    try {
+      const updated = await updateMe({ notifyPreferences: notif });
+      setNotif({ ...DEFAULT_NOTIF, ...(updated.notifyPreferences || {}) });
+      showToast("บันทึกการแจ้งเตือนเรียบร้อยแล้ว");
+    } catch (err) {
+      setNotifError(err.message || "บันทึกการแจ้งเตือนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSavingNotif(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -907,6 +935,17 @@ export default function Profile() {
                       onChange={() => toggleNotif("newsletter")}
                     />
                   </div>
+
+                  {notifError && <p className="text-xs text-red-500 mt-3">{notifError}</p>}
+
+                  <button
+                    onClick={handleSaveNotif}
+                    disabled={savingNotif}
+                    className="mt-5 flex items-center gap-2 bg-green-900 hover:bg-green-800 disabled:opacity-60 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+                  >
+                    {savingNotif && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {savingNotif ? "กำลังบันทึก..." : "บันทึกการแจ้งเตือน"}
+                  </button>
                 </div>
 
                 {/* Session — logout */}

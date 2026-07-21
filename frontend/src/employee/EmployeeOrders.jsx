@@ -34,6 +34,29 @@ const DELIVERY_LABELS = {
 
 const PAGE_SIZE = 10;
 
+// [ADD] ข้อความแจ้งเตือนลูกค้าตามสถานะที่เปลี่ยน
+// type ต้องเป็น "orderUpdates" ให้ตรงกับคีย์ notifyPreferences.orderUpdates
+// ที่ผู้ใช้ตั้งค่าไว้ในหน้า Profile > ตั้งค่าบัญชี > การแจ้งเตือน
+// ไม่งั้น toggle "อัปเดตสถานะคำสั่งซื้อ" ในหน้า Profile จะไม่มีผลอะไรเลย
+const STATUS_NOTIFICATIONS = {
+  preparing: (o) => ({
+    title: `คำสั่งซื้อ ${o.id} กำลังเตรียมพัสดุ`,
+    message: "เจ้าหน้าที่กำลังจัดเตรียมสินค้าของคุณ จะแจ้งเตือนอีกครั้งเมื่อเริ่มจัดส่ง",
+  }),
+  shipping: (o) => ({
+    title: `คำสั่งซื้อ ${o.id} กำลังจัดส่ง`,
+    message: "พัสดุของคุณออกเดินทางแล้ว กรุณาเตรียมรับสินค้า",
+  }),
+  delivered: (o) => ({
+    title: `คำสั่งซื้อ ${o.id} ถึงจุดหมายแล้ว`,
+    message: "พัสดุของคุณจัดส่งถึงที่อยู่ปลายทางเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ Farmart",
+  }),
+  cancelled: (o) => ({
+    title: `คำสั่งซื้อ ${o.id} ถูกยกเลิก`,
+    message: `คำสั่งซื้อมูลค่า ฿${(o.total || 0).toLocaleString()} ของคุณถูกยกเลิกโดยเจ้าหน้าที่ หากมีข้อสงสัยกรุณาติดต่อร้านค้า`,
+  }),
+};
+
 // ไอคอนโปรไฟล์เริ่มต้น (คนสีเทาบนพื้นขาว) สำหรับ user ที่ยังไม่เคยอัปโหลดรูปโปรไฟล์
 // ใช้ SVG แบบ inline แทนรูปสุ่ม/รูปสินค้า เพื่อไม่ให้ดูเหมือนเป็นรูปของสินค้าในออเดอร์
 const DEFAULT_AVATAR =
@@ -46,13 +69,9 @@ const DEFAULT_AVATAR =
       "</svg>"
   );
 
-// (ไม่ใช้ placeholder รูปสินค้าอีกแล้ว — ถ้าไม่มีรูปจริง จะไม่แสดงกล่องรูปเลยตามที่ต้องการ)
-
 // backend เก็บรูปสินค้าบางรายการเป็น path แบบ relative (เช่น "/uploads/products/SD001.svg")
 // พอเอาไปใส่ src ตรงๆ browser จะไปหาไฟล์ที่ origin ของหน้าเว็บ (frontend) แทนที่จะเป็น backend
 // ทำให้รูปโหลดไม่ขึ้น จึงต้องเติม base URL ของ backend ให้ path แบบ relative เหล่านี้ก่อนเสมอ
-// NOTE: ใช้ localhost:4000 ตามที่เห็นใน users.json/orders.json — ถ้า apiClient.js มี base URL
-// กำหนดไว้เป็น constant อยู่แล้ว แนะนำให้ import มาใช้แทนการ hardcode ตรงนี้
 const API_BASE = "http://localhost:4000";
 
 function resolveProductImage(url) {
@@ -60,9 +79,9 @@ function resolveProductImage(url) {
   if (/^(https?:)?\/\//.test(url) || url.startsWith("data:")) return url;
   return `${API_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
 }
+
 // ดึงรูปโปรไฟล์ลูกค้าโดย join จาก userAvatarMap (userId -> avatar) เท่านั้น
 // ถ้า user คนนั้นไม่มีรูปโปรไฟล์ (ยังไม่เคยอัปโหลด) ให้ใช้ไอคอนเริ่มต้นแทน
-// ห้าม fallback ไปที่รูปสินค้าในออเดอร์เด็ดขาด เพราะไม่ใช่รูปของ user
 function getCustomerAvatar(o, userAvatarMap) {
   return userAvatarMap[o.userId] || DEFAULT_AVATAR;
 }
@@ -90,15 +109,11 @@ export default function EmployeeOrders() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [actingId, setActingId] = useState(null); // order id ที่กำลังกดอนุมัติ/ปฏิเสธ/ยกเลิก
-  // ออเดอร์ที่กำลังจะยืนยันยกเลิก (เปิด modal แจ้งเตือนแทน window.confirm)
+  const [actingId, setActingId] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
-  // ออเดอร์ที่กำลังเปิดดูรายละเอียดสินค้า (เปิดจากการคลิกที่แถวในตาราง)
   const [detailOrder, setDetailOrder] = useState(null);
-  // id ของแถวที่เปิดเมนู MoreVertical อยู่ (เปลี่ยนสถานะ: เตรียมพัสดุ / จัดส่ง)
   const [openMenuId, setOpenMenuId] = useState(null);
 
-  // ปิดเมนู dropdown เมื่อคลิกนอกเมนู
   useEffect(() => {
     if (!openMenuId) return;
     function handleClickOutside(e) {
@@ -110,8 +125,6 @@ export default function EmployeeOrders() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openMenuId]);
 
-  // ดึงคำสั่งซื้อทั้งหมดครั้งเดียว ใช้คำนวณทั้งสถิติการ์ดด้านบนและตาราง (กรองตามแท็บฝั่ง client)
-  // ดึง users มาพร้อมกันด้วย เพื่อ join รูปโปรไฟล์ลูกค้าผ่าน userId
   const loadOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -120,8 +133,6 @@ export default function EmployeeOrders() {
       const ordersList = Array.isArray(ordersData) ? ordersData : ordersData.orders || [];
       setOrders(ordersList);
 
-      // ดึงเฉพาะ user ที่มีอยู่ในออเดอร์จริงๆ ทีละคนผ่าน /api/users/:id (ไม่ดึง list ทั้งหมด)
-      // เพื่อเลี่ยงปัญหาสิทธิ์เข้าถึง และไม่ต้องโหลดข้อมูล user ที่ไม่เกี่ยวข้อง
       const uniqueUserIds = [...new Set(ordersList.map((o) => o.userId).filter(Boolean))];
       const userResults = await Promise.allSettled(
         uniqueUserIds.map((id) => api.get(`/api/users/${id}`))
@@ -141,7 +152,6 @@ export default function EmployeeOrders() {
     loadOrders();
   }, [loadOrders]);
 
-  // lookup map จาก userId -> avatar เพื่อใช้แสดงรูปโปรไฟล์ลูกค้าในตาราง
   const userAvatarMap = useMemo(() => {
     const map = {};
     for (const u of users) {
@@ -150,20 +160,20 @@ export default function EmployeeOrders() {
     return map;
   }, [users]);
 
-  // แท็บ "อนุมัติแล้ว" ต้องรวมออเดอร์ที่กำลัง "เตรียมพัสดุ" ด้วย (จะหายไปจากแท็บนี้ก็ต่อเมื่อกด "จัดส่ง" แล้วเท่านั้น)
+  // [CHANGED] แท็บ "อนุมัติแล้ว" ต้องรวม preparing / shipping / delivered ด้วย
   const tableOrders = useMemo(() => {
     if (tab === "pending") return orders.filter((o) => o.status === "pending");
     if (tab === "approved")
-      return orders.filter((o) => o.status === "approved" || o.status === "preparing");
+      return orders.filter((o) =>
+        ["approved", "preparing", "shipping", "delivered"].includes(o.status)
+      );
     return orders;
   }, [orders, tab]);
 
-  // กลับไปหน้า 1 ทุกครั้งที่เปลี่ยน tab หรือค้นหาใหม่
   useEffect(() => {
     setPage(1);
   }, [tab, query]);
 
-  // ค้นหาด้วยข้อความ filter ที่ client บน tableOrders (ที่กรองตามแท็บมาแล้วจาก useMemo ด้านบน)
   const filteredOrders = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return tableOrders;
@@ -177,8 +187,6 @@ export default function EmployeeOrders() {
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const pagedOrders = filteredOrders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // ถ้าหน้าปัจจุบันเกินจำนวนหน้าที่มีจริงแล้ว (เช่น อนุมัติ/ปฏิเสธ/ยกเลิกรายการสุดท้ายของหน้าสุดท้ายไป)
-  // ให้ดึงกลับมาหน้าสุดท้ายที่ยังมีข้อมูลอยู่ ไม่ปล่อยให้ค้างเป็นหน้าว่าง
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
@@ -193,6 +201,8 @@ export default function EmployeeOrders() {
     ];
   }, [orders]);
 
+  // [CHANGED] เพิ่มการส่งแจ้งเตือนลูกค้าให้ครอบคลุมทุกสถานะที่ลูกค้าควรรู้
+  // (เดิมมีแค่ตอน cancelled) และแก้ type ให้ตรงกับ notifyPreferences.orderUpdates
   async function handleStatusChange(orderId, status) {
     if (status === "rejected") {
       const ok = window.confirm("ยืนยันปฏิเสธคำสั่งซื้อนี้? การกระทำนี้ย้อนกลับยาก");
@@ -200,24 +210,25 @@ export default function EmployeeOrders() {
     }
     setActingId(orderId);
     try {
+      // เก็บ snapshot ของออเดอร์ก่อนอัปเดต ไว้ใช้ประกอบข้อความแจ้งเตือน (userId, total)
+      const orderInfo = orders.find((o) => o.id === orderId);
+
       const data = await api.patch(`/api/orders/${orderId}/status`, { status });
       const updated = data?.order || data;
 
-      // อัปเดตชุดข้อมูลเต็ม — tableOrders derive มาจาก orders อัตโนมัติผ่าน useMemo อยู่แล้ว
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, ...updated, status } : o))
       );
 
-      // แจ้งเตือนลูกค้าเมื่อคำสั่งซื้อถูกยกเลิก (กรณีพนักงานอนุมัติไปแล้วแต่มายกเลิกทีหลัง)
-      // หา snapshot ของออเดอร์จาก state เดิม (ก่อนอัปเดต) ไว้ใช้แสดงยอดเงินในข้อความแจ้งเตือน
-      if (status === "cancelled") {
-        const orderInfo = orders.find((o) => o.id === orderId);
+      // แจ้งเตือนลูกค้าเมื่อสถานะเปลี่ยนไปเป็นสถานะที่ลูกค้าควรรู้
+      const buildNotif = STATUS_NOTIFICATIONS[status];
+      if (buildNotif && orderInfo) {
         addNotification({
-          type: "order",
-          title: `คำสั่งซื้อ ${orderId} ถูกยกเลิก`,
-          message: `คำสั่งซื้อมูลค่า ฿${(orderInfo?.total || 0).toLocaleString()} ของคุณถูกยกเลิกโดยเจ้าหน้าที่ หากมีข้อสงสัยกรุณาติดต่อร้านค้า`,
+          type: "orderUpdates", // ต้องตรงกับ notifyPreferences.orderUpdates
+          userId: orderInfo.userId, // แจ้งเตือนไปหา "ลูกค้าเจ้าของออเดอร์" ไม่ใช่พนักงานที่กดอยู่
+          ...buildNotif({ id: orderId, total: orderInfo.total }),
         }).catch(() => {
-          /* แจ้งเตือนล้มเหลวไม่ควรทำให้การยกเลิกออเดอร์ที่สำเร็จแล้วดูเหมือนพัง */
+          /* แจ้งเตือนล้มเหลวไม่ควรทำให้การอัปเดตสถานะที่สำเร็จแล้วดูเหมือนพัง */
         });
       }
     } catch (err) {
@@ -245,7 +256,6 @@ export default function EmployeeOrders() {
           searchPlaceholder="ค้นหาคำสั่งซื้อ..."
         />
 
-        {/* Heading + tabs */}
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-slate-800">อนุมัติคำสั่งซื้อ</h1>
@@ -282,14 +292,12 @@ export default function EmployeeOrders() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((s) => (
             <StatCard key={s.label} {...s} />
           ))}
         </div>
 
-        {/* Table */}
         <div className="mt-6 overflow-hidden rounded-xl border border-slate-100 bg-white">
           {error && (
             <div className="border-b border-rose-100 bg-rose-50 px-6 py-3 text-sm text-rose-600">
@@ -339,8 +347,6 @@ export default function EmployeeOrders() {
                           src={getCustomerAvatar(o, userAvatarMap)}
                           alt=""
                           onError={(e) => {
-                            // ถ้ารูปโหลดไม่ขึ้น (เช่น URL localhost dev ที่ใช้ไม่ได้แล้ว หรือไฟล์ถูกลบ)
-                            // ให้ fallback เป็นไอคอนโปรไฟล์เริ่มต้น (ไม่ใช้รูปสินค้าหรือรูปสุ่ม)
                             if (e.currentTarget.src !== DEFAULT_AVATAR) {
                               e.currentTarget.src = DEFAULT_AVATAR;
                             }
@@ -365,10 +371,13 @@ export default function EmployeeOrders() {
                     <td className="px-6 py-4 text-slate-600">
                       {PAYMENT_LABELS[o.paymentMethod] || o.paymentMethod}
                     </td>
+                    {/* [CHANGED] เพิ่มสีป้าย + label สำหรับสถานะ delivered */}
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                          o.status === "approved"
+                          o.status === "delivered"
+                            ? "bg-green-50 text-green-700"
+                            : o.status === "approved"
                             ? "bg-emerald-50 text-emerald-600"
                             : o.status === "preparing"
                             ? "bg-blue-50 text-blue-600"
@@ -381,12 +390,14 @@ export default function EmployeeOrders() {
                             : "bg-amber-50 text-amber-600"
                         }`}
                       >
-                        {o.status === "approved"
+                        {o.status === "delivered"
+                          ? "ถึงจุดหมายแล้ว"
+                          : o.status === "approved"
                           ? "ยืนยันคำสั่งซื้อ"
                           : o.status === "preparing"
                           ? "เตรียมพัสดุ"
                           : o.status === "shipping"
-                          ? "จัดส่งแล้ว"
+                          ? "กำลังจัดส่ง"
                           : o.status === "rejected"
                           ? "ปฏิเสธแล้ว"
                           : o.status === "cancelled"
@@ -429,7 +440,8 @@ export default function EmployeeOrders() {
                             {actingId === o.id ? "..." : "ยกเลิกคำสั่งซื้อ"}
                           </button>
                         )}
-                        {o.status !== "pending" && (
+                        {/* [CHANGED] เมนู ... ต้องเปิดได้ตั้งแต่ approved ไปจนถึง shipping (เพื่อกด "ถึงจุดหมายแล้ว" ได้) */}
+                        {["approved", "preparing", "shipping"].includes(o.status) && (
                           <button
                             type="button"
                             aria-label="ตัวเลือกเพิ่มเติม"
@@ -466,6 +478,18 @@ export default function EmployeeOrders() {
                             >
                               กำลังจัดส่ง
                             </button>
+                            {/* [ADD] ขั้นตอนสุดท้าย: ถึงจุดหมายแล้ว (ใช้ได้ต่อเมื่อสถานะปัจจุบันคือ shipping) */}
+                            <button
+                              type="button"
+                              disabled={o.status !== "shipping" || actingId === o.id}
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleStatusChange(o.id, "delivered");
+                              }}
+                              className="flex w-full items-center px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                            >
+                              ถึงจุดหมายแล้ว
+                            </button>
                           </div>
                         )}
                       </div>
@@ -476,7 +500,6 @@ export default function EmployeeOrders() {
             </tbody>
           </table>
 
-          {/* Pagination */}
           <div className="flex items-center justify-between border-t border-slate-100 px-6 py-3.5">
             <p className="text-sm text-slate-400">
               แสดง {pagedOrders.length} จาก {filteredOrders.length} รายการ
@@ -517,7 +540,6 @@ export default function EmployeeOrders() {
         </div>
       </main>
 
-      {/* Modal ยืนยันยกเลิกคำสั่งซื้อ */}
       {cancelTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
@@ -554,7 +576,6 @@ export default function EmployeeOrders() {
         </div>
       )}
 
-      {/* Modal รายละเอียดคำสั่งซื้อ (เปิดจากการคลิกแถวในตาราง) */}
       {detailOrder && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
@@ -597,8 +618,6 @@ export default function EmployeeOrders() {
                           src={resolveProductImage(item.image)}
                           alt=""
                           onError={(e) => {
-                            // ถ้ารูปที่ควรจะโหลดได้ดันโหลดพัง (ลิงก์เสีย) ให้ซ่อนรูปไปเลย
-                            // ไม่ใช้กล่อง placeholder ตามที่ต้องการ "ถ้าไม่มีก็ไม่มี"
                             e.currentTarget.style.display = "none";
                           }}
                           className="h-11 w-11 shrink-0 rounded-lg border border-slate-100 object-cover"

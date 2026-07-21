@@ -22,6 +22,6 @@ router.put("/:id/read", notificationController.markAsRead);
 router.delete("/:id", notificationController.deleteNotification);
 
 // POST /api/notifications (admin only) - ยิงแจ้งเตือน/โปรโมชั่นเอง
-router.post("/", requireRole("ADMIN"), notificationController.createNotification);
+router.post("/", requireRole("ADMIN", "EMPLOYEE"), notificationController.createNotification);
 
 module.exports = router;
