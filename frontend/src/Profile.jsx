@@ -135,6 +135,13 @@ function CenterAlert({ message, onClose }) {
   );
 }
 
+// ตัดอักขระที่ไม่ใช่ตัวเลขออก + จำกัดไม่เกิน 10 หลัก ใช้ทุกจุดที่ phone เข้ามาในฟอร์ม
+// (ค่า default, ค่าที่แคชไว้, ค่าจาก backend) กันเบอร์เก่าที่เคยเก็บแบบมีขีด "081-234-5678"
+// ทำให้ผ่าน validation ไม่ได้ทันทีที่โหลดหน้า
+function sanitizePhone(value) {
+  return (value || "").replace(/\D/g, "").slice(0, 10);
+}
+
 export default function Profile() {
   const { itemCount } = useCart();
   const navigate = useNavigate();
@@ -155,7 +162,7 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: "สมชาย รักเกษตร",
     email: "somchai.r@gmail.com",
-    phone: "081-234-5678",
+    phone: sanitizePhone("081-234-5678"),
   });
   const [savedForm, setSavedForm] = useState(form);
   const [formErrors, setFormErrors] = useState({});
@@ -170,7 +177,7 @@ export default function Profile() {
       const cachedForm = {
         name: cached.name ?? "",
         email: cached.email ?? "",
-        phone: cached.phone ?? "",
+        phone: sanitizePhone(cached.phone),
       };
       setForm(cachedForm);
       setSavedForm(cachedForm);
@@ -186,7 +193,7 @@ export default function Profile() {
         const nextForm = {
           name: user.name ?? "",
           email: user.email ?? "",
-          phone: user.phone ?? "",
+          phone: sanitizePhone(user.phone),
         };
         setForm(nextForm);
         setSavedForm(nextForm);
@@ -248,7 +255,7 @@ export default function Profile() {
     const errs = {};
     if (!form.name.trim()) errs.name = "กรุณากรอกชื่อ-นามสกุล";
     if (!/^\S+@\S+\.\S+$/.test(form.email)) errs.email = "รูปแบบอีเมลไม่ถูกต้อง";
-    if (!/^[0-9-]{9,10}$/.test(form.phone)) errs.phone = "รูปแบบเบอร์โทรไม่ถูกต้อง";
+    if (!/^[0-9]{9,10}$/.test(form.phone)) errs.phone = "รูปแบบเบอร์โทรไม่ถูกต้อง (ต้องเป็นตัวเลข 9-10 หลัก)";
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -646,8 +653,15 @@ export default function Profile() {
                       </label>
                       <input
                         type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
                         value={form.phone}
-                        onChange={(e) => handleFormChange("phone", e.target.value)}
+                        onChange={(e) =>
+                          // ตัดอักขระที่ไม่ใช่ตัวเลขทิ้ง แล้วจำกัดไว้ไม่เกิน 10 หลัก
+                          // (เบอร์มือถือไทย 10 หลัก) กันพิมพ์เลยจำนวนตั้งแต่ตอนพิมพ์เลย
+                          // ไม่ต้องรอไป error ตอนกดบันทึกทีเดียว
+                          handleFormChange("phone", e.target.value.replace(/\D/g, "").slice(0, 10))
+                        }
                         className={`w-full px-3 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-700 ${
                           formErrors.phone ? "border-red-400" : "border-gray-200"
                         }`}
