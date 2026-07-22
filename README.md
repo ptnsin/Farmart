@@ -103,13 +103,13 @@ graph TD
     F --> G[7. Maintenance<br/>ปรับปรุงระบบ แก้ไขบั๊ก<br/>เพิ่มฟีเจอร์ในอนาคต]
     G -.ปรับปรุงต่อเนื่อง.-> C
 
-    style A fill:#a8d5a2,stroke:#333
-    style B fill:#a8d5a2,stroke:#333
-    style C fill:#8fc98a,stroke:#333
-    style D fill:#8fc98a,stroke:#333
-    style E fill:#6fb96a,stroke:#333
-    style F fill:#6fb96a,stroke:#333
-    style G fill:#5aa855,stroke:#333
+    style A fill:#a8d5a2,stroke:#333,color:#000
+    style B fill:#a8d5a2,stroke:#333,color:#000
+    style C fill:#8fc98a,stroke:#333,color:#000
+    style D fill:#8fc98a,stroke:#333,color:#000
+    style E fill:#6fb96a,stroke:#333,color:#000
+    style F fill:#6fb96a,stroke:#333,color:#000
+    style G fill:#5aa855,stroke:#333,color:#000
 ```
 
 ---
